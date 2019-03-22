@@ -27,7 +27,7 @@
     "mobx": "^5.8.0",
     "mobx-react": "^5.4.3",
     "moment": "^2.23.0",
-    "react": "^16.6.3",
+    "react": "^16.8.5",
     "react-native": "^0.59.1",
     "react-native-localization": "^2.0.3",
     "react-native-audio-recorder-player": "file:../",
