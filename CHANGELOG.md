@@ -1,4 +1,6 @@
 ## Changelogs
+- **[2.2.+]**
+  + Migrated to androidx [#82](https://github.com/dooboolab/react-native-audio-recorder-player/pull/82)
 - **[2.1.4]**
   + remove extra ext from `android` gradle versions references as rootProjet [#47](remove extra ext from android gradle versions references as rootProje).
 - **[2.1.2]**
