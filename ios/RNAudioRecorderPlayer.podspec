@@ -4,8 +4,8 @@ package = JSON.parse(File.read('../package.json'))
 Pod::Spec.new do |s|
   s.name         = "RNAudioRecorderPlayer"
   s.version      = package["version"]
-  s.summary      = package["description"]
-  s.description  = <<-DESC
+  s.description  = package["description"]
+  s.summary  = <<-DESC
                   RNAudioRecorderPlayer
                    DESC
   s.homepage     = "https://github.com/dooboolab/react-native-audio-recorder-player"
