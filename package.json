@@ -2,6 +2,7 @@
   "name": "react-native-audio-recorder-player",
   "version": "2.2.2",
   "description": "React Native Audio Recorder and Player.",
+  "homepage": "https://github.com/dooboolab/react-native-audio-recorder-player",
   "main": "index.js",
   "types": "index.d.ts",
   "postinstall": "dooboolab-welcome postinstall",
