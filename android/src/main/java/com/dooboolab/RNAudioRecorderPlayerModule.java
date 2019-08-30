@@ -15,9 +15,9 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.PermissionChecker;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.PermissionChecker;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
@@ -38,6 +38,7 @@ import javax.annotation.Nullable;
 public class RNAudioRecorderPlayerModule extends ReactContextBaseJavaModule implements PermissionListener{
   final private static String TAG = "RNAudioRecorderPlayer";
   final private static String FILE_LOCATION = "/sdcard/sound.mp4";
+  private String audioFileURL = "";
 
   private int subsDurationMillis = 100;
 
@@ -83,16 +84,15 @@ public class RNAudioRecorderPlayerModule extends ReactContextBaseJavaModule impl
       return;
     }
 
+    audioFileURL = (path.equals("DEFAULT")) ? FILE_LOCATION : path;
+
     if (mediaRecorder == null) {
       mediaRecorder = new MediaRecorder();
       mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
       mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
       mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
-      if (path.equals("DEFAULT")) {
-        mediaRecorder.setOutputFile(FILE_LOCATION);
-      } else {
-        mediaRecorder.setOutputFile(path);
-      }
+
+      mediaRecorder.setOutputFile(audioFileURL);
     }
 
     try {
@@ -111,8 +111,7 @@ public class RNAudioRecorderPlayerModule extends ReactContextBaseJavaModule impl
       };
       this.recorderRunnable.run();
 
-      String resolvedPath = (path.equals("DEFAULT")) ? FILE_LOCATION : path;
-      promise.resolve("file://" + resolvedPath);
+      promise.resolve("file://" + audioFileURL);
     } catch (Exception e) {
       Log.e(TAG, "Exception: ", e);
       promise.reject("startRecord", e.getMessage());
@@ -133,7 +132,7 @@ public class RNAudioRecorderPlayerModule extends ReactContextBaseJavaModule impl
     mediaRecorder.release();
     mediaRecorder = null;
 
-    promise.resolve("recorder stopped.");
+    promise.resolve("file://" + audioFileURL);
   }
 
   @ReactMethod
