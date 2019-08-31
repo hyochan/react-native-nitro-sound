@@ -32,7 +32,7 @@
     "react-native-localization": "^2.0.3",
     "react-native-audio-recorder-player": "file:../",
     "react-native-status-bar-height": "^2.2.0",
-    "react-navigation": "^3.0.8"
+    "react-navigation": "^4.0.0"
   },
   "devDependencies": {
     "babel-jest": "24.5.0",
