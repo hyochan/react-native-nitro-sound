@@ -62,7 +62,7 @@ public class RNAudioRecorderPlayerModule extends ReactContextBaseJavaModule impl
   }
 
   @ReactMethod
-  public void startRecorder(final String path, Promise promise) {
+  public void startRecorder(final String path, final ReadableMap audioSet, Promise promise) {
     try {
       if (
           Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&

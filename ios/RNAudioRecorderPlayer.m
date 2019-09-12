@@ -110,6 +110,7 @@ RCT_EXPORT_METHOD(setSubscriptionDuration:(double)duration
 }
 
 RCT_EXPORT_METHOD(startRecorder:(NSString*)path
+                  audioSets: (NSDictionary*)audioSets
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject) {
   
@@ -119,11 +120,55 @@ RCT_EXPORT_METHOD(startRecorder:(NSString*)path
     audioFileURL = [NSURL fileURLWithPath: path];
   }
 
+  NSMutableDictionary *sets = [audioSets mutableCopy];
+
+  if (![sets objectForKey:@"AVSampleRateKeyIOS"]) {
+    sets["AVSampleRateKeyIOS"] = 44100;
+  }
+  if (![sets objectForKey:@"AVFormatIDKeyIOS"]) {
+    sets["AVFormatIDKeyIOS"] = kAudioFormatAppleLossless;
+  } else {
+    if ([encoding  isEqual: @"lpcm"]) {
+      sets["AVFormatIDKeyIOS"]_audioEncoding =[NSNumber numberWithInt:kAudioFormatLinearPCM];
+    } else if ([encoding  isEqual: @"ima4"]) {
+      sets["AVFormatIDKeyIOS"]_audioEncoding =[NSNumber numberWithInt:kAudioFormatAppleIMA4];
+    } else if ([encoding  isEqual: @"aac"]) {
+      sets["AVFormatIDKeyIOS"]_audioEncoding =[NSNumber numberWithInt:kAudioFormatMPEG4AAC];
+    } else if ([encoding  isEqual: @"MAC3"]) {
+      sets["AVFormatIDKeyIOS"]_audioEncoding =[NSNumber numberWithInt:kAudioFormatMACE3];
+    } else if ([encoding  isEqual: @"MAC6"]) {
+      sets["AVFormatIDKeyIOS"]_audioEncoding =[NSNumber numberWithInt:kAudioFormatMACE6];
+    } else if ([encoding  isEqual: @"ulaw"]) {
+      sets["AVFormatIDKeyIOS"]_audioEncoding =[NSNumber numberWithInt:kAudioFormatULaw];
+    } else if ([encoding  isEqual: @"alaw"]) {
+      sets["AVFormatIDKeyIOS"]_audioEncoding =[NSNumber numberWithInt:kAudioFormatALaw];
+    } else if ([encoding  isEqual: @"mp1"]) {
+      sets["AVFormatIDKeyIOS"] =[NSNumber numberWithInt:kAudioFormatMPEGLayer1];
+    } else if ([encoding  isEqual: @"mp2"]) {
+      sets["AVFormatIDKeyIOS"] =[NSNumber numberWithInt:kAudioFormatMPEGLayer2];
+    } else if ([encoding  isEqual: @"alac"]) {
+      sets["AVFormatIDKeyIOS"] =[NSNumber numberWithInt:kAudioFormatAppleLossless];
+    } else if ([encoding  isEqual: @"amr"]) {
+      sets["AVFormatIDKeyIOS"] =[NSNumber numberWithInt:kAudioFormatAMR];
+    } else if ([encoding  isEqual: @"flac"]) {
+        if (@available(iOS 11, *)) sets["AVFormatIDKeyIOS"] =[NSNumber numberWithInt:kAudioFormatFLAC];
+    } else if ([encoding  isEqual: @"opus"]) {
+        if (@available(iOS 11, *)) sets["AVFormatIDKeyIOS"] =[NSNumber numberWithInt:kAudioFormatOpus];
+    }
+  }
+  if (![sets objectForKey:@"AVNumberOfChannelsKeyIOS"]) {
+    sets["AVNumberOfChannelsKeyIOS"] = 2;
+  }
+  if (![sets objectForKey:@"AVEncoderAudioQualityKeyIOS"]) {
+    sets["AVEncoderAudioQualityKeyIOS"] = AVAudioQualityMedium;
+  }
+
   NSDictionary *audioSettings = [NSDictionary dictionaryWithObjectsAndKeys:
-                                 [NSNumber numberWithFloat:44100],AVSampleRateKey,
-                                 [NSNumber numberWithInt: kAudioFormatAppleLossless],AVFormatIDKey,
-                                 [NSNumber numberWithInt: 2],AVNumberOfChannelsKey,
-                                 [NSNumber numberWithInt:AVAudioQualityMedium],AVEncoderAudioQualityKey,nil];
+                                 [NSNumber numberWithFloat: sets["AVSampleRateKeyIOS"]], AVSampleRateKey,
+                                 [NSNumber numberWithInt: sets["AVFormatIDKeyIOS"]], AVFormatIDKey,
+                                 [NSNumber numberWithInt: sets["AVNumberOfChannelsKeyIOS"]], AVNumberOfChannelsKey,
+                                 [NSNumber numberWithInt: sets["AVEncoderAudioQualityKeyIOS"]], AVEncoderAudioQualityKey,
+                                 nil];
 
   // Setup audio session
   AVAudioSession *session = [AVAudioSession sharedInstance];
