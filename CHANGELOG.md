@@ -1,5 +1,7 @@
 ## Changelogs
 
+- **[2.3.+]**
+  - Add ability to customize recorder parameters [#114](https://github.com/dooboolab/react-native-audio-recorder-player/pull/114)
 - **[2.2.+]**
   - Migrated to androidx [#82](https://github.com/dooboolab/react-native-audio-recorder-player/pull/82)
   - Makes path param in startRecord to behave as a path on iOS [#94](https://github.com/dooboolab/react-native-audio-recorder-player/pull/94)
