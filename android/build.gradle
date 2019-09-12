@@ -37,5 +37,20 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.facebook.react:react-native:+'
+  implementation 'com.facebook.react:react-native:+'
+  def supportLibVersion = safeExtGet('supportLibVersion', safeExtGet('supportVersion', null))
+  def androidXVersion = safeExtGet('androidXVersion', null)
+  if (supportLibVersion && androidXVersion == null) {
+    implementation "com.android.support:support-annotations:$supportLibVersion"
+    implementation "com.android.support:customtabs:$supportLibVersion"
+  } else {
+    def defaultAndroidXVersion = "1.+"
+    if (androidXVersion == null) {
+      androidXVersion = defaultAndroidXVersion
+    }
+    def androidXAnnotation = safeExtGet('androidXAnnotation', androidXVersion)
+    def androidXBrowser = safeExtGet('androidXBrowser', androidXVersion)
+    implementation "androidx.annotation:annotation:$androidXAnnotation"
+    implementation "androidx.browser:browser:$androidXBrowser"
+  }
 }
