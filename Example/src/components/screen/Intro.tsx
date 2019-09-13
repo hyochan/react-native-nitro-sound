@@ -1,33 +1,26 @@
-import React, { Component, SyntheticEvent } from 'react';
+import AudioRecorderPlayer, {
+  AudioEncoderAndroidType,
+  AudioSet,
+  AudioSourceAndroidType,
+} from 'react-native-audio-recorder-player';
 import {
-  Platform,
-  StatusBar,
-  StyleSheet,
-  TouchableHighlight,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-  Text,
-  View,
-  FlatList,
-  InteractionManager,
   PermissionsAndroid,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import React, { Component } from 'react';
+import { ratio, screenWidth } from '../../utils/Styles';
 
-import { ratio, colors, screenWidth } from '@utils/Styles';
-import { IC_MASK } from '@utils/Icons';
-
-import { getString } from '@STRINGS';
-import User from '@models/User';
-import Button from '@shared/Button';
-import { inject } from 'mobx-react/native';
-
-import AudioRecorderPlayer from 'react-native-audio-recorder-player';
+import Button from '../shared/Button';
+import { getString } from '../../../STRINGS';
 
 const styles: any = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#455A64',
     flexDirection: 'column',
     alignItems: 'center',
   },
@@ -112,13 +105,10 @@ interface IState {
   duration: string;
 }
 
-@inject('store')
 class Page extends Component<any, IState> {
-  private timer: any;
-  private subscription: any;
   private audioRecorderPlayer: AudioRecorderPlayer;
 
-  constructor(props) {
+  constructor(props: any) {
     super(props);
     this.state = {
       isLoggingIn: false,
@@ -135,7 +125,11 @@ class Page extends Component<any, IState> {
   }
 
   public render() {
-    const playWidth = (this.state.currentPositionSec / this.state.currentDurationSec) * (screenWidth - 56 * ratio);
+    let playWidth =
+      (this.state.currentPositionSec / this.state.currentDurationSec) *
+      (screenWidth - 56 * ratio);
+    if (!playWidth) playWidth = 0;
+
     return (
       <View style={styles.container}>
         <Text style={styles.titleTxt}>{getString('TITLE')}</Text>
@@ -146,7 +140,9 @@ class Page extends Component<any, IState> {
               style={styles.btn}
               onPress={this.onStartRecord}
               textStyle={styles.txt}
-            >{getString('RECORD')}</Button>
+            >
+              {getString('RECORD')}
+            </Button>
             <Button
               style={[
                 styles.btn,
@@ -156,7 +152,9 @@ class Page extends Component<any, IState> {
               ]}
               onPress={this.onStopRecord}
               textStyle={styles.txt}
-            >{getString('STOP')}</Button>
+            >
+              {getString('STOP')}
+            </Button>
           </View>
         </View>
         <View style={styles.viewPlayer}>
@@ -165,19 +163,20 @@ class Page extends Component<any, IState> {
             onPress={this.onStatusPress}
           >
             <View style={styles.viewBar}>
-              <View style={[
-                styles.viewBarPlay,
-                { width: playWidth },
-              ]}/>
+              <View style={[styles.viewBarPlay, { width: playWidth }]} />
             </View>
           </TouchableOpacity>
-          <Text style={styles.txtCounter}>{this.state.playTime} / {this.state.duration}</Text>
+          <Text style={styles.txtCounter}>
+            {this.state.playTime} / {this.state.duration}
+          </Text>
           <View style={styles.playBtnWrapper}>
             <Button
               style={styles.btn}
               onPress={this.onStartPlay}
               textStyle={styles.txt}
-            >{getString('PLAY')}</Button>
+            >
+              {getString('PLAY')}
+            </Button>
             <Button
               style={[
                 styles.btn,
@@ -187,7 +186,9 @@ class Page extends Component<any, IState> {
               ]}
               onPress={this.onPausePlay}
               textStyle={styles.txt}
-            >{getString('PAUSE')}</Button>
+            >
+              {getString('PAUSE')}
+            </Button>
             <Button
               style={[
                 styles.btn,
@@ -197,7 +198,9 @@ class Page extends Component<any, IState> {
               ]}
               onPress={this.onStopPlay}
               textStyle={styles.txt}
-              >{getString('STOP')}</Button>
+            >
+              {getString('STOP')}
+            </Button>
           </View>
         </View>
       </View>
@@ -207,22 +210,24 @@ class Page extends Component<any, IState> {
   private onStatusPress = (e: any) => {
     const touchX = e.nativeEvent.locationX;
     console.log(`touchX: ${touchX}`);
-    const playWidth = (this.state.currentPositionSec / this.state.currentDurationSec) * (screenWidth - 56 * ratio);
+    const playWidth =
+      (this.state.currentPositionSec / this.state.currentDurationSec) *
+      (screenWidth - 56 * ratio);
     console.log(`currentPlayWidth: ${playWidth}`);
 
     const currentPosition = Math.round(this.state.currentPositionSec);
     console.log(`currentPosition: ${currentPosition}`);
 
     if (playWidth && playWidth < touchX) {
-      const addSecs = Math.round((currentPosition + 3000));
+      const addSecs = Math.round(currentPosition + 3000);
       this.audioRecorderPlayer.seekToPlayer(addSecs);
       console.log(`addSecs: ${addSecs}`);
     } else {
-      const subSecs = Math.round((currentPosition - 3000));
+      const subSecs = Math.round(currentPosition - 3000);
       this.audioRecorderPlayer.seekToPlayer(subSecs);
       console.log(`subSecs: ${subSecs}`);
     }
-  }
+  };
 
   private onStartRecord = async () => {
     if (Platform.OS === 'android') {
@@ -232,6 +237,7 @@ class Page extends Component<any, IState> {
           {
             title: 'Permissions for write access',
             message: 'Give permission to your storage to write a file',
+            buttonPositive: 'ok',
           },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
@@ -252,6 +258,7 @@ class Page extends Component<any, IState> {
           {
             title: 'Permissions for write access',
             message: 'Give permission to your storage to write a file',
+            buttonPositive: 'ok',
           },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
@@ -269,16 +276,23 @@ class Page extends Component<any, IState> {
       ios: 'hello.m4a',
       android: 'sdcard/hello.mp4',
     });
-    const uri = await this.audioRecorderPlayer.startRecorder(path);
-    this.audioRecorderPlayer.addRecordBackListener((e) => {
+    const audioSet: AudioSet = {
+      AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
+      AudioSourceAndroid: AudioSourceAndroidType.MIC,
+    };
+    console.log('audioSet', audioSet);
+    const uri = await this.audioRecorderPlayer.startRecorder(path, audioSet);
+    this.audioRecorderPlayer.addRecordBackListener((e: any) => {
       this.setState({
         recordSecs: e.current_position,
-        recordTime: this.audioRecorderPlayer.mmssss(Math.floor(e.current_position)),
+        recordTime: this.audioRecorderPlayer.mmssss(
+          Math.floor(e.current_position),
+        ),
       });
       return;
     });
     console.log(`uri: ${uri}`);
-  }
+  };
 
   private onStopRecord = async () => {
     const result = await this.audioRecorderPlayer.stopRecorder();
@@ -287,7 +301,7 @@ class Page extends Component<any, IState> {
       recordSecs: 0,
     });
     console.log(result);
-  }
+  };
 
   private onStartPlay = async () => {
     console.log('onStartPlay');
@@ -298,7 +312,7 @@ class Page extends Component<any, IState> {
     const msg = await this.audioRecorderPlayer.startPlayer(path);
     this.audioRecorderPlayer.setVolume(1.0);
     console.log(msg);
-    this.audioRecorderPlayer.addPlayBackListener((e) => {
+    this.audioRecorderPlayer.addPlayBackListener((e: any) => {
       if (e.current_position === e.duration) {
         console.log('finished');
         this.audioRecorderPlayer.stopPlayer();
@@ -306,22 +320,24 @@ class Page extends Component<any, IState> {
       this.setState({
         currentPositionSec: e.current_position,
         currentDurationSec: e.duration,
-        playTime: this.audioRecorderPlayer.mmssss(Math.floor(e.current_position)),
+        playTime: this.audioRecorderPlayer.mmssss(
+          Math.floor(e.current_position),
+        ),
         duration: this.audioRecorderPlayer.mmssss(Math.floor(e.duration)),
       });
       return;
     });
-  }
+  };
 
   private onPausePlay = async () => {
     await this.audioRecorderPlayer.pausePlayer();
-  }
+  };
 
   private onStopPlay = async () => {
     console.log('onStopPlay');
     this.audioRecorderPlayer.stopPlayer();
     this.audioRecorderPlayer.removePlayBackListener();
-  }
+  };
 }
 
 export default Page;

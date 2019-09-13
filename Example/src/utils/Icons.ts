@@ -1,1 +1,3 @@
-export const IC_MASK = require('../../assets/icons/mask.png');
+import MASK from '../../assets/icons/mask.png';
+
+export const IC_MASK = MASK;

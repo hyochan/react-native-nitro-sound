@@ -1,15 +1,16 @@
-import React, { Component } from 'react';
 import {
   ActivityIndicator,
-  StyleSheet,
-  TouchableOpacity,
   Image,
+  StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
-// import NativeButton from 'apsl-react-native-button';
+import React, { Component } from 'react';
 
-import { ratio, colors } from '@utils/Styles';
+import { ratio } from '../../utils/Styles';
+
+// import NativeButton from 'apsl-react-native-button';
 
 const styles: any = StyleSheet.create({
   btn: {
@@ -72,10 +73,9 @@ class Button extends Component<ItemProps, any> {
     activeOpacity: 0.5,
   };
 
-  constructor(props) {
+  constructor(props: ItemProps) {
     super(props);
-    this.state = {
-    };
+    this.state = {};
   }
 
   public render() {
@@ -99,14 +99,12 @@ class Button extends Component<ItemProps, any> {
         onPress={this.props.onPress}
       >
         <View style={this.props.style}>
-          {
-            this.props.imgLeftSrc
-              ? <Image
-                style={this.props.imgLeftStyle}
-                source={this.props.imgLeftSrc}
-              />
-              : null
-          }
+          {this.props.imgLeftSrc ? (
+            <Image
+              style={this.props.imgLeftStyle}
+              source={this.props.imgLeftSrc}
+            />
+          ) : null}
           <Text style={this.props.textStyle}>{this.props.children}</Text>
         </View>
       </TouchableOpacity>

@@ -41,6 +41,7 @@ yarn-error.log
 buck-out/
 \.buckd/
 *.keystore
+!android/app/debug.keystore
 
 # fastlane
 #
@@ -55,3 +56,9 @@ buck-out/
 
 # Bundle artifact
 *.jsbundle
+.jest/
+
+coverage/
+package-lock.json
+
+ios/Pods/
