@@ -94,8 +94,6 @@ class AudioRecorderPlayer {
     const minutes = Math.floor(secs / 60);
     const seconds = secs % 60;
     const miliseconds = Math.floor((milisecs % 1000) / 10);
-    console.log('milisecs: ' + milisecs);
-    console.log('min: ' + minutes + ', secs: ' + seconds + ', ' + miliseconds);
     return pad(minutes) + ':' + pad(seconds) + ':' + pad(miliseconds);
   };
 
@@ -179,7 +177,6 @@ class AudioRecorderPlayer {
       this._isRecording = false;
       return RNAudioRecorderPlayer.stopRecorder();
     }
-    console.log('Already stopped recording');
   };
 
   /**
@@ -207,7 +204,6 @@ class AudioRecorderPlayer {
       this._isPlaying = true;
       return RNAudioRecorderPlayer.startPlayer(uri);
     }
-    console.log('Already started playing');
   };
 
   /**
@@ -231,7 +227,6 @@ class AudioRecorderPlayer {
       this._isPlaying = false;
       return RNAudioRecorderPlayer.pausePlayer();
     }
-    console.log('Already paused or stopped');
   };
 
   /**

@@ -95,7 +95,7 @@ const styles: any = StyleSheet.create({
   },
 });
 
-interface IState {
+interface State {
   isLoggingIn: boolean;
   recordSecs: number;
   recordTime: string;
@@ -105,7 +105,7 @@ interface IState {
   duration: string;
 }
 
-class Page extends Component<any, IState> {
+class Page extends Component<any, State> {
   private audioRecorderPlayer: AudioRecorderPlayer;
 
   constructor(props: any) {
@@ -289,7 +289,6 @@ class Page extends Component<any, IState> {
           Math.floor(e.current_position),
         ),
       });
-      return;
     });
     console.log(`uri: ${uri}`);
   };
@@ -325,7 +324,6 @@ class Page extends Component<any, IState> {
         ),
         duration: this.audioRecorderPlayer.mmssss(Math.floor(e.duration)),
       });
-      return;
     });
   };
 
