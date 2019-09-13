@@ -1,4 +1,4 @@
-enum AudioSourceAndroidType {
+export enum AudioSourceAndroidType {
   DEFAULT = 0,
   MIC,
   VOICE_UPLINK,
@@ -13,7 +13,7 @@ enum AudioSourceAndroidType {
   HOTWORD,
 }
 
-enum OutputFormatAndroidType {
+export enum OutputFormatAndroidType {
   DEFAULT = 0,
   THREE_GPP,
   MPEG_4,
@@ -26,7 +26,7 @@ enum OutputFormatAndroidType {
   WEBM,
 }
 
-enum AudioEncoderAndroidType {
+export enum AudioEncoderAndroidType {
   DEFAULT = 0,
   AMR_NB,
   AMR_WB,
@@ -37,21 +37,37 @@ enum AudioEncoderAndroidType {
 }
 
 type AVEncodingType =
-  | 'lpcm'
-  | 'ima4'
-  | 'aac'
-  | 'MAC3'
-  | 'MAC6'
-  | 'ulaw'
-  | 'alaw'
-  | 'mp1'
-  | 'mp2'
-  | 'alac'
-  | 'amr'
-  | 'flac'
-  | 'opus';
+  | AVEncodingOption.lpcm
+  | AVEncodingOption.ima4
+  | AVEncodingOption.aac
+  | AVEncodingOption.MAC3
+  | AVEncodingOption.MAC6
+  | AVEncodingOption.ulaw
+  | AVEncodingOption.alaw
+  | AVEncodingOption.mp1
+  | AVEncodingOption.mp2
+  | AVEncodingOption.alac
+  | AVEncodingOption.amr
+  | AVEncodingOption.flac
+  | AVEncodingOption.opus;
 
-enum AVEncoderAudioQualityIOSType {
+interface AVEncodingOption {
+  lpcm: 'lpcm';
+  ima4: 'ima4';
+  aac: 'aac';
+  MAC3: 'MAC3';
+  MAC6: 'MAC6';
+  ulaw: 'ulaw';
+  alaw: 'alaw';
+  mp1: 'mp1';
+  mp2: 'mp2';
+  alac: 'alac';
+  amr: 'amr';
+  flac: 'flac';
+  opus: 'opus';
+}
+
+export enum AVEncoderAudioQualityIOSType {
   min = 0,
   low = 32,
   medium = 64,
@@ -60,13 +76,13 @@ enum AVEncoderAudioQualityIOSType {
 }
 
 interface AudioSet {
-  AVSampleRateKeyIOS: number;
-  AVFormatIDKeyIOS: AVEncodingType;
-  AVNumberOfChannelsKeyIOS: number;
-  AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType;
-  AudioSourceAndroid: AudioSourceAndroidType;
-  OutputFormatAndroid: OutputFormatAndroidType;
-  AudioEncoderAndroid: AudioEncoderAndroidType;
+  AVSampleRateKeyIOS?: number;
+  AVFormatIDKeyIOS?: AVEncodingType;
+  AVNumberOfChannelsKeyIOS?: number;
+  AVEncoderAudioQualityKeyIOS?: AVEncoderAudioQualityIOSType;
+  AudioSourceAndroid?: AudioSourceAndroidType;
+  OutputFormatAndroid?: OutputFormatAndroidType;
+  AudioEncoderAndroid?: AudioEncoderAndroidType;
 }
 
 export default class AudioRecorderPlayer {

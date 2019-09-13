@@ -10,12 +10,16 @@ buildscript {
     }
 }
 
-apply plugin: 'com.android.library'
+def safeExtGet(prop, fallback) {
+    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+}
 
 def DEFAULT_COMPILE_SDK_VERSION = 28
 def DEFAULT_BUILD_TOOLS_VERSION = "28.0.3"
 def DEFAULT_MIN_SDK_VERSION = 16
 def DEFAULT_TARGET_SDK_VERSION = 28
+
+apply plugin: 'com.android.library'
 
 android {
   compileSdkVersion rootProject.hasProperty('compileSdkVersion') ? rootProject.compileSdkVersion : DEFAULT_COMPILE_SDK_VERSION
@@ -38,19 +42,20 @@ repositories {
 
 dependencies {
   implementation 'com.facebook.react:react-native:+'
-  def supportLibVersion = safeExtGet('supportLibVersion', safeExtGet('supportVersion', null))
-  def androidXVersion = safeExtGet('androidXVersion', null)
-  if (supportLibVersion && androidXVersion == null) {
-    implementation "com.android.support:support-annotations:$supportLibVersion"
-    implementation "com.android.support:customtabs:$supportLibVersion"
-  } else {
-    def defaultAndroidXVersion = "1.+"
-    if (androidXVersion == null) {
-      androidXVersion = defaultAndroidXVersion
+    apply plugin: 'eclipse-wtp'
+    def supportLibVersion = safeExtGet('supportLibVersion', safeExtGet('supportVersion', null))
+    def androidXVersion = safeExtGet('androidXVersion', null)
+    if (supportLibVersion && androidXVersion == null) {
+      implementation "com.android.support:support-annotations:$supportLibVersion"
+      implementation "com.android.support:customtabs:$supportLibVersion"
+    } else {
+      def defaultAndroidXVersion = "1.+"
+      if (androidXVersion == null) {
+        androidXVersion = defaultAndroidXVersion
+      }
+      def androidXAnnotation = safeExtGet('androidXAnnotation', androidXVersion)
+      def androidXBrowser = safeExtGet('androidXBrowser', androidXVersion)
+      implementation "androidx.annotation:annotation:$androidXAnnotation"
+      implementation "androidx.browser:browser:$androidXBrowser"
     }
-    def androidXAnnotation = safeExtGet('androidXAnnotation', androidXVersion)
-    def androidXBrowser = safeExtGet('androidXBrowser', androidXVersion)
-    implementation "androidx.annotation:annotation:$androidXAnnotation"
-    implementation "androidx.browser:browser:$androidXBrowser"
-  }
 }

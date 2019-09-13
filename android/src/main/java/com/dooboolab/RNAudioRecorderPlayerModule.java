@@ -4,6 +4,7 @@ package com.dooboolab;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.Callback;
 
 import android.Manifest;
@@ -88,12 +89,22 @@ public class RNAudioRecorderPlayerModule extends ReactContextBaseJavaModule impl
 
     if (mediaRecorder == null) {
       mediaRecorder = new MediaRecorder();
+    }
+
+    if (audioSet != null) {
+      mediaRecorder.setAudioSource(audioSet.hasKey("AudioSourceAndroid")
+        ? audioSet.getInt("AudioSourceAndroid") : MediaRecorder.AudioSource.MIC);
+      mediaRecorder.setOutputFormat(audioSet.hasKey("OutputFormatAndroid")
+        ? audioSet.getInt("OutputFormatAndroid") : MediaRecorder.OutputFormat.MPEG_4);
+      mediaRecorder.setAudioEncoder(audioSet.hasKey("AudioEncoderAndroid")
+        ? audioSet.getInt("AudioEncoderAndroid") : MediaRecorder.AudioEncoder.AAC);
+    } else {
       mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
       mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
       mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-
-      mediaRecorder.setOutputFile(audioFileURL);
     }
+
+    mediaRecorder.setOutputFile(audioFileURL);
 
     try {
       mediaRecorder.prepare();
