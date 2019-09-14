@@ -1,4 +1,6 @@
 import AudioRecorderPlayer, {
+  AVEncoderAudioQualityIOSType,
+  AVEncodingOption,
   AudioEncoderAndroidType,
   AudioSet,
   AudioSourceAndroidType,
@@ -241,7 +243,7 @@ class Page extends Component<any, State> {
           },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('You can use the camera');
+          console.log('You can use the storage');
         } else {
           console.log('permission denied');
           return;
@@ -279,10 +281,14 @@ class Page extends Component<any, State> {
     const audioSet: AudioSet = {
       AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
       AudioSourceAndroid: AudioSourceAndroidType.MIC,
+      AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
+      AVNumberOfChannelsKeyIOS: 2,
+      AVFormatIDKeyIOS: AVEncodingOption.aac,
     };
     console.log('audioSet', audioSet);
     const uri = await this.audioRecorderPlayer.startRecorder(path, audioSet);
     this.audioRecorderPlayer.addRecordBackListener((e: any) => {
+      console.log('e', e);
       this.setState({
         recordSecs: e.current_position,
         recordTime: this.audioRecorderPlayer.mmssss(

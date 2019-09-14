@@ -7,6 +7,7 @@
 
 #import "RNAudioRecorderPlayer.h"
 #import <React/RCTLog.h>
+#import <React/RCTConvert.h>
 #import <AVFoundation/AVFoundation.h>
 
 @implementation RNAudioRecorderPlayer {
@@ -114,22 +115,20 @@ RCT_EXPORT_METHOD(startRecorder:(NSString*)path
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject) {
 
-  NSString *encoding = [RCTConvert NSNumber:audioSets[@"AVFormatIDKeyIOS"]];
-  int sampleRate = [RCTConvert NSNumber:audioSets[@"AVSampleRateKeyIOS"]];
-  int numberOfChannel = [RCTConvert NSNumber:audioSets[@"AVNumberOfChannelsKeyIOS"]];
-  NSNumber avFormat;
-  int audioQuality = [RCTConvert NSNumber:audioSets[@"AVEncoderAudioQualityKeyIOS"]];
-
-  NSDate *time = [RCTConvert NSDate:details[@"time"]];
+  NSString *encoding = [RCTConvert NSString:audioSets[@"AVFormatIDKeyIOS"]];
+  NSNumber *sampleRate = [RCTConvert NSNumber:audioSets[@"AVSampleRateKeyIOS"]];
+  NSNumber *numberOfChannel = [RCTConvert NSNumber:audioSets[@"AVNumberOfChannelsKeyIOS"]];
+  NSNumber *avFormat;
+  NSNumber *audioQuality = [RCTConvert NSNumber:audioSets[@"AVEncoderAudioQualityKeyIOS"]];
 
   if ([path isEqualToString:@"DEFAULT"]) {
     audioFileURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingString:@"sound.m4a"]];
   } else {
-    audioFileURL = [NSURL fileURLWithPath: path];
+    audioFileURL = [NSURL fileURLWithPath: [NSTemporaryDirectory() stringByAppendingString:path]];
   }
 
   if (!sampleRate) {
-    sampleRate = 44100;
+      sampleRate = [NSNumber numberWithFloat:44100];
   }
   if (!encoding) {
     avFormat = [NSNumber numberWithInt:kAudioFormatAppleLossless];
@@ -163,17 +162,17 @@ RCT_EXPORT_METHOD(startRecorder:(NSString*)path
     }
   }
   if (!numberOfChannel) {
-    numberOfChannel = 2;
+    numberOfChannel = [NSNumber numberWithInt:2];
   }
   if (!audioQuality) {
-    audioQuality = AVAudioQualityMedium;
+    audioQuality = [NSNumber numberWithInt:AVAudioQualityMedium];
   }
 
   NSDictionary *audioSettings = [NSDictionary dictionaryWithObjectsAndKeys:
-                                 [NSNumber numberWithFloat: sampleRate], AVSampleRateKey,
-                                 [NSNumber numberWithInt: avFormat], AVFormatIDKey,
-                                 [NSNumber numberWithInt: numberOfChannel], AVNumberOfChannelsKey,
-                                 [NSNumber numberWithInt: audioQuality], AVEncoderAudioQualityKey,
+                                 sampleRate, AVSampleRateKey,
+                                 avFormat, AVFormatIDKey,
+                                 numberOfChannel, AVNumberOfChannelsKey,
+                                 audioQuality, AVEncoderAudioQualityKey,
                                  nil];
 
   // Setup audio session

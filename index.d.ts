@@ -51,20 +51,20 @@ type AVEncodingType =
   | AVEncodingOption.flac
   | AVEncodingOption.opus;
 
-interface AVEncodingOption {
-  lpcm: 'lpcm';
-  ima4: 'ima4';
-  aac: 'aac';
-  MAC3: 'MAC3';
-  MAC6: 'MAC6';
-  ulaw: 'ulaw';
-  alaw: 'alaw';
-  mp1: 'mp1';
-  mp2: 'mp2';
-  alac: 'alac';
-  amr: 'amr';
-  flac: 'flac';
-  opus: 'opus';
+export enum AVEncodingOption {
+  lpcm = 'lpcm',
+  ima4 = 'ima4',
+  aac = 'aac',
+  MAC3 = 'MAC3',
+  MAC6 = 'MAC6',
+  ulaw = 'ulaw',
+  alaw = 'alaw',
+  mp1 = 'mp1',
+  mp2 = 'mp2',
+  alac = 'alac',
+  amr = 'amr',
+  flac = 'flac',
+  opus = 'opus',
 }
 
 export enum AVEncoderAudioQualityIOSType {
