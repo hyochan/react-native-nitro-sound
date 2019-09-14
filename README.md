@@ -177,6 +177,42 @@ All methods are implemented with promises.
 | seekToPlayer          |  `number` seconds   | `Promise<string>` | Seek audio.                                                                  |
 | setVolume             |   `doulbe` value    | `Promise<string>` | Set volume of audio player (default 1.0, range: 0.0 ~ 1.0).                  |
 
+## Customizing recorded audio quality
+
+```
+interface AudioSet {
+  AVSampleRateKeyIOS?: number;
+  AVFormatIDKeyIOS?: AVEncodingType;
+  AVNumberOfChannelsKeyIOS?: number;
+  AVEncoderAudioQualityKeyIOS?: AVEncoderAudioQualityIOSType;
+  AudioSourceAndroid?: AudioSourceAndroidType;
+  OutputFormatAndroid?: OutputFormatAndroidType;
+  AudioEncoderAndroid?: AudioEncoderAndroidType;
+}
+```
+
+> More description on each parameter types are described in `index.d.ts`. Below is an example code.
+
+```
+    const audioSet: AudioSet = {
+      AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
+      AudioSourceAndroid: AudioSourceAndroidType.MIC,
+      AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
+      AVNumberOfChannelsKeyIOS: 2,
+      AVFormatIDKeyIOS: AVEncodingOption.aac,
+    };
+
+    const uri = await this.audioRecorderPlayer.startRecorder(path, audioSet);
+    this.audioRecorderPlayer.addRecordBackListener((e: any) => {
+      this.setState({
+        recordSecs: e.current_position,
+        recordTime: this.audioRecorderPlayer.mmssss(
+          Math.floor(e.current_position),
+        ),
+      });
+    });
+```
+
 ## Default Path
 
 - Default path for android uri is `sdcard/sound.mp4`.
