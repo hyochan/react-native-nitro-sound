@@ -288,7 +288,6 @@ class Page extends Component<any, State> {
     console.log('audioSet', audioSet);
     const uri = await this.audioRecorderPlayer.startRecorder(path, audioSet);
     this.audioRecorderPlayer.addRecordBackListener((e: any) => {
-      console.log('e', e);
       this.setState({
         recordSecs: e.current_position,
         recordTime: this.audioRecorderPlayer.mmssss(
