@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "moment": "^2.24.0",
-    "react": "16.8.6",
+    "react": "16.10.0",
     "react-native": "0.60.6",
     "react-native-audio-recorder-player": "^2.2.4",
     "react-native-gesture-handler": "git://github.com/hyochan/react-native-gesture-handler.git#package-names",
