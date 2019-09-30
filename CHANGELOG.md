@@ -1,5 +1,7 @@
 ## Changelogs
 
+- **[2.4.+]**
+  - Migrated to `ts` project and also support `flow` types.
 - **[2.3.+]**
   - Add ability to customize recorder parameters [#114](https://github.com/dooboolab/react-native-audio-recorder-player/pull/114)
 - **[2.2.+]**
