@@ -34,7 +34,7 @@
   "dependencies": {
     "moment": "^2.24.0",
     "react": "16.8.6",
-    "react-native": "0.60.5",
+    "react-native": "0.60.6",
     "react-native-audio-recorder-player": "file:../",
     "react-native-gesture-handler": "git://github.com/hyochan/react-native-gesture-handler.git#package-names",
     "react-native-localization": "^2.1.6",
@@ -44,14 +44,14 @@
     "styled-components": "^4.3.2"
   },
   "devDependencies": {
-    "@babel/cli": "^7.6.0",
-    "@babel/core": "^7.6.0",
+    "@babel/cli": "^7.6.2",
+    "@babel/core": "^7.6.2",
     "@babel/plugin-proposal-class-properties": "^7.5.5",
     "@babel/plugin-proposal-decorators": "7.6.0",
-    "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
-    "@babel/plugin-transform-runtime": "7.6.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.6.2",
+    "@babel/plugin-transform-runtime": "7.6.2",
     "@babel/preset-typescript": "^7.6.0",
-    "@babel/runtime": "^7.6.0",
+    "@babel/runtime": "^7.6.2",
     "@testing-library/react-native": "^4.0.9",
     "@types/jest": "^24.0.18",
     "@types/react": "^16.8.25",
@@ -77,8 +77,8 @@
     "jsc-android": "^241213.1.0",
     "metro-react-native-babel-preset": "^0.56.0",
     "prettier": "^1.18.2",
-    "react-dom": "^16.8.6",
-    "react-test-renderer": "^16.8.6",
+    "react-dom": "^16.10.0",
+    "react-test-renderer": "^16.10.0",
     "ts-jest": "^24.0.2",
     "typescript": "^3.6.3"
   }

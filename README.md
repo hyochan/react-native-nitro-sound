@@ -137,21 +137,45 @@ Also, android above `Marshmallow` needs runtime permission to record audio. Usin
 
 ```javascript
 if (Platform.OS === 'android') {
-  const micPermission: string = await checkPermission('microphone');
-  console.log('micPermission', micPermission);
-  if (micPermission !== 'authorized') {
-    const micRequest: string = await requestPermission('microphone');
-    console.log('micRequest', micRequest);
-    if (micRequest !== 'authorized') {
+  try {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      {
+        title: 'Permissions for write access',
+        message: 'Give permission to your storage to write a file',
+        buttonPositive: 'ok',
+      },
+    );
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      console.log('You can use the storage');
+    } else {
+      console.log('permission denied');
       return;
     }
+  } catch (err) {
+    console.warn(err);
+    return;
   }
-  const storagePermission: string = await checkPermission('storage');
-  if (storagePermission !== 'authorized') {
-    const storageRequest: string = await requestPermission('storage');
-    if (storageRequest !== 'authorized') {
+}
+if (Platform.OS === 'android') {
+  try {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+      {
+        title: 'Permissions for write access',
+        message: 'Give permission to your storage to write a file',
+        buttonPositive: 'ok',
+      },
+    );
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      console.log('You can use the camera');
+    } else {
+      console.log('permission denied');
       return;
     }
+  } catch (err) {
+    console.warn(err);
+    return;
   }
 }
 ```
