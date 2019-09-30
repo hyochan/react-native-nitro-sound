@@ -3,12 +3,8 @@ const { defaults: tsJestConfig } = require('ts-jest/presets');
 module.exports = {
   ...tsJestConfig,
   preset: 'react-native',
-  setupFiles: [
-    './test/jestSetup.ts',
-  ],
-  transformIgnorePatterns: [
-    'node_modules/(?!(.*-)?react-(.*-)?native(-.*)?)',
-  ],
+  setupFiles: ['./test/jestSetup.ts'],
+  transformIgnorePatterns: ['node_modules/(?!(.*-)?react-(.*-)?native(-.*)?)'],
   globals: {
     'ts-jest': {
       tsConfig: {
@@ -22,10 +18,7 @@ module.exports = {
     '\\.(ts|tsx)$': 'ts-jest',
   },
   // 'testRegex': '(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$',
-  testPathIgnorePatterns: [
-    '\\.snap$',
-    '<rootDir>/node_modules/',
-  ],
+  testPathIgnorePatterns: ['\\.snap$', '<rootDir>/node_modules/'],
   cacheDirectory: '.jest/cache',
   moduleFileExtensions: [
     'ts',
