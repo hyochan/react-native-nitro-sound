@@ -85,7 +85,7 @@ export enum AVEncoderAudioQualityIOSType {
   max = 127,
 }
 
-interface AudioSet {
+export interface AudioSet {
   AVSampleRateKeyIOS?: number;
   AVFormatIDKeyIOS?: AVEncodingType;
   AVNumberOfChannelsKeyIOS?: number;
@@ -182,7 +182,10 @@ class AudioRecorderPlayer {
    * @param {string} uri audio uri.
    * @returns {Promise<string>}
    */
-  startRecorder = async (uri: string, audioSets: AudioSet): Promise<string> => {
+  startRecorder = async (
+    uri?: string,
+    audioSets?: AudioSet,
+  ): Promise<string> => {
     if (!uri) {
       uri = 'DEFAULT';
     }
