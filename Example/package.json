@@ -78,7 +78,7 @@
     "metro-react-native-babel-preset": "^0.56.0",
     "prettier": "^1.18.2",
     "react-dom": "^16.10.2",
-    "react-test-renderer": "^16.10.0",
+    "react-test-renderer": "^16.10.2",
     "ts-jest": "^24.0.2",
     "typescript": "^3.6.3"
   }
