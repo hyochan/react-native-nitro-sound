@@ -102,7 +102,7 @@ Linking the package manually is not required anymore with [Autolinking](https://
 
 #### Android
 
-1. Open up `android/app/src/main/java/[...]/MainActivity.java`
+1. Open up `android/app/src/main/java/[...]/MainApplication.java`
 
 - Add `import com.dooboolab.RNAudioRecorderPlayerPackage;` to the imports at the top of the file
 - Add `new RNAudioRecorderPlayerPackage()` to the list returned by the `getPackages()` method
