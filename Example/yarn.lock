@@ -1704,13 +1704,13 @@
     react-native-safe-area-view "^0.14.1"
     react-native-screens "^1.0.0 || ^1.0.0-alpha"
 
-"@testing-library/react-native@^4.0.9":
-  version "4.0.9"
-  resolved "https://registry.yarnpkg.com/@testing-library/react-native/-/react-native-4.0.9.tgz#116d6a254f27d09020099ca5b039b30d394acf4d"
-  integrity sha512-Aj49ES0OcyVLFm7bEnpZwukmmv+GPhPJDKg6LN8xSUtqlzcgSJx1uyLE/oaXjG76VuFE2C302QNGECaOh0huEA==
+"@testing-library/react-native@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@testing-library/react-native/-/react-native-5.0.0.tgz#9ba1fa3387f012f3647787502762c52ed94cf3dd"
+  integrity sha512-boupJ1qA/434t7TPgtY+6v3+vK8RyLSQMKYnAY0dzYUC5AMjZitNjwbgrjvl8nxf4O1B04Gt/UQnL2VLWeygWg==
   dependencies:
-    pretty-format "^24.5.0"
-    wait-for-expect "^1.1.1"
+    pretty-format "^24.9.0"
+    wait-for-expect "^3.0.0"
 
 "@types/babel__core@^7.1.0":
   version "7.1.0"
@@ -6391,7 +6391,7 @@ prettier@^1.18.2:
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.18.2.tgz#6823e7c5900017b4bd3acf46fe9ac4b4d7bda9ea"
   integrity sha512-OeHeMc0JhFE9idD4ZdtNibzY0+TPHSpSSb9h8FqtP+YnoZZ1sl8Vc9b1sasjfymH3SonAF4QcA2+mzHPhMvIiw==
 
-pretty-format@^24.5.0, pretty-format@^24.7.0, pretty-format@^24.8.0:
+pretty-format@^24.7.0, pretty-format@^24.8.0:
   version "24.8.0"
   resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-24.8.0.tgz#8dae7044f58db7cb8be245383b565a963e3c27f2"
   integrity sha512-P952T7dkrDEplsR+TuY7q3VXDae5Sr7zmQb12JU/NDQa/3CH7/QW0yvqLcGN6jL+zQFKaoJcPc+yJxMTGmosqw==
@@ -7859,10 +7859,10 @@ w3c-hr-time@^1.0.1:
   dependencies:
     browser-process-hrtime "^0.1.2"
 
-wait-for-expect@^1.1.1:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/wait-for-expect/-/wait-for-expect-1.2.0.tgz#fdab6a26e87d2039101db88bff3d8158e5c3e13f"
-  integrity sha512-EJhKpA+5UHixduMBEGhTFuLuVgQBKWxkFbefOdj2bbk2/OpA5Opsc4aUTGmF+qJ+v3kTGxDRNYwKaT4j6g5n8Q==
+wait-for-expect@^3.0.0:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/wait-for-expect/-/wait-for-expect-3.0.1.tgz#ec204a76b0038f17711e575720aaf28505ac7185"
+  integrity sha512-3Ha7lu+zshEG/CeHdcpmQsZnnZpPj/UsG3DuKO8FskjuDbkx3jE3845H+CuwZjA2YWYDfKMU2KhnCaXMLd3wVw==
 
 walker@^1.0.7, walker@~1.0.5:
   version "1.0.7"
