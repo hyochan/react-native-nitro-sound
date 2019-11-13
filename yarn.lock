@@ -957,13 +957,13 @@
     "@types/istanbul-reports" "^1.1.1"
     "@types/yargs" "^13.0.0"
 
-"@testing-library/react-native@^4.0.9":
-  version "4.0.9"
-  resolved "https://registry.yarnpkg.com/@testing-library/react-native/-/react-native-4.0.9.tgz#116d6a254f27d09020099ca5b039b30d394acf4d"
-  integrity sha512-Aj49ES0OcyVLFm7bEnpZwukmmv+GPhPJDKg6LN8xSUtqlzcgSJx1uyLE/oaXjG76VuFE2C302QNGECaOh0huEA==
+"@testing-library/react-native@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@testing-library/react-native/-/react-native-5.0.1.tgz#7edd21eef10aa9d2738e601964c6ca39014f8644"
+  integrity sha512-sS7dO8ws5GyQ7r2X6dw3Mj+KUjrY/9Obr+9zyrph6hwz5DDntrCvCz+NSyWtwIPeLsr7pRj+BWWsw8uYYFUKJg==
   dependencies:
-    pretty-format "^24.5.0"
-    wait-for-expect "^1.1.1"
+    pretty-format "^24.9.0"
+    wait-for-expect "^3.0.0"
 
 "@types/babel__core@^7.1.0":
   version "7.1.3"
@@ -3482,7 +3482,7 @@ prettier@^1.16.4, prettier@^1.18.2:
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.18.2.tgz#6823e7c5900017b4bd3acf46fe9ac4b4d7bda9ea"
   integrity sha512-OeHeMc0JhFE9idD4ZdtNibzY0+TPHSpSSb9h8FqtP+YnoZZ1sl8Vc9b1sasjfymH3SonAF4QcA2+mzHPhMvIiw==
 
-pretty-format@^24.5.0:
+pretty-format@^24.9.0:
   version "24.9.0"
   resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-24.9.0.tgz#12fac31b37019a4eea3c11aa9a959eb7628aa7c9"
   integrity sha512-00ZMZUiHaJrNfk33guavqgvfJS30sLYf0f8+Srklv0AMPodGGHcoHgksZ3OThYnIvOd+8yMCn0YiEOogjlgsnA==
@@ -4379,10 +4379,10 @@ validate-npm-package-license@^3.0.1:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
 
-wait-for-expect@^1.1.1:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/wait-for-expect/-/wait-for-expect-1.3.0.tgz#65241ce355425f907f5d127bdb5e72c412ff830c"
-  integrity sha512-8fJU7jiA96HfGPt+P/UilelSAZfhMBJ52YhKzlmZQvKEZU2EcD1GQ0yqGB6liLdHjYtYAoGVigYwdxr5rktvzA==
+wait-for-expect@^3.0.0:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/wait-for-expect/-/wait-for-expect-3.0.1.tgz#ec204a76b0038f17711e575720aaf28505ac7185"
+  integrity sha512-3Ha7lu+zshEG/CeHdcpmQsZnnZpPj/UsG3DuKO8FskjuDbkx3jE3845H+CuwZjA2YWYDfKMU2KhnCaXMLd3wVw==
 
 walker@^1.0.7, walker@~1.0.5:
   version "1.0.7"
