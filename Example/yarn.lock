@@ -6512,10 +6512,8 @@ react-localization@^1.0.14:
   dependencies:
     localized-strings "^0.2.0"
 
-react-native-audio-recorder-player@^2.4.3:
-  version "2.4.3"
-  resolved "https://registry.yarnpkg.com/react-native-audio-recorder-player/-/react-native-audio-recorder-player-2.4.3.tgz#430a84a751a245de4fd6b603b16479a5664e180e"
-  integrity sha512-JQsM92uSRjBXlY/6TAuk/aRwWTgZDaaZZmuSnv3wPrQJMQtSdg84EhJUAXawkT2H7URfymb9gELEqWxf0ChfWQ==
+"react-native-audio-recorder-player@file:..":
+  version "2.4.4"
   dependencies:
     dooboolab-welcome "^1.1.1"
 

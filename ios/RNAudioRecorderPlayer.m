@@ -10,6 +10,11 @@
 #import <React/RCTConvert.h>
 #import <AVFoundation/AVFoundation.h>
 
+NSString* GetDirectoryOfType_Sound(NSSearchPathDirectory dir) {
+  NSArray* paths = NSSearchPathForDirectoriesInDomains(dir, NSUserDomainMask, YES);
+  return [paths.firstObject stringByAppendingString:@"/"];
+}
+
 @implementation RNAudioRecorderPlayer {
   NSURL *audioFileURL;
   AVAudioRecorder *audioRecorder;
@@ -122,9 +127,9 @@ RCT_EXPORT_METHOD(startRecorder:(NSString*)path
   NSNumber *audioQuality = [RCTConvert NSNumber:audioSets[@"AVEncoderAudioQualityKeyIOS"]];
 
   if ([path isEqualToString:@"DEFAULT"]) {
-    audioFileURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingString:@"sound.m4a"]];
+    audioFileURL = [NSURL fileURLWithPath:[GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:@"sound.m4a"]];
   } else {
-    audioFileURL = [NSURL fileURLWithPath: [NSTemporaryDirectory() stringByAppendingString:path]];
+    audioFileURL = [NSURL fileURLWithPath: [GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:path]];
   }
 
   if (!sampleRate) {
@@ -254,9 +259,9 @@ RCT_EXPORT_METHOD(startPlayer:(NSString*)path
         [downloadTask resume];
     } else {
         if ([path isEqualToString:@"DEFAULT"]) {
-            audioFileURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingString:@"sound.m4a"]];
+          audioFileURL = [NSURL fileURLWithPath:[GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:@"sound.m4a"]];
         } else {
-            audioFileURL = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingString:path]];
+          audioFileURL = [NSURL fileURLWithPath: [GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:path]];
         }
 
         if (!audioPlayer) {
