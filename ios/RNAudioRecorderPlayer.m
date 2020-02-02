@@ -261,8 +261,14 @@ RCT_EXPORT_METHOD(startPlayer:(NSString*)path
         if ([path isEqualToString:@"DEFAULT"]) {
           audioFileURL = [NSURL fileURLWithPath:[GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:@"sound.m4a"]];
         } else {
-          audioFileURL = [NSURL fileURLWithPath: [GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:path]];
+            if ([path rangeOfString:@"file://"].location == NSNotFound) {
+                audioFileURL = [NSURL fileURLWithPath: [GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:path]];
+            } else {
+                audioFileURL = [NSURL URLWithString:path];
+            }
         }
+                
+        NSLog(@"Error %@",error);
 
         if (!audioPlayer) {
             RCTLogInfo(@"audio player alloc");
