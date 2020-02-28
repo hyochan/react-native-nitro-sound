@@ -34,7 +34,7 @@
   "dependencies": {
     "@react-native-community/masked-view": "^0.1.6",
     "moment": "^2.24.0",
-    "react": "16.9.0",
+    "react": "16.13.0",
     "react-native": "0.61.4",
     "react-native-audio-recorder-player": "file:../",
     "react-native-gesture-handler": "git://github.com/hyochan/react-native-gesture-handler.git#package-names",
