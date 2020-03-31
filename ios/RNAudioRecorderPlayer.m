@@ -127,9 +127,13 @@ RCT_EXPORT_METHOD(startRecorder:(NSString*)path
   NSNumber *audioQuality = [RCTConvert NSNumber:audioSets[@"AVEncoderAudioQualityKeyIOS"]];
 
   if ([path isEqualToString:@"DEFAULT"]) {
-    audioFileURL = [NSURL fileURLWithPath:[GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:@"sound.m4a"]];
+      audioFileURL = [NSURL fileURLWithPath:[GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:@"sound.m4a"]];
   } else {
-    audioFileURL = [NSURL fileURLWithPath: [GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:path]];
+      if ([path rangeOfString:@"file://"].location == NSNotFound) {
+          audioFileURL = [NSURL fileURLWithPath: [GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:path]];
+      } else {
+          audioFileURL = [NSURL URLWithString:path];
+      }
   }
 
   if (!sampleRate) {
