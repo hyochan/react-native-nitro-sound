@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
 
 public class RNAudioRecorderPlayerModule extends ReactContextBaseJavaModule implements PermissionListener{
   final private static String TAG = "RNAudioRecorderPlayer";
-  final private static String FILE_LOCATION = "/sdcard/sound.mp4";
+  final private static String FILE_LOCATION = "sdcard/sound.mp4";
   private String audioFileURL = "";
 
   private int subsDurationMillis = 100;
@@ -122,7 +122,7 @@ public class RNAudioRecorderPlayerModule extends ReactContextBaseJavaModule impl
       };
       this.recorderRunnable.run();
 
-      promise.resolve("file://" + audioFileURL);
+      promise.resolve("file:///" + audioFileURL);
     } catch (Exception e) {
       Log.e(TAG, "Exception: ", e);
       promise.reject("startRecord", e.getMessage());
@@ -143,7 +143,7 @@ public class RNAudioRecorderPlayerModule extends ReactContextBaseJavaModule impl
     mediaRecorder.release();
     mediaRecorder = null;
 
-    promise.resolve("file://" + audioFileURL);
+    promise.resolve("file:///" + audioFileURL);
   }
 
   @ReactMethod
@@ -203,7 +203,7 @@ public class RNAudioRecorderPlayerModule extends ReactContextBaseJavaModule impl
           mTimer = new Timer();
           mTimer.schedule(mTask, 0, subsDurationMillis);
 
-          String resolvedPath = (path.equals("DEFAULT")) ? "file://" + FILE_LOCATION : path;
+          String resolvedPath = (path.equals("DEFAULT")) ? "file:///" + FILE_LOCATION : path;
           promise.resolve(resolvedPath);
         }
       });
