@@ -1,4 +1,6 @@
 ## Changelogs
+- **[2.5.1]**
+  - Resolve [#157](https://github.com/dooboolab/react-native-audio-recorder-player/issues/157), android path problem once again.
 - **[2.5.0]**
   - Handle stop once player is paused [#169](https://github.com/dooboolab/react-native-audio-recorder-player/pull/169)
   - Add custom path for ios [#168](https://github.com/dooboolab/react-native-audio-recorder-player/pull/168)
