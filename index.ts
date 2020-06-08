@@ -93,6 +93,8 @@ export interface AudioSet {
   AudioSourceAndroid?: AudioSourceAndroidType;
   OutputFormatAndroid?: OutputFormatAndroidType;
   AudioEncoderAndroid?: AudioEncoderAndroidType;
+  AudioEncodingBitRateAndroid?: number;
+  AudioSamplingRateAndroid?: number;
 }
 
 const pad = (num: number): string => {
@@ -130,10 +132,7 @@ class AudioRecorderPlayer {
    */
   addRecordBackListener = (e): void => {
     if (Platform.OS === 'android') {
-      this._recorderSubscription = DeviceEventEmitter.addListener(
-        'rn-recordback',
-        e,
-      );
+      this._recorderSubscription = DeviceEventEmitter.addListener('rn-recordback', e);
     } else {
       const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
       this._recorderSubscription = myModuleEvt.addListener('rn-recordback', e);
@@ -157,10 +156,7 @@ class AudioRecorderPlayer {
    */
   addPlayBackListener = (e): void => {
     if (Platform.OS === 'android') {
-      this._playerSubscription = DeviceEventEmitter.addListener(
-        'rn-playback',
-        e,
-      );
+      this._playerSubscription = DeviceEventEmitter.addListener('rn-playback', e);
     } else {
       const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
       this._playerSubscription = myModuleEvt.addListener('rn-playback', e);
