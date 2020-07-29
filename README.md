@@ -221,8 +221,10 @@ interface AudioSet {
       AVNumberOfChannelsKeyIOS: 2,
       AVFormatIDKeyIOS: AVEncodingOption.aac,
     };
+    const meteringEnabled = false; 
 
-    const uri = await this.audioRecorderPlayer.startRecorder(path, audioSet);
+    const uri = await this.audioRecorderPlayer.startRecorder(path, meteringEnabled, audioSet);
+    
     this.audioRecorderPlayer.addRecordBackListener((e: any) => {
       this.setState({
         recordSecs: e.current_position,
