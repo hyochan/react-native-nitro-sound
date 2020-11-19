@@ -330,6 +330,7 @@ RCT_EXPORT_METHOD(seekToPlayer: (nonnull NSNumber*) time
                   reject:(RCTPromiseRejectBlock)reject) {
     if (audioPlayer) {
         audioPlayer.currentTime = [time doubleValue];
+        resolve(@"seekTo");
     } else {
         reject(@"audioPlayer seekTo", @"audioPlayer is not set", nil);
     }
