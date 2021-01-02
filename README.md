@@ -275,10 +275,6 @@ onStartPlay = async () => {
   const msg = await this.audioRecorderPlayer.startPlayer();
   console.log(msg);
   this.audioRecorderPlayer.addPlayBackListener((e) => {
-    if (e.current_position === e.duration) {
-      console.log('finished');
-      this.audioRecorderPlayer.stopPlayer();
-    }
     this.setState({
       currentPositionSec: e.current_position,
       currentDurationSec: e.duration,
