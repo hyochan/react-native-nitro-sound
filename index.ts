@@ -103,6 +103,7 @@ const pad = (num: number): string => {
 
 class AudioRecorderPlayer {
   private _isRecording: boolean;
+  private _hasPausedRecording: boolean;
   private _isPlaying: boolean;
   private _hasPaused: boolean;
   private _recorderSubscription: EmitterSubscription;
@@ -195,9 +196,8 @@ class AudioRecorderPlayer {
     audioSets?: AudioSet,
     meteringEnabled?: boolean,
   ): Promise<string> => {
-    if (!this._isRecording) {
+    if (!this._isRecording && !this._hasPausedRecording) {
       this._isRecording = true;
-
       return RNAudioRecorderPlayer.startRecorder(
         uri ?? 'DEFAULT',
         meteringEnabled ?? false,
@@ -207,6 +207,45 @@ class AudioRecorderPlayer {
 
     return 'Already recording';
   };
+
+
+  /**
+   * pause recording.
+   * @returns {Promise<boolean>}
+   */
+  pauseRecorder = async () : Promise<boolean> => {
+
+    if(Platform.OS !== "ios"){
+      return Promise.reject("Pause and resume only on ios")
+    }
+
+    if (this._isRecording) {
+      this._isRecording = false;
+      this._hasPausedRecording = true;
+
+      return RNAudioRecorderPlayer.pauseRecorder();
+    }
+    return false;
+  }
+
+  /**
+   * pause recording.
+   * @returns {Promise<boolean>}
+   */
+  resumeRecorder = async () : Promise<boolean> => {
+
+    if(Platform.OS !== "ios"){
+      return Promise.reject("Pause and resume only on ios")
+    }
+
+    if (!this._isRecording && this._hasPausedRecording) {
+      this._isRecording = true;
+      this._hasPausedRecording = false;
+      return RNAudioRecorderPlayer.resumeRecorder();
+    }
+    return false;
+  }
+
 
   /**
    * stop recording.

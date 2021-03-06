@@ -16,11 +16,11 @@ NSString* GetDirectoryOfType_Sound(NSSearchPathDirectory dir) {
 }
 
 @implementation RNAudioRecorderPlayer {
-  NSURL *audioFileURL;
-  AVAudioRecorder *audioRecorder;
-  AVAudioPlayer *audioPlayer;
-  NSTimer *recordTimer;
-  NSTimer *playTimer;
+    NSURL *audioFileURL;
+    AVAudioRecorder *audioRecorder;
+    AVAudioPlayer *audioPlayer;
+    NSTimer *recordTimer;
+    NSTimer *playTimer;
   BOOL _meteringEnabled;
 }
 double subscriptionDuration = 0.1;
@@ -233,6 +233,39 @@ RCT_EXPORT_METHOD(stopRecorder:(RCTPromiseResolveBlock)resolve
         reject(@"audioRecorder record", @"audioRecorder is not set", nil);
     }
 }
+
+RCT_EXPORT_METHOD(pauseRecorder:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    if (audioRecorder && [audioRecorder isRecording]) {
+        [audioRecorder pause];
+        if (recordTimer != nil) {
+            [recordTimer invalidate];
+            recordTimer = nil;
+        }
+        resolve(true);
+    } else {
+        reject(@"audioRecorder record", @"audioRecorder is not set", nil);
+    }
+}
+
+RCT_EXPORT_METHOD(resumeRecorder:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    if (audioRecorder) {
+        [[AVAudioSession sharedInstance]
+            setCategory: AVAudioSessionCategoryRecord
+            error: nil];
+        [audioRecorder record];
+        if (recordTimer == nil) {
+            [self startRecorderTimer];
+        }
+        
+
+        resolve(true);
+    } else {
+        reject(@"audioRecorder record", @"audioRecorder is not set", nil);
+    }
+}
+
 
 RCT_EXPORT_METHOD(setVolume:(double) volume
                   resolve:(RCTPromiseResolveBlock) resolve
