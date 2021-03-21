@@ -242,7 +242,7 @@ RCT_EXPORT_METHOD(pauseRecorder:(RCTPromiseResolveBlock)resolve
             [recordTimer invalidate];
             recordTimer = nil;
         }
-        resolve(true);
+        resolve(@true);
     } else {
         reject(@"audioRecorder record", @"audioRecorder is not set", nil);
     }
@@ -260,7 +260,7 @@ RCT_EXPORT_METHOD(resumeRecorder:(RCTPromiseResolveBlock)resolve
         }
         
 
-        resolve(true);
+        resolve(@true);
     } else {
         reject(@"audioRecorder record", @"audioRecorder is not set", nil);
     }
