@@ -85,12 +85,23 @@ export enum AVEncoderAudioQualityIOSType {
   max = 127,
 }
 
+export enum AVLinearPCMBitDepthKeyIOSType {
+  'bit8' = 8,
+  'bit16' = 16,
+  'bit24' = 24,
+  'bit32' = 32,
+}
+
 export interface AudioSet {
   AVSampleRateKeyIOS?: number;
   AVFormatIDKeyIOS?: AVEncodingType;
   AVNumberOfChannelsKeyIOS?: number;
   AVEncoderAudioQualityKeyIOS?: AVEncoderAudioQualityIOSType;
   AudioSourceAndroid?: AudioSourceAndroidType;
+  AVLinearPCMBitDepthKeyIOS?: AVLinearPCMBitDepthKeyIOSType;
+  AVLinearPCMIsBigEndianKeyIOS?: boolean;
+  AVLinearPCMIsFloatKeyIOS?: boolean;
+  AVLinearPCMIsNonInterleavedIOS?: boolean;
   OutputFormatAndroid?: OutputFormatAndroidType;
   AudioEncoderAndroid?: AudioEncoderAndroidType;
   AudioEncodingBitRateAndroid?: number;

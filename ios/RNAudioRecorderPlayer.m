@@ -134,6 +134,10 @@ RCT_EXPORT_METHOD(startRecorder:(NSString*)path
   NSNumber *avFormat;
   NSNumber *audioQuality = [RCTConvert NSNumber:audioSets[@"AVEncoderAudioQualityKeyIOS"]];
   _meteringEnabled = meteringEnabled;
+  NSNumber *avLPCMBitDepth = [RCTConvert NSNumber:audioSets[@"AVLinearPCMBitDepthKeyIOS"]];
+  BOOL *avLPCMIsBigEndian = [RCTConvert BOOL:audioSets[@"AVLinearPCMIsBigEndianKeyIOS"]];
+  BOOL *avLPCMIsFloatKey = [RCTConvert BOOL:audioSets[@"AVLinearPCMIsFloatKeyIOS"]];
+  BOOL *avLPCMIsNonInterleaved = [RCTConvert BOOL:audioSets[@"AVLinearPCMIsNonInterleavedIOS"]];
 
   if ([path isEqualToString:@"DEFAULT"]) {
       audioFileURL = [NSURL fileURLWithPath:[GetDirectoryOfType_Sound(NSCachesDirectory) stringByAppendingString:@"sound.m4a"]];
@@ -191,6 +195,10 @@ RCT_EXPORT_METHOD(startRecorder:(NSString*)path
                                  avFormat, AVFormatIDKey,
                                  numberOfChannel, AVNumberOfChannelsKey,
                                  audioQuality, AVEncoderAudioQualityKey,
+                                 avLPCMBitDepth, AVLinearPCMBitDepthKey,
+                                 avLPCMIsBigEndian, AVLinearPCMIsBigEndianKey,
+                                 avLPCMIsFloatKey, AVLinearPCMIsFloatKey,
+                                 avLPCMIsNonInterleaved, AVLinearPCMIsNonInterleaved,
                                  nil];
 
   // Setup audio session
