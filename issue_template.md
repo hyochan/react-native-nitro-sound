@@ -1,3 +1,5 @@
+> Please use the 
+
 ### Version of react-native-audio-recorder-player
 
 ### Platforms you faced the error (IOS or Android or both?)
@@ -6,4 +8,4 @@
 
 ### Actual behavior
 
-### Steps to reprodue the behabior
+### Steps to reproduce the behabior

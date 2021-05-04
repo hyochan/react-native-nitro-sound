@@ -2,12 +2,16 @@
 
 <img src="Logotype Primary.png" width="70%" height="70%" />
 
-[![Npm Version](http://img.shields.io/npm/v/react-native-audio-recorder-player.svg?style=flat-square)](https://npmjs.org/package/react-native-audio-recorder-player)
+[![yarn Version](http://img.shields.io/npm/v/react-native-audio-recorder-player.svg?style=flat-square)](https://npmjs.org/package/react-native-audio-recorder-player)
 [![Downloads](http://img.shields.io/npm/dm/react-native-audio-recorder-player.svg?style=flat-square)](https://npmjs.org/package/react-native-audio-recorder-player)
 [![Build Status](https://travis-ci.com/hyochan/react-native-audio-recorder-player.svg?branch=master)](https://travis-ci.com/hyochan/react-native-audio-recorder-player) [![Greenkeeper badge](https://badges.greenkeeper.io/hyochan/react-native-audio-recorder-player.svg)](https://greenkeeper.io/)
 ![License](http://img.shields.io/npm/l/react-native-audio-recorder-player.svg?style=flat-square)
 
 This is a react-native link module for audio recorder and player. This is not a playlist audio module and this library provides simple recorder and player functionalities for both `android` and `ios` platforms. This only supports default file extension for each platform. This module can also handle file from url.
+
+## Preview
+
+<img src="https://user-images.githubusercontent.com/27461460/116999369-7c3c1780-ad1a-11eb-90ff-5aa7141e7565.gif" width=300/>
 
 ## Free read
 
@@ -35,53 +39,16 @@ This is a react-native link module for audio recorder and player. This is not a 
 
 ## Getting started
 
-`$ npm install react-native-audio-recorder-player --save`
+`$ yarn add react-native-audio-recorder-player --save`
 
-### Mostly automatic installation
+## Installation
 
-#### Using React Native >= 0.60
+#### Using React Native >= 0.61
 
-Linking the package manually is not required anymore with [Autolinking](https://github.com/react-native-community/cli/blob/master/docs/autolinking.md).
-
-- **iOS Platform:**
-
-  `$ cd ios && pod install && cd ..` # CocoaPods on iOS needs this extra step
-
-- **Android Platform with Android Support:**
-
-  Using [Jetifier tool](https://github.com/mikehardy/jetifier) for backward-compatibility.
-
-  Modify your **android/build.gradle** configuration:
-
-  ```
-  buildscript {
-    ext {
-      buildToolsVersion = "28.0.3"
-      minSdkVersion = 16
-      compileSdkVersion = 28
-      targetSdkVersion = 28
-      # Only using Android Support libraries
-      supportLibVersion = "28.0.0"
-    }
-  ```
-
-- **Android Platform with AndroidX:**
-
-  Modify your **android/build.gradle** configuration:
-
-  ```
-  buildscript {
-    ext {
-      buildToolsVersion = "28.0.3"
-      minSdkVersion = 16
-      compileSdkVersion = 28
-      targetSdkVersion = 28
-      # Remove 'supportLibVersion' property and put specific versions for AndroidX libraries
-      androidXAnnotation = "1.1.0"
-      androidXBrowser = "1.0.0"
-      // Put here other AndroidX dependencies
-    }
-  ```
+[iOS only]
+```sh
+npx pod-install
+```
 
 #### Using React Native < 0.60
 
@@ -127,46 +94,33 @@ On _Android_ you need to add a permission to `AndroidManifest.xml`:
 ```xml
 <uses-permission android:name="android.permission.RECORD_AUDIO" />
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 ```
 
-Also, android above `Marshmallow` needs runtime permission to record audio. Using [react-native-permissions](https://github.com/yonahforst/react-native-permissions) will help you out with this problem. Below is sample usage before when started the recording.
+Also, android above `Marshmallow` needs runtime permission to record audio. Using [react-native-permissions](https://github.com/yonahforst/react-native-permissions) will help you out with this problem. Below is sample usage before when before staring the recording.
 
-```javascript
+```ts
 if (Platform.OS === 'android') {
   try {
-    const granted = await PermissionsAndroid.request(
+    const grants = await PermissionsAndroid.requestMultiple([
       PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      {
-        title: 'Permissions for write access',
-        message: 'Give permission to your storage to write a file',
-        buttonPositive: 'ok',
-      },
-    );
-    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      console.log('You can use the storage');
-    } else {
-      console.log('permission denied');
-      return;
-    }
-  } catch (err) {
-    console.warn(err);
-    return;
-  }
-}
-if (Platform.OS === 'android') {
-  try {
-    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
       PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-      {
-        title: 'Permissions for write access',
-        message: 'Give permission to your storage to write a file',
-        buttonPositive: 'ok',
-      },
-    );
-    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-      console.log('You can use the camera');
+    ]);
+
+    console.log('write external stroage', grants);
+
+    if (
+      grants['android.permission.WRITE_EXTERNAL_STORAGE'] ===
+        PermissionsAndroid.RESULTS.GRANTED &&
+      grants['android.permission.READ_EXTERNAL_STORAGE'] ===
+        PermissionsAndroid.RESULTS.GRANTED &&
+      grants['android.permission.RECORD_AUDIO'] ===
+        PermissionsAndroid.RESULTS.GRANTED
+    ) {
+      console.log('Permissions granted');
     } else {
-      console.log('permission denied');
+      console.log('All required permissions not granted');
       return;
     }
   } catch (err) {
@@ -175,6 +129,31 @@ if (Platform.OS === 'android') {
   }
 }
 ```
+
+Lastly, you need to enable `kotlin`. Please change add the line below in `android/build.gradle`.
+
+```diff
+buildscript {
+  ext {
+      buildToolsVersion = "29.0.3"
+      minSdkVersion = 21
+      compileSdkVersion = 29
+      targetSdkVersion = 29
++     kotlinVersion = '1.3.41'
+
+      ndkVersion = "20.1.5948944"
+  }
+  repositories {
+      google()
+      jcenter()
+  }
+  dependencies {
+      classpath("com.android.tools.build:gradle:4.1.0")
++     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+  }
+...
+```
+
 
 ## Methods
 
@@ -296,11 +275,15 @@ onStopPlay = async () => {
 
 If you want to get actual uri from the record or play file to actually grab it and upload it to your bucket, just grab the resolved message when using `startPlay` or `startRecord` method like below.
 
+To access the file with more reliability, please use [rn-fetch-blob](https://www.npmjs.com/package/rn-fetch-blob). For example, below.
+
 ```javascript
+const dirs = RNFetchBlob.fs.dirs;
 const path = Platform.select({
   ios: 'hello.m4a',
-  android: 'sdcard/hello.mp4', // should give extra dir name in android. Won't grant permission to the first level of dir.
+  android: `${this.dirs.CacheDir}/hello.mp3`,
 });
+
 const uri = await audioRecorderPlayer.startRecord(path);
 ```
 
@@ -309,8 +292,8 @@ Also, above example helps you to setup manual path to record audio. Not giving p
 ## Try yourself
 
 1. Goto `Example` folder by running `cd Example`.
-2. Run `npm install && npm start`.
-3. Run `npm run ios` to run on ios simulator and `npm run android` to run on your android device.
+2. Run `yarn install && yarn start`.
+3. Run `yarn ios` to run on ios simulator and `yarn android` to run on your android device.
 
 ### TODO
 
