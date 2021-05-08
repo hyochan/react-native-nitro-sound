@@ -1,4 +1,8 @@
 ## Changelogs
+- **[3.0.0-beta.1]**
+  - [iOS]
+    * Codebase re-written in `Swift`.
+    * Migrate `AVAudioPlayer` to `AVPlayer`.
 - **[2.7.0]**
   - Migrate `android` module to `kotlin`.
 - **[2.6.2]**
