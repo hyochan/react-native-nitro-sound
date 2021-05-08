@@ -20,6 +20,11 @@ RCT_EXTERN_METHOD(startRecorder:(NSString *)path
 RCT_EXTERN_METHOD(stopRecorder:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
+RCT_EXTERN_METHOD(pauseRecorder:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject);
+
+RCT_EXTERN_METHOD(resumeRecorder:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject);
 
 RCT_EXTERN_METHOD(setVolume:(float)volume
                   resolve:(RCTPromiseResolveBlock) resolve

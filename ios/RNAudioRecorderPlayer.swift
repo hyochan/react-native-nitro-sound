@@ -33,7 +33,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     override func supportedEvents() -> [String]! {
         return ["rn-playback", "rn-recordback"]
     }
-    
+
     func setAudioFileURL(path: String) {
         if (path == "DEFAULT") {
             let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
@@ -45,7 +45,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             audioFileURL = cachesDirectory.appendingPathComponent(path)
         }
     }
-    
+
+    /**********               Recorder               **********/
+
     @objc(updateRecorderProgress:)
     public func updateRecorderProgress(timer: Timer) -> Void {
         if (audioRecorder != nil) {
@@ -77,6 +79,40 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 repeats: true
             )
         }
+    }
+
+    @objc(pauseRecorder:rejecter:)
+    public func pauseRecorder(
+        resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        if (audioRecorder == nil) {
+            return reject("RNAudioPlayerRecorder", "Recorder is not recording", nil)
+        }
+
+        recordTimer?.invalidate()
+        recordTimer = nil;
+
+        audioRecorder.pause()
+        resolve("Recorder paused!")
+    }
+
+    @objc(resumeRecorder:rejecter:)
+    public func resumeRecorder(
+        resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        if (audioRecorder == nil) {
+            return reject("RNAudioPlayerRecorder", "Recorder is nil", nil)
+        }
+
+        audioRecorder.record()
+
+        if (recordTimer == nil) {
+            startRecorderTimer()
+        }
+
+        resolve("Recorder paused!")
     }
 
     @objc
@@ -307,7 +343,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         }
 
         audioPlayer.pause()
-        resolve("Paused!")
+        resolve("Player paused!")
     }
 
     @objc(resumePlayer:rejecter:)

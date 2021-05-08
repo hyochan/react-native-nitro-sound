@@ -32,6 +32,8 @@ This is a react-native link module for audio recorder and player. This is not a 
 | 1.x.x                  | 2.x.x & 3.x.x             |
 | ---------------------- | ------------------------- |
 | `startRecord`          | `startRecorder`           |
+|                        | `pauseRecorder`  (3.x.x)  |
+|                        | `resumeRecorder` (3.x.x)  |
 | `stopRecord`           | `stopRecorder`            |
 | `startPlay`            | `startPlayer`             |
 | `stopPlay`             | `stopPlayer`              |
@@ -178,9 +180,10 @@ All methods are implemented with promises.
 | Func                  |        Param        |      Return       | Description                                                                  |
 | :-------------------- | :--------------------: | :---------------: | :--------------------------------------------------------------------------- |
 | mmss                  |  `number` seconds       |     `string`      | Convert seconds to `minute:second` string.                                   |
-| addRecordBackListener | `Function` callBack     |     `void`        | Get callback from native module. Will receive `current_position`, `current_metering` (if configured in startRecorder)          |
-| addPlayBackListener   | `Function` callBack     |      `void`       | Get callback from native module. Will receive `duration`, `current_position` |
+| addRecordBackListener | `Function` callBack     |     `void`        | Get callback from native module. Will receive `currentPosition`, `currentMetering` (if configured in startRecorder)          |
+| addPlayBackListener   | `Function` callBack     |      `void`       | Get callback from native module. Will receive `duration`, `currentPosition` |
 | startRecorder         |   `<string>` uri? `<boolean>` meteringEnabled?      |  `Promise<void>`  | Start recording. Not passing uri will save audio in default location.  |
+| pauseRecorder         |                         | `Promise<string>` | Pause recording.                                                              |
 | stopRecorder          |                         | `Promise<string>` | Stop recording.                                                              |
 | startPlayer           |   `string` uri? `Record<string, string>` httpHeaders?       | `Promise<string>` | Start playing. Not passing the param will play audio in default location.    |
 | stopPlayer            |                         | `Promise<string>` | Stop playing.                                                                |
@@ -218,9 +221,9 @@ interface AudioSet {
     
     this.audioRecorderPlayer.addRecordBackListener((e: any) => {
       this.setState({
-        recordSecs: e.current_position,
+        recordSecs: e.currentPosition,
         recordTime: this.audioRecorderPlayer.mmssss(
-          Math.floor(e.current_position),
+          Math.floor(e.currentPosition),
         ),
       });
     });
@@ -242,9 +245,9 @@ onStartRecord = async () => {
   const result = await this.audioRecorderPlayer.startRecorder();
   this.audioRecorderPlayer.addRecordBackListener((e) => {
     this.setState({
-      recordSecs: e.current_position,
+      recordSecs: e.currentPosition,
       recordTime: this.audioRecorderPlayer.mmssss(
-        Math.floor(e.current_position),
+        Math.floor(e.currentPosition),
       ),
     });
     return;
@@ -267,9 +270,9 @@ onStartPlay = async () => {
   console.log(msg);
   this.audioRecorderPlayer.addPlayBackListener((e) => {
     this.setState({
-      currentPositionSec: e.current_position,
+      currentPositionSec: e.currentPosition,
       currentDurationSec: e.duration,
-      playTime: this.audioRecorderPlayer.mmssss(Math.floor(e.current_position)),
+      playTime: this.audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)),
       duration: this.audioRecorderPlayer.mmssss(Math.floor(e.duration)),
     });
     return;

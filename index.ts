@@ -112,10 +112,23 @@ const pad = (num: number): string => {
   return ('0' + num).slice(-2);
 };
 
+type RecordBackType = {
+  isRecording?: boolean;
+  currentPosition: number;
+  currentMetering?: number;
+};
+
+type PlayBackType = {
+  isMuted?: boolean;
+  currentPosition: number;
+  duration: number;
+};
+
 class AudioRecorderPlayer {
   private _isRecording: boolean;
   private _isPlaying: boolean;
   private _hasPaused: boolean;
+  private _hasPausedRecord: boolean;
   private _recorderSubscription: EmitterSubscription;
   private _playerSubscription: EmitterSubscription;
   private _recordInterval: number;
@@ -126,8 +139,6 @@ class AudioRecorderPlayer {
     secs = secs % 60;
     minutes = minutes % 60;
 
-    // minutes = ('0' + minutes).slice(-2);
-    // secs = ('0' + secs).slice(-2);
     return pad(minutes) + ':' + pad(secs);
   };
 
@@ -141,24 +152,26 @@ class AudioRecorderPlayer {
   };
 
   /**
-   * set listerner from native module for recorder.
-   * @returns {callBack(e: any)}
+   * Set listerner from native module for recorder.
+   * @returns {callBack(e: RecordBackType)}
    */
-  addRecordBackListener = (e): void => {
+  addRecordBackListener = (e: RecordBackType): void => {
     if (Platform.OS === 'android')
       this._recorderSubscription = DeviceEventEmitter.addListener(
         'rn-recordback',
+        // @ts-ignore
         e,
       );
     else {
       const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
 
+      // @ts-ignore
       this._recorderSubscription = myModuleEvt.addListener('rn-recordback', e);
     }
   };
 
   /**
-   * remove listener for recorder.
+   * Remove listener for recorder.
    * @returns {void}
    */
   removeRecordBackListener = (): void => {
@@ -169,18 +182,20 @@ class AudioRecorderPlayer {
   };
 
   /**
-   * set listener from native module for player.
-   * @returns {callBack(e: Event)}
+   * Set listener from native module for player.
+   * @returns {callBack(e: PlayBackType)}
    */
-  addPlayBackListener = (e): void => {
+  addPlayBackListener = (e: PlayBackType): void => {
     if (Platform.OS === 'android')
       this._playerSubscription = DeviceEventEmitter.addListener(
         'rn-playback',
+        // @ts-ignore
         e,
       );
     else {
       const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
 
+      // @ts-ignore
       this._playerSubscription = myModuleEvt.addListener('rn-playback', e);
     }
   };
@@ -220,6 +235,36 @@ class AudioRecorderPlayer {
   };
 
   /**
+   * Pause recording.
+   * @returns {Promise<string>}
+   */
+  pauseRecorder = async (): Promise<string> => {
+    if (!this._isRecording) return 'No audio recording';
+
+    if (!this._hasPausedRecord) {
+      this._hasPausedRecord = true;
+
+      return RNAudioRecorderPlayer.pauseRecorder();
+    }
+  };
+
+  /**
+   * Resume recording.
+   * @returns {Promise<string>}
+   */
+  resumeRecorder = async (): Promise<string> => {
+    if (!this._isRecording) return 'No audio recording';
+
+    if (this._isRecording) {
+      this._isRecording = true;
+
+      return RNAudioRecorderPlayer.resumeRecorder();
+    }
+
+    return 'Already recording';
+  };
+
+  /**
    * stop recording.
    * @returns {Promise<string>}
    */
@@ -234,7 +279,7 @@ class AudioRecorderPlayer {
   };
 
   /**
-   * resume playing.
+   * Resume playing.
    * @returns {Promise<string>}
    */
   resumePlayer = async (): Promise<string> => {
@@ -250,7 +295,7 @@ class AudioRecorderPlayer {
   };
 
   /**
-   * start playing with param.
+   * Start playing with param.
    * @param {string} uri audio uri.
    * @param {Record<string, string>} httpHeaders Set of http headers.
    * @returns {Promise<string>}
@@ -273,7 +318,7 @@ class AudioRecorderPlayer {
   };
 
   /**
-   * stop playing.
+   * Stop playing.
    * @returns {Promise<string>}
    */
   stopPlayer = async (): Promise<string> => {
@@ -288,7 +333,7 @@ class AudioRecorderPlayer {
   };
 
   /**
-   * pause playing.
+   * Pause playing.
    * @returns {Promise<string>}
    */
   pausePlayer = async (): Promise<string> => {
@@ -302,7 +347,7 @@ class AudioRecorderPlayer {
   };
 
   /**
-   * seek to.
+   * Seek to.
    * @param {number} time position seek to in second.
    * @returns {Promise<string>}
    */
@@ -313,7 +358,7 @@ class AudioRecorderPlayer {
   };
 
   /**
-   * set volume.
+   * Set volume.
    * @param {number} setVolume set volume.
    * @returns {Promise<string>}
    */
@@ -325,7 +370,7 @@ class AudioRecorderPlayer {
   };
 
   /**
-   * set subscription duration.
+   * Set subscription duration. Default is 0.5.
    * @param {number} sec subscription callback duration in seconds.
    * @returns {Promise<string>}
    */
