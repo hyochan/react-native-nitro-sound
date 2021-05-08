@@ -24,6 +24,22 @@ This is a react-native link module for audio recorder and player. This is not a 
   1. Codebase has been re-written to [kotlin for Android](https://kotlinlang.org) and [swift for iOS](https://swift.org).
   [iOS]
   * [AVAudioPlayer](https://developer.apple.com/documentation/avfaudio/avaudioplayer) has been migrated to [AVPlayer](https://developer.apple.com/documentation/avfoundation/avplayer) which supports stream and more possibilities [#231](https://github.com/hyochan/react-native-audio-recorder-player/issues/231), [#245](https://github.com/hyochan/react-native-audio-recorder-player/issues/245), [#275](https://github.com/hyochan/react-native-audio-recorder-player/issues/275).
+  2. `pauseRecorder` and `resumeRecorder` features are added.
+     - **Caveat** Android now requires `minSdk` of `24`.
+  3. Renamed callback variables.
+      ```ts
+      export type RecordBackType = {
+        isRecording?: boolean;
+        currentPosition: number;
+        currentMetering?: number;
+      };
+
+      export type PlayBackType = {
+        isMuted?: boolean;
+        currentPosition: number;
+        duration: number;
+      };
+      ```
 
 - There has been vast improvements in [#114](https://github.com/dooboolab/react-native-audio-recorder-player/pull/114) which is released in `2.3.0`. We now support all `RN` versions without any version differenciating. See below installation guide for your understanding.
 

@@ -4,10 +4,11 @@ import AudioRecorderPlayer, {
   AudioEncoderAndroidType,
   AudioSet,
   AudioSourceAndroidType,
+  PlayBackType,
+  RecordBackType,
 } from 'react-native-audio-recorder-player';
 import {
   Dimensions,
-  NativeModules,
   PermissionsAndroid,
   Platform,
   SafeAreaView,
@@ -310,7 +311,7 @@ class Page extends Component<any, State> {
       audioSet,
     );
 
-    this.audioRecorderPlayer.addRecordBackListener((e: any) => {
+    this.audioRecorderPlayer.addRecordBackListener((e: RecordBackType) => {
       this.setState({
         recordSecs: e.currentPosition,
         recordTime: this.audioRecorderPlayer.mmssss(
@@ -322,11 +323,15 @@ class Page extends Component<any, State> {
   };
 
   private onPauseRecord = async () => {
-    await NativeModules.RNAudioRecorderPlayer.pauseRecorder();
+    try {
+      await this.audioRecorderPlayer.pauseRecorder();
+    } catch (err) {
+      console.log('pauseRecord', err);
+    }
   };
 
   private onResumeRecord = async () => {
-    await NativeModules.RNAudioRecorderPlayer.resumeRecorder();
+    await this.audioRecorderPlayer.resumeRecorder();
   };
 
   private onStopRecord = async () => {
@@ -344,7 +349,7 @@ class Page extends Component<any, State> {
     const volume = await this.audioRecorderPlayer.setVolume(1.0);
     console.log(`file: ${msg}`, `volume: ${volume}`);
 
-    this.audioRecorderPlayer.addPlayBackListener((e: any) => {
+    this.audioRecorderPlayer.addPlayBackListener((e: PlayBackType) => {
       if (e.currentPosition === e.duration) {
         console.log('finished');
         this.audioRecorderPlayer.stopPlayer();

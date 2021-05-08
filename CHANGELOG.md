@@ -1,8 +1,28 @@
 ## Changelogs
-- **[3.0.0-beta.1]**
-  - [iOS]
-    * Codebase re-written in `Swift`.
-    * Migrate `AVAudioPlayer` to `AVPlayer`.
+- **[3.0.0]**
+  - 3.0.0-beta.2
+    - Add `resumeRecorder` and `pauseRecorder` features.
+      - **Caveat**: Android now requires min sdk of `24`.
+    - Renamed listener callback variables from `snake_case` to `camelCase`.
+      * Below are return types.
+        ```ts
+        export type RecordBackType = {
+          isRecording?: boolean;
+          currentPosition: number;
+          currentMetering?: number;
+        };
+
+        export type PlayBackType = {
+          isMuted?: boolean;
+          currentPosition: number;
+          duration: number;
+        };
+        ```
+  - 3.0.0-beta.1
+    - [iOS]
+      * Codebase re-written in `Swift`.
+      * Migrate `AVAudioPlayer` to `AVPlayer`.
+
 - **[2.7.0]**
   - Migrate `android` module to `kotlin`.
 - **[2.6.2]**

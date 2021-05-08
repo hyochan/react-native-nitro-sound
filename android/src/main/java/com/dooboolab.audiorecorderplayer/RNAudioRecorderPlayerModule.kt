@@ -20,13 +20,15 @@ import kotlin.math.log10
 
 class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), PermissionListener {
     private var audioFileURL = ""
-    private var subsDurationMillis = 100
+    private var subsDurationMillis = 500
     private var _meteringEnabled = false
     private var mediaRecorder: MediaRecorder? = null
     private var mediaPlayer: MediaPlayer? = null
     private var recorderRunnable: Runnable? = null
     private var mTask: TimerTask? = null
     private var mTimer: Timer? = null
+    private var pausedRecordTime = 0L
+    private var totalPausedRecordTime = 0L
     var recordHandler: Handler? = Handler(Looper.getMainLooper())
     override fun getName(): String {
         return tag
@@ -51,9 +53,11 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         }
         audioFileURL = if (((path == "DEFAULT"))) fileLocation else path
         _meteringEnabled = meteringEnabled
+
         if (mediaRecorder == null) {
             mediaRecorder = MediaRecorder()
         }
+
         if (audioSet != null) {
             mediaRecorder!!.setAudioSource(if (audioSet.hasKey("AudioSourceAndroid")) audioSet.getInt("AudioSourceAndroid") else MediaRecorder.AudioSource.MIC)
             mediaRecorder!!.setOutputFormat(if (audioSet.hasKey("OutputFormatAndroid")) audioSet.getInt("OutputFormatAndroid") else MediaRecorder.OutputFormat.MPEG_4)
@@ -68,13 +72,15 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
             mediaRecorder!!.setAudioSamplingRate(48000)
         }
         mediaRecorder!!.setOutputFile(audioFileURL)
+
         try {
             mediaRecorder!!.prepare()
+            totalPausedRecordTime = 0L
             mediaRecorder!!.start()
             val systemTime = SystemClock.elapsedRealtime()
             recorderRunnable = object : Runnable {
                 override fun run() {
-                    val time = SystemClock.elapsedRealtime() - systemTime
+                    val time = SystemClock.elapsedRealtime() - systemTime - totalPausedRecordTime
                     val obj = Arguments.createMap()
                     obj.putDouble("currentPosition", time.toDouble())
                     if (_meteringEnabled) {
@@ -98,6 +104,42 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         } catch (e: Exception) {
             Log.e(tag, "Exception: ", e)
             promise.reject("startRecord", e.message)
+        }
+    }
+
+    @ReactMethod
+    fun resumeRecorder(promise: Promise) {
+        if (mediaRecorder == null) {
+            promise.reject("resumeReocrder", "Recorder is null.")
+            return
+        }
+
+        try {
+            mediaRecorder!!.resume()
+            totalPausedRecordTime += SystemClock.elapsedRealtime() - pausedRecordTime;
+            recordHandler!!.postDelayed(recorderRunnable, subsDurationMillis.toLong())
+            promise.resolve("Recorder resumed.")
+        } catch (e: Exception) {
+            Log.e(tag, "Recorder resume: " + e.message)
+            promise.reject("resumeRecorder", e.message)
+        }
+    }
+
+    @ReactMethod
+    fun pauseRecorder(promise: Promise) {
+        if (mediaRecorder == null) {
+            promise.reject("pauseRecorder", "Recorder is null.")
+            return
+        }
+
+        try {
+            mediaRecorder!!.pause()
+            pausedRecordTime = SystemClock.elapsedRealtime();
+            recordHandler!!.removeCallbacks(recorderRunnable);
+            promise.resolve("Recorder paused.")
+        } catch (e: Exception) {
+            Log.e(tag, "pauseRecorder exception: " + e.message)
+            promise.reject("pauseRecorder", e.message)
         }
     }
 
@@ -127,6 +169,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
             promise.reject("setVolume", "player is null.")
             return
         }
+
         val mVolume = volume.toFloat()
         mediaPlayer!!.setVolume(mVolume, mVolume)
         promise.resolve("set volume")
@@ -136,11 +179,13 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     fun startPlayer(path: String, httpHeaders: ReadableMap?, promise: Promise) {
         if (mediaPlayer != null) {
             val isPaused = !mediaPlayer!!.isPlaying && mediaPlayer!!.currentPosition > 1
+
             if (isPaused) {
                 mediaPlayer!!.start()
                 promise.resolve("player resumed.")
                 return
             }
+
             Log.e(tag, "Player is already running. Stop it first.")
             promise.reject("startPlay", "Player is already running. Stop it first.")
             return
@@ -164,6 +209,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                     mediaPlayer!!.setDataSource(path)
                 }
             }
+
             mediaPlayer!!.setOnPreparedListener { mp ->
                 Log.d(tag, "mediaplayer prepared and start")
                 mp.start()
@@ -178,6 +224,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                         sendEvent(reactContext, "rn-playback", obj)
                     }
                 }
+
                 mTimer = Timer()
                 mTimer!!.schedule(mTask, 0, subsDurationMillis.toLong())
                 val resolvedPath = if (((path == "DEFAULT"))) "file:///$fileLocation" else path
@@ -204,6 +251,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                 mp.release()
                 mediaPlayer = null
             }
+
             mediaPlayer!!.prepare()
         } catch (e: IOException) {
             Log.e(tag, "startPlay() io exception")
@@ -219,10 +267,12 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
             promise.reject("resume", "mediaPlayer is null.")
             return
         }
+
         if (mediaPlayer!!.isPlaying) {
             promise.reject("resume", "mediaPlayer is already running.")
             return
         }
+
         try {
             mediaPlayer!!.seekTo(mediaPlayer!!.currentPosition)
             mediaPlayer!!.start()
@@ -239,6 +289,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
             promise.reject("pausePlay", "mediaPlayer is null.")
             return
         }
+
         try {
             mediaPlayer!!.pause()
             promise.resolve("pause player")
@@ -254,6 +305,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
             promise.reject("seekTo", "mediaPlayer is null.")
             return
         }
+
         val millis = time * 1000
         mediaPlayer!!.seekTo(millis)
         promise.resolve("pause player")
@@ -296,9 +348,11 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean {
         var requestRecordAudioPermission: Int = 200
+
         when (requestCode) {
             requestRecordAudioPermission -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) return true
         }
+
         return false
     }
 

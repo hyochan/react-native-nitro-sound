@@ -153,7 +153,7 @@ class AudioRecorderPlayer {
 
   /**
    * Set listerner from native module for recorder.
-   * @returns {callBack(e: RecordBackType)}
+   * @returns {callBack((e: RecordBackType): void)}
    */
   addRecordBackListener = (e: RecordBackType): void => {
     if (Platform.OS === 'android')
@@ -183,7 +183,7 @@ class AudioRecorderPlayer {
 
   /**
    * Set listener from native module for player.
-   * @returns {callBack(e: PlayBackType)}
+   * @returns {callBack((e: PlayBackType): void)}
    */
   addPlayBackListener = (e: PlayBackType): void => {
     if (Platform.OS === 'android')
