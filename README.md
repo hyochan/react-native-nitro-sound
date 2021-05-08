@@ -12,7 +12,7 @@ This is a react-native link module for audio recorder and player. This is not a 
 
 ## Preview
 
-<img src="https://user-images.githubusercontent.com/27461460/116999369-7c3c1780-ad1a-11eb-90ff-5aa7141e7565.gif" width=300/>
+<img src="https://user-images.githubusercontent.com/27461460/117547014-3fe52000-b068-11eb-9f34-2bfc1e5092fd.gif" width=300/>
 
 ## Free read
 
