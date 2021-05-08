@@ -8,6 +8,4 @@
         successfully:(BOOL)flag;
 - (void)updateRecorderProgress:(NSTimer*) timer;
 - (void)updateProgress:(NSTimer*) timer;
-- (void)startRecorderTimer;
-- (void)startPlayerTimer;
 @end

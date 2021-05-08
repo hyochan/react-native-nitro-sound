@@ -20,6 +20,11 @@ This is a react-native link module for audio recorder and player. This is not a 
 
 ## Breaking Changes
 
+- From version `3.0.+`, a critical migration has been done. Current version is not much different from version `2.0.+` in usability, but there are many changes internally.
+  1. Codebase has been re-written to [kotlin for Android](https://kotlinlang.org) and [swift for iOS](https://swift.org).
+  [iOS]
+  * [AVAudioPlayer](https://developer.apple.com/documentation/avfaudio/avaudioplayer) has been migrated to [AVPlayer](https://developer.apple.com/documentation/avfoundation/avplayer) which supports stream and more possibilities [#231](https://github.com/hyochan/react-native-audio-recorder-player/issues/231), [#245](https://github.com/hyochan/react-native-audio-recorder-player/issues/245), [#275](https://github.com/hyochan/react-native-audio-recorder-player/issues/275).
+
 - There has been vast improvements in [#114](https://github.com/dooboolab/react-native-audio-recorder-player/pull/114) which is released in `2.3.0`. We now support all `RN` versions without any version differenciating. See below installation guide for your understanding.
 
 ## Migration Guide
@@ -34,6 +39,7 @@ This is a react-native link module for audio recorder and player. This is not a 
 | `resume`               | `resumePlayer`            |
 | `seekTo`               | `seekToPlayer`            |
 |                        | `setSubscriptionDuration` |
+| `addPlayBackListener`  | `addPlayBackListener`     |
 | `setRecordInterval`    | `addRecordBackListener`   |
 | `removeRecordInterval` | ``                        |
 |                        | `setVolume`               |
@@ -81,14 +87,23 @@ npx pod-install
      compile project(':react-native-audio-recorder-player')
    ```
 
-### Post installation
+## Post installation
+
+#### iOS
 
 On _iOS_ you need to add a usage description to `Info.plist`:
 
 ```xml
 <key>NSMicrophoneUsageDescription</key>
-<string>This sample uses the microphone to record your speech and convert it to text.</string>
+<string>Give $(PRODUCT_NAME) permission to use your microphone. Your record wont be shared without your permission.</string>
 ```
+
+Also, add [swift bridging header](https://stackoverflow.com/questions/31716413/xcode-not-automatically-creating-bridging-header) if you haven't created one for `swift` compatibility.
+
+<img width="800" alt="1" src="https://user-images.githubusercontent.com/27461460/111863065-8be6e300-899c-11eb-8ad8-6811e0bd0fbd.png">
+
+
+#### Android
 
 On _Android_ you need to add a permission to `AndroidManifest.xml`:
 
@@ -173,7 +188,7 @@ All methods are implemented with promises.
 | seekToPlayer          |  `number` miliseconds   | `Promise<string>` | Seek audio.                                                                  |
 | setVolume             |   `doulbe` value        | `Promise<string>` | Set volume of audio player (default 1.0, range: 0.0 ~ 1.0).                  |
 
-## Customizing recorded audio quality (from `2.3.0`)
+## Able to customize recorded audio quality (from `2.3.0`)
 
 ```
 interface AudioSet {

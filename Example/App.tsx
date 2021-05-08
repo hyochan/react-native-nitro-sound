@@ -298,8 +298,9 @@ class Page extends Component<any, State> {
   private onStartPlay = async () => {
     console.log('onStartPlay');
     const msg = await this.audioRecorderPlayer.startPlayer(this.path);
-    this.audioRecorderPlayer.setVolume(1.0);
-    console.log(msg);
+    const volume = await this.audioRecorderPlayer.setVolume(1.0);
+    console.log(`file: ${msg}`, `volume: ${volume}`);
+
     this.audioRecorderPlayer.addPlayBackListener((e: any) => {
       if (e.current_position === e.duration) {
         console.log('finished');
