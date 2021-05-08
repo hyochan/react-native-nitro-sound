@@ -112,13 +112,13 @@ const pad = (num: number): string => {
   return ('0' + num).slice(-2);
 };
 
-type RecordBackType = {
+export type RecordBackType = {
   isRecording?: boolean;
   currentPosition: number;
   currentMetering?: number;
 };
 
-type PlayBackType = {
+export type PlayBackType = {
   isMuted?: boolean;
   currentPosition: number;
   duration: number;
@@ -239,13 +239,13 @@ class AudioRecorderPlayer {
    * @returns {Promise<string>}
    */
   pauseRecorder = async (): Promise<string> => {
-    if (!this._isRecording) return 'No audio recording';
-
     if (!this._hasPausedRecord) {
       this._hasPausedRecord = true;
 
       return RNAudioRecorderPlayer.pauseRecorder();
     }
+
+    return 'Already paused recording.';
   };
 
   /**
@@ -253,15 +253,13 @@ class AudioRecorderPlayer {
    * @returns {Promise<string>}
    */
   resumeRecorder = async (): Promise<string> => {
-    if (!this._isRecording) return 'No audio recording';
-
-    if (this._isRecording) {
-      this._isRecording = true;
+    if (this._hasPausedRecord) {
+      this._hasPausedRecord = false;
 
       return RNAudioRecorderPlayer.resumeRecorder();
     }
 
-    return 'Already recording';
+    return 'Currently recording.';
   };
 
   /**
