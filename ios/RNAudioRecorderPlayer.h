@@ -7,5 +7,4 @@
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player
         successfully:(BOOL)flag;
 - (void)updateRecorderProgress:(NSTimer*) timer;
-- (void)updateProgress:(NSTimer*) timer;
 @end

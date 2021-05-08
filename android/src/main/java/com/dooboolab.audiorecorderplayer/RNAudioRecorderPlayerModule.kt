@@ -76,7 +76,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                 override fun run() {
                     val time = SystemClock.elapsedRealtime() - systemTime
                     val obj = Arguments.createMap()
-                    obj.putDouble("current_position", time.toDouble())
+                    obj.putDouble("currentPosition", time.toDouble())
                     if (_meteringEnabled) {
                         var maxAmplitude = 0
                         if (mediaRecorder != null) {
@@ -87,7 +87,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                         if (maxAmplitude > 0) {
                             dB = 20 * log10(maxAmplitude / maxAudioSize)
                         }
-                        obj.putInt("current_metering", dB.toInt())
+                        obj.putInt("currentMetering", dB.toInt())
                     }
                     sendEvent(reactContext, "rn-recordback", obj)
                     recordHandler!!.postDelayed(this, subsDurationMillis.toLong())
@@ -174,7 +174,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                     override fun run() {
                         val obj = Arguments.createMap()
                         obj.putInt("duration", mp.duration)
-                        obj.putInt("current_position", mp.currentPosition)
+                        obj.putInt("currentPosition", mp.currentPosition)
                         sendEvent(reactContext, "rn-playback", obj)
                     }
                 }
@@ -193,7 +193,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                  */
                 val obj = Arguments.createMap()
                 obj.putInt("duration", mp.duration)
-                obj.putInt("current_position", mp.duration)
+                obj.putInt("currentPosition", mp.duration)
                 sendEvent(reactContext, "rn-playback", obj)
                 /**
                  * Reset player.
