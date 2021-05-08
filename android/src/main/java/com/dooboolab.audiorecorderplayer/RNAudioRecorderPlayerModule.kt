@@ -51,7 +51,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
             promise.reject("No permission granted.", "Try again after adding permission.")
             return
         }
-        audioFileURL = if (((path == "DEFAULT"))) fileLocation else path
+        audioFileURL = if (((path == "DEFAULT"))) "${reactContext.cacheDir}/$defaultFileName" else path
         _meteringEnabled = meteringEnabled
 
         if (mediaRecorder == null) {
@@ -195,7 +195,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
 
         try {
             if ((path == "DEFAULT")) {
-                mediaPlayer!!.setDataSource(fileLocation)
+                mediaPlayer!!.setDataSource("${reactContext.cacheDir}/$defaultFileName")
             } else {
                 if (httpHeaders != null) {
                     val headers: MutableMap<String, String?> = HashMap<String, String?>()
@@ -227,7 +227,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
 
                 mTimer = Timer()
                 mTimer!!.schedule(mTask, 0, subsDurationMillis.toLong())
-                val resolvedPath = if (((path == "DEFAULT"))) "file:///$fileLocation" else path
+                val resolvedPath = if (((path == "DEFAULT"))) "${reactContext.cacheDir}/$defaultFileName" else path
                 promise.resolve(resolvedPath)
             }
 
@@ -358,6 +358,6 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
 
     companion object {
         private var tag = "RNAudioRecorderPlayer"
-        private var fileLocation = "sdcard/sound.mp4"
+        private var defaultFileName = "sound.mp4"
     }
 }

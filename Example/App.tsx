@@ -306,8 +306,15 @@ class Page extends Component<any, State> {
     };
 
     console.log('audioSet', audioSet);
+    //? Custom path
+    // const uri = await this.audioRecorderPlayer.startRecorder(
+    //   this.path,
+    //   audioSet,
+    // );
+
+    //? Default path
     const uri = await this.audioRecorderPlayer.startRecorder(
-      this.path,
+      undefined,
       audioSet,
     );
 
@@ -345,7 +352,11 @@ class Page extends Component<any, State> {
 
   private onStartPlay = async () => {
     console.log('onStartPlay');
-    const msg = await this.audioRecorderPlayer.startPlayer(this.path);
+    //? Custom path
+    // const msg = await this.audioRecorderPlayer.startPlayer(this.path);
+
+    //? Default path
+    const msg = await this.audioRecorderPlayer.startPlayer();
     const volume = await this.audioRecorderPlayer.setVolume(1.0);
     console.log(`file: ${msg}`, `volume: ${volume}`);
 

@@ -40,6 +40,8 @@ This is a react-native link module for audio recorder and player. This is not a 
         duration: number;
       };
       ```
+  4. `subscriptionDuration` offset not defaults to `0.5` which is `500ms`.
+      * Resolve [#273](https://github.com/hyochan/react-native-audio-recorder-player/issues/273)
 
 - There has been vast improvements in [#114](https://github.com/dooboolab/react-native-audio-recorder-player/pull/114) which is released in `2.3.0`. We now support all `RN` versions without any version differenciating. See below installation guide for your understanding.
 

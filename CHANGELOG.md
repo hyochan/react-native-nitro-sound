@@ -1,27 +1,35 @@
 ## Changelogs
 - **[3.0.0]**
-  - 3.0.0-beta.2
-    - Add `resumeRecorder` and `pauseRecorder` features.
+  - beta.3
+    [Android]
+    1. Fix `Android` default path to `cacheDir`.
+       * Fix [#283](https://github.com/hyochan/react-native-audio-recorder-player/issues/283).
+ 
+  - beta.2
+    1. Add `resumeRecorder` and `pauseRecorder` features.
       - **Caveat**: Android now requires min sdk of `24`.
-    - Renamed listener callback variables from `snake_case` to `camelCase`.
-      * Below are return types.
-        ```ts
-        export type RecordBackType = {
-          isRecording?: boolean;
-          currentPosition: number;
-          currentMetering?: number;
-        };
+    2. Renamed listener callback variables from `snake_case` to `camelCase`.
+       * Below are return types.
+         ```ts
+         export type RecordBackType = {
+           isRecording?: boolean;
+           currentPosition: number;
+           currentMetering?: number;
+         };
 
-        export type PlayBackType = {
-          isMuted?: boolean;
-          currentPosition: number;
-          duration: number;
-        };
-        ```
-  - 3.0.0-beta.1
-    - [iOS]
-      * Codebase re-written in `Swift`.
-      * Migrate `AVAudioPlayer` to `AVPlayer`.
+         export type PlayBackType = {
+           isMuted?: boolean;
+           currentPosition: number;
+           duration: number;
+         };
+         ```
+    3. `subscriptionDuration` offset not defaults to `0.5` which is `500ms`.
+       * Resolve [#273](https://github.com/hyochan/react-native-audio-recorder-player/issues/273)
+       
+  - beta.1
+    [iOS]
+    1. Codebase re-written in `Swift`.
+    2. Migrate `AVAudioPlayer` to `AVPlayer`.
 
 - **[2.7.0]**
   - Migrate `android` module to `kotlin`.
@@ -40,7 +48,7 @@
   - Add android record parameters [#210](dooboolab/react-native-audio-recorder-player/issues/210)
   - Play music in bluetooth earpiece while recording [#192](dooboolab/react-native-audio-recorder-player/issues/192)
   - Adding optional volume metering [#191](dooboolab/react-native-audio-recorder-player/issues/191)
-  - Upgrade packages
+   Upgrade packages
 - **[2.5.1]**
   - Resolve [#157](https://github.com/dooboolab/react-native-audio-recorder-player/issues/157), android path problem once again.
 - **[2.5.0]**
