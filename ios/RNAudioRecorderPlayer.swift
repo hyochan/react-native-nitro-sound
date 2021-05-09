@@ -59,9 +59,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             }
 
             let status = [
-                "is_recording": audioRecorder.isRecording,
-                "current_position": audioRecorder.currentTime * 1000,
-                "current_metering": currentMetering,
+                "isRecording": audioRecorder.isRecording,
+                "currentPosition": audioRecorder.currentTime * 1000,
+                "currentMetering": currentMetering,
             ] as [String : Any];
 
             sendEvent(withName: "rn-recordback", body: status)
@@ -132,7 +132,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     
     /**********               Player               **********/
 
-    @objc(startRecorder:meteringEnabled:audioSets:resolve:reject:)
+    @objc(startRecorder:audioSets:meteringEnabled:resolve:reject:)
     func startRecorder(path: String,  audioSets: [String: Any], meteringEnabled: Bool, resolve: @escaping RCTPromiseResolveBlock,
        rejecter reject: @escaping RCTPromiseRejectBlock) -> Void {
 
@@ -283,7 +283,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                                                                 queue: .main) {_ in
             self.sendEvent(withName: "rn-playback", body: [
                 "isMuted": self.audioPlayer.isMuted,
-                "current_position": self.audioPlayerItem.currentTime().seconds * 1000,
+                "currentPosition": self.audioPlayerItem.currentTime().seconds * 1000,
                 "duration": self.audioPlayerItem.duration.seconds * 1000,
             ])
         }

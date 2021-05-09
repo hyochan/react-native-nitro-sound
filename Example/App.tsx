@@ -134,7 +134,7 @@ class Page extends Component<any, State> {
     };
 
     this.audioRecorderPlayer = new AudioRecorderPlayer();
-    this.audioRecorderPlayer.setSubscriptionDuration(0.09); // optional. Default is 0.1
+    this.audioRecorderPlayer.setSubscriptionDuration(0.1); // optional. Default is 0.5
   }
 
   public render() {
@@ -319,6 +319,7 @@ class Page extends Component<any, State> {
     );
 
     this.audioRecorderPlayer.addRecordBackListener((e: RecordBackType) => {
+      console.log('record-back', e);
       this.setState({
         recordSecs: e.currentPosition,
         recordTime: this.audioRecorderPlayer.mmssss(

@@ -1,5 +1,7 @@
 ## Changelogs
 - **[3.0.0]**
+  Released with `3.0.0` with below beta updates applied.
+
   - beta.3
     [Android]
     1. Fix `Android` default path to `cacheDir`.

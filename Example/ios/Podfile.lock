@@ -329,8 +329,8 @@ PODS:
     - React-perflogger (= 0.64.0)
   - rn-fetch-blob (0.12.0):
     - React-Core
-  - RNAudioRecorderPlayer (2.7.0):
-    - React
+  - RNAudioRecorderPlayer (3.0.0-beta.3):
+    - React-Core
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
     - Yoga (~> 1.14)
@@ -505,7 +505,7 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: cad74a1eaa53ee6e7a3620231939d8fe2c6afcf0
   ReactCommon: cfe2b7fd20e0dbd2d1185cd7d8f99633fbc5ff05
   rn-fetch-blob: f065bb7ab7fb48dd002629f8bdcb0336602d3cba
-  RNAudioRecorderPlayer: 415f616f2db152d9e6e11011fd8b192d3ef6606d
+  RNAudioRecorderPlayer: 9dc245c3e5465784328f6f6edf98b5db290b7641
   Yoga: 8c8436d4171c87504c648ae23b1d81242bdf3bbf
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
