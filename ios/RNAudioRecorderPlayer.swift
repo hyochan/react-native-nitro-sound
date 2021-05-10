@@ -256,9 +256,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     ) -> Void {
         if (audioRecorder != nil) {
             do {
-                try recordingSession.setActive(false)
-
                 audioRecorder.stop()
+                try recordingSession.setActive(false)
 
                 if (recordTimer != nil) {
                     recordTimer!.invalidate()
