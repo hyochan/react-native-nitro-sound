@@ -303,9 +303,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
         setAudioFileURL(path: path)
+        audioPlayerItem = AVPlayerItem(url: audioFileURL!)
         
         if (audioPlayer == nil) {
-            audioPlayerItem = AVPlayerItem(url: audioFileURL!)
             audioPlayer = AVPlayer(playerItem: audioPlayerItem)
         } else {
             audioPlayer.replaceCurrentItem(with: audioPlayerItem)
