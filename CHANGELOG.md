@@ -1,4 +1,7 @@
 ## Changelogs
+- **[3.0.5]**
+  - [iOS] Enhance handling file path
+
 - **[3.0.4]**
   - [Android] Add optional wrappers to support android sdk 30 [#305](https://github.com/hyochan/react-native-audio-recorder-player/pull/305)
 
