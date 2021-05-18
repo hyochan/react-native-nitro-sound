@@ -117,7 +117,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         try {
             mediaRecorder!!.resume()
             totalPausedRecordTime += SystemClock.elapsedRealtime() - pausedRecordTime;
-            recordHandler!!.postDelayed(recorderRunnable, subsDurationMillis.toLong())
+            recorderRunnable?.let { recordHandler!!.postDelayed(it, subsDurationMillis.toLong()) }
             promise.resolve("Recorder resumed.")
         } catch (e: Exception) {
             Log.e(tag, "Recorder resume: " + e.message)
@@ -135,7 +135,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         try {
             mediaRecorder!!.pause()
             pausedRecordTime = SystemClock.elapsedRealtime();
-            recordHandler!!.removeCallbacks(recorderRunnable);
+            recorderRunnable?.let { recordHandler!!.removeCallbacks(it) };
             promise.resolve("Recorder paused.")
         } catch (e: Exception) {
             Log.e(tag, "pauseRecorder exception: " + e.message)
@@ -146,7 +146,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     @ReactMethod
     fun stopRecorder(promise: Promise) {
         if (recordHandler != null) {
-            recordHandler!!.removeCallbacks(recorderRunnable)
+            recorderRunnable?.let { recordHandler!!.removeCallbacks(it) }
         }
         if (mediaRecorder == null) {
             promise.reject("stopRecord", "recorder is null.")
@@ -155,7 +155,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         try {
             mediaRecorder!!.stop()
         } catch (stopException: RuntimeException) {
-            Log.d(tag, stopException.message)
+            stopException.message?.let { Log.d(tag, it) }
             promise.reject("stopRecord", stopException.message)
         }
         mediaRecorder!!.release()
