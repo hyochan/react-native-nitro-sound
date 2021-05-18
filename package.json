@@ -1,6 +1,6 @@
 {
   "name": "react-native-audio-recorder-player",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "description": "React Native Audio Recorder and Player.",
   "homepage": "https://github.com/dooboolab/react-native-audio-recorder-player",
   "main": "index.ts",
