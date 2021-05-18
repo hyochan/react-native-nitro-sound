@@ -40,6 +40,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             audioFileURL = cachesDirectory.appendingPathComponent("sound.m4a")
         } else if (path.contains("http")){
             audioFileURL = URL(string: path)
+        } else if (path.contains("file")) {
+            audioFileURL = path
         } else {
             let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
             audioFileURL = cachesDirectory.appendingPathComponent(path)

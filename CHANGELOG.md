@@ -1,4 +1,8 @@
 ## Changelogs
+- **[3.0.3]**
+  - [iOS] Allow file uri to play [#301](https://github.com/hyochan/react-native-audio-recorder-player/pull/301)
+     * Resolve [#300](https://github.com/hyochan/react-native-audio-recorder-player/issue/300)
+
 - **[3.0.2]**
   - [iOS] Fixes when playing same file repeatedely [#293](https://github.com/hyochan/react-native-audio-recorder-player/pull/293)
 
