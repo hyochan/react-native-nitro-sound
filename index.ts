@@ -155,18 +155,17 @@ class AudioRecorderPlayer {
    * Set listerner from native module for recorder.
    * @returns {callBack((e: RecordBackType): void)}
    */
-  addRecordBackListener = (e: RecordBackType): void => {
+
+  addRecordBackListener =  (callback: ((recordingMeta: RecordBackType) => void)): void => {
     if (Platform.OS === 'android')
       this._recorderSubscription = DeviceEventEmitter.addListener(
         'rn-recordback',
-        // @ts-ignore
-        e,
+        callback,
       );
     else {
       const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
 
-      // @ts-ignore
-      this._recorderSubscription = myModuleEvt.addListener('rn-recordback', e);
+      this._recorderSubscription = myModuleEvt.addListener('rn-recordback', callback);
     }
   };
 
@@ -185,18 +184,16 @@ class AudioRecorderPlayer {
    * Set listener from native module for player.
    * @returns {callBack((e: PlayBackType): void)}
    */
-  addPlayBackListener = (e: PlayBackType): void => {
+  addPlayBackListener = (callback: ((playbackMeta: PlayBackType) => void)): void => {
     if (Platform.OS === 'android')
       this._playerSubscription = DeviceEventEmitter.addListener(
         'rn-playback',
-        // @ts-ignore
-        e,
+        callback,
       );
     else {
       const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
 
-      // @ts-ignore
-      this._playerSubscription = myModuleEvt.addListener('rn-playback', e);
+      this._playerSubscription = myModuleEvt.addListener('rn-playback', callback);
     }
   };
 
