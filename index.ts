@@ -156,7 +156,9 @@ class AudioRecorderPlayer {
    * @returns {callBack((e: RecordBackType): void)}
    */
 
-  addRecordBackListener =  (callback: ((recordingMeta: RecordBackType) => void)): void => {
+  addRecordBackListener = (
+    callback: (recordingMeta: RecordBackType) => void,
+  ): void => {
     if (Platform.OS === 'android')
       this._recorderSubscription = DeviceEventEmitter.addListener(
         'rn-recordback',
@@ -165,7 +167,10 @@ class AudioRecorderPlayer {
     else {
       const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
 
-      this._recorderSubscription = myModuleEvt.addListener('rn-recordback', callback);
+      this._recorderSubscription = myModuleEvt.addListener(
+        'rn-recordback',
+        callback,
+      );
     }
   };
 
@@ -184,7 +189,9 @@ class AudioRecorderPlayer {
    * Set listener from native module for player.
    * @returns {callBack((e: PlayBackType): void)}
    */
-  addPlayBackListener = (callback: ((playbackMeta: PlayBackType) => void)): void => {
+  addPlayBackListener = (
+    callback: (playbackMeta: PlayBackType) => void,
+  ): void => {
     if (Platform.OS === 'android')
       this._playerSubscription = DeviceEventEmitter.addListener(
         'rn-playback',
@@ -193,7 +200,10 @@ class AudioRecorderPlayer {
     else {
       const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
 
-      this._playerSubscription = myModuleEvt.addListener('rn-playback', callback);
+      this._playerSubscription = myModuleEvt.addListener(
+        'rn-playback',
+        callback,
+      );
     }
   };
 
