@@ -1,4 +1,7 @@
 ## Changelogs
+- **[3.0.7]**
+  - [iOS] Set recording volume default to speaker.
+
 - **[3.0.6]**
   - [iOS] Fix seekToPlayer method: it always seeked to 0. [#311](https://github.com/hyochan/react-native-audio-recorder-player/pull/311)
 
