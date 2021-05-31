@@ -218,7 +218,7 @@ All methods are implemented with promises.
 | stopPlayer            |                         | `Promise<string>` | Stop playing.         |
 | pausePlayer           |                         | `Promise<string>` | Pause playing.        |
 | seekToPlayer          |  `number` miliseconds   | `Promise<string>` | Seek audio.           |
-| setVolume             |   `doulbe` value        | `Promise<string>` | Set volume of audio player (default 1.0, range: 0.0 ~ 1.0). |
+| setVolume             |   `double` value        | `Promise<string>` | Set volume of audio player (default 1.0, range: 0.0 ~ 1.0). |
 
 ## Able to customize recorded audio quality (from `2.3.0`)
 
