@@ -1,4 +1,8 @@
 ## Changelogs
+- **[3.0.8]**
+  - [Bugfix/iOS] Fix crashing when stopping recorder when metering is enabled.
+     - Resolve [#297](https://github.com/hyochan/react-native-audio-recorder-player/issues/297)
+
 - **[3.0.7]**
   - [iOS] Set recording volume default to speaker.
 
