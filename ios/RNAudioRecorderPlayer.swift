@@ -124,12 +124,12 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     public static func audioPlayerDidFinishPlaying(player: AVAudioRecorder) -> Bool {
         return true
     }
-    
+
     @objc(setSubscriptionDuration:)
     func setSubscriptionDuration(duration: Double) -> Void {
         subscriptionDuration = duration
     }
-    
+
     /**********               Player               **********/
 
     @objc(startRecorder:audioSets:meteringEnabled:resolve:reject:)
@@ -143,7 +143,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         let avLPCMIsBigEndian = audioSets["AVLinearPCMIsBigEndianKeyIOS"] as? Bool
         let avLPCMIsFloatKey = audioSets["AVLinearPCMIsFloatKeyIOS"] as? Bool
         let avLPCMIsNonInterleaved = audioSets["AVLinearPCMIsNonInterleavedIOS"] as? Bool
-        
+
         var avFormat: Int? = nil
         var sampleRate = audioSets["AVSampleRateKeyIOS"] as? Int
         var numberOfChannel = audioSets["AVNumberOfChannelsKeyIOS"] as? Int
@@ -183,9 +183,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             } else if (encoding == "flac") {
                 if #available(iOS 11.0, *) {
                     avFormat = Int(kAudioFormatFLAC)
-                } else if (encoding == "opus") {
-                    avFormat = Int(kAudioFormatOpus)
                 }
+            } else if (encoding == "opus") {
+                avFormat = Int(kAudioFormatOpus)
             }
         }
 
@@ -248,7 +248,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             reject("RNAudioPlayerRecorder", "Faled to record", nil)
         }
     }
-    
+
     @objc(stopRecorder:rejecter:)
     public func stopRecorder(
         resolve: @escaping RCTPromiseResolveBlock,
@@ -307,7 +307,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     ) -> Void {
         setAudioFileURL(path: path)
         audioPlayerItem = AVPlayerItem(url: audioFileURL!)
-        
+
         if (audioPlayer == nil) {
             audioPlayer = AVPlayer(playerItem: audioPlayerItem)
         } else {
