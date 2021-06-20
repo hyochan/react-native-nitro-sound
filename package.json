@@ -39,6 +39,7 @@
     "@types/react-native": "^0.64.5",
     "babel-eslint": "^10.1.0",
     "eslint": "^7.26.0",
+    "eslint-plugin-prettier": "^3.4.0",
     "flow-bin": "^0.151.0",
     "flowgen": "^1.14.1",
     "prettier": "^2.3.0",
