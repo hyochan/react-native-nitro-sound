@@ -155,7 +155,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         try {
             mediaRecorder!!.stop()
         } catch (stopException: RuntimeException) {
-            stopException.message?.let { Log.d(tag, it) }
+            stopException.message?.let { Log.d(tag,"" + it) }
             promise.reject("stopRecord", stopException.message)
         }
         mediaRecorder!!.release()
