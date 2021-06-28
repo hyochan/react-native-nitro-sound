@@ -283,11 +283,13 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
         timeObserverToken = audioPlayer.addPeriodicTimeObserver(forInterval: time,
                                                                 queue: .main) {_ in
-            self.sendEvent(withName: "rn-playback", body: [
-                "isMuted": self.audioPlayer.isMuted,
-                "currentPosition": self.audioPlayerItem.currentTime().seconds * 1000,
-                "duration": self.audioPlayerItem.duration.seconds * 1000,
-            ])
+            if (self.audioPlayer != nil) {
+                self.sendEvent(withName: "rn-playback", body: [
+                    "isMuted": self.audioPlayer.isMuted,
+                    "currentPosition": self.audioPlayerItem.currentTime().seconds * 1000,
+                    "duration": self.audioPlayerItem.duration.seconds * 1000,
+                ])
+            }
         }
     }
 
