@@ -1,4 +1,7 @@
 ## Changelogs
+- **[3.0.12]**
+  - [iOS] Fix unexpectedly found nil in swift [#341](https://github.com/hyochan/react-native-audio-recorder-player/pull/341).
+
 - **[3.0.11]**
   - [Android] Small bugfixes on `println` message [#337](https://github.com/hyochan/react-native-audio-recorder-player/pull/337).
 
