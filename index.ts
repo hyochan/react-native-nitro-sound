@@ -131,7 +131,7 @@ class AudioRecorderPlayer {
   private _hasPausedRecord: boolean;
   private _recorderSubscription: EmitterSubscription;
   private _playerSubscription: EmitterSubscription;
-  private _recordInterval: number;
+  private _playerCallback: (event: PlayBackType) => void;
 
   mmss = (secs: number): string => {
     let minutes = Math.floor(secs / 60);
@@ -192,19 +192,7 @@ class AudioRecorderPlayer {
   addPlayBackListener = (
     callback: (playbackMeta: PlayBackType) => void,
   ): void => {
-    if (Platform.OS === 'android')
-      this._playerSubscription = DeviceEventEmitter.addListener(
-        'rn-playback',
-        callback,
-      );
-    else {
-      const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
-
-      this._playerSubscription = myModuleEvt.addListener(
-        'rn-playback',
-        callback,
-      );
-    }
+    this._playerCallback = callback;
   };
 
   /**
@@ -212,10 +200,7 @@ class AudioRecorderPlayer {
    * @returns {void}
    */
   removePlayBackListener = (): void => {
-    if (this._playerSubscription) {
-      this._playerSubscription.remove();
-      this._playerSubscription = null;
-    }
+    this._playerCallback = null;
   };
 
   /**
@@ -299,6 +284,12 @@ class AudioRecorderPlayer {
     return 'Already playing';
   };
 
+  playerCallback = (event: PlayBackType): void => {
+    if (this._playerCallback) this._playerCallback(event);
+
+    if (event.currentPosition === event.duration) this.stopPlayer();
+  };
+
   /**
    * Start playing with param.
    * @param {string} uri audio uri.
@@ -310,6 +301,21 @@ class AudioRecorderPlayer {
     httpHeaders?: Record<string, string>,
   ): Promise<string> => {
     if (!uri) uri = 'DEFAULT';
+
+    if (!this._playerSubscription)
+      if (Platform.OS === 'android')
+        this._playerSubscription = DeviceEventEmitter.addListener(
+          'rn-playback',
+          this.playerCallback,
+        );
+      else {
+        const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
+
+        this._playerSubscription = myModuleEvt.addListener(
+          'rn-playback',
+          this.playerCallback,
+        );
+      }
 
     if (!this._isPlaying || this._hasPaused) {
       this._isPlaying = true;
