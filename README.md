@@ -209,7 +209,9 @@ All methods are implemented with promises.
 | mmss                  |  `number` seconds       |     `string`      | Convert seconds to `minute:second` string       |
 | setSubscriptionDuration |                        | `void` | Set default callback time when starting recorder or player. Default to `0.5` which is `500ms` |
 | addRecordBackListener | `Function` callBack     |     `void`        | Get callback from native module. Will receive `currentPosition`, `currentMetering` (if configured in startRecorder)          |
+| removeRecordBackListener | `Function` callBack  |     `void`        | Removes recordback listener |
 | addPlayBackListener   | `Function` callBack     |      `void`       | Get callback from native module. Will receive `duration`, `currentPosition` |
+| removePlayBackListener| `Function` callBack     |      `void`       | Removes playback  listener |
 | startRecorder         |   `<string>` uri? `<boolean>` meteringEnabled?      |  `Promise<void>`  | Start recording. Not passing uri will save audio in default location.  |
 | pauseRecorder         |                         | `Promise<string>` | Pause recording.      |
 | resumeRecorder        |                         | `Promise<string>` | Resume recording.     |
@@ -244,7 +246,7 @@ const audioSet: AudioSet = {
   AVNumberOfChannelsKeyIOS: 2,
   AVFormatIDKeyIOS: AVEncodingOption.aac,
 };
-const meteringEnabled = false; 
+const meteringEnabled = false;
 
 const uri = await this.audioRecorderPlayer.startRecorder(path, audioSet, meteringEnabled);
 
