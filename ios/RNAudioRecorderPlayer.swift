@@ -15,7 +15,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
     // Recorder
     var audioRecorder: AVAudioRecorder!
-    var recordingSession: AVAudioSession!
+    var audioSession: AVAudioSession!
     var recordTimer: Timer?
     var _meteringEnabled: Bool = false
 
@@ -229,13 +229,13 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             }
         }
 
-        recordingSession = AVAudioSession.sharedInstance()
+        audioSession = AVAudioSession.sharedInstance()
 
         do {
-            try recordingSession.setCategory(.playAndRecord, mode: .default, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth])
-            try recordingSession.setActive(true)
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth])
+            try audioSession.setActive(true)
 
-            recordingSession.requestRecordPermission { granted in
+            audioSession.requestRecordPermission { granted in
                 DispatchQueue.main.async {
                     if granted {
                         startRecording()
@@ -307,6 +307,15 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
+        audioSession = AVAudioSession.sharedInstance()
+
+        do {
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth])
+            try audioSession.setActive(true)
+        } catch {
+            reject("RNAudioPlayerRecorder", "Faled to play", nil)
+        }
+        
         setAudioFileURL(path: path)
         audioPlayerItem = AVPlayerItem(url: audioFileURL!)
 
