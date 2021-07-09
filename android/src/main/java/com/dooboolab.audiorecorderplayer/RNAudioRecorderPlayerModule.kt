@@ -148,16 +148,19 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         if (recordHandler != null) {
             recorderRunnable?.let { recordHandler!!.removeCallbacks(it) }
         }
+
         if (mediaRecorder == null) {
             promise.reject("stopRecord", "recorder is null.")
             return
         }
+
         try {
             mediaRecorder!!.stop()
         } catch (stopException: RuntimeException) {
             stopException.message?.let { Log.d(tag,"" + it) }
             promise.reject("stopRecord", stopException.message)
         }
+
         mediaRecorder!!.release()
         mediaRecorder = null
         promise.resolve("file:///$audioFileURL")
@@ -264,7 +267,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     @ReactMethod
     fun resumePlayer(promise: Promise) {
         if (mediaPlayer == null) {
-            promise.reject("resume", "mediaPlayer is null.")
+            promise.reject("resume", "mediaPlayer is null on resume.")
             return
         }
 
@@ -286,7 +289,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     @ReactMethod
     fun pausePlayer(promise: Promise) {
         if (mediaPlayer == null) {
-            promise.reject("pausePlay", "mediaPlayer is null.")
+            promise.reject("pausePlay", "mediaPlayer is null on pause.")
             return
         }
 
@@ -302,7 +305,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     @ReactMethod
     fun seekToPlayer(time: Int, promise: Promise) {
         if (mediaPlayer == null) {
-            promise.reject("seekTo", "mediaPlayer is null.")
+            promise.reject("seekTo", "mediaPlayer is null on seek.")
             return
         }
 
@@ -326,7 +329,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         }
 
         if (mediaPlayer == null) {
-            promise.reject("stopPlay", "mediaPlayer is null.")
+            promise.resolve("Already stopped player")
             return
         }
 

@@ -254,7 +254,6 @@ class Page extends Component<any, State> {
     console.log(`currentPlayWidth: ${playWidth}`);
 
     const currentPosition = Math.round(this.state.currentPositionSec);
-    console.log(`currentPosition: ${currentPosition}`);
 
     if (playWidth && playWidth < touchX) {
       const addSecs = Math.round(currentPosition + 1000);
@@ -362,10 +361,6 @@ class Page extends Component<any, State> {
     console.log(`file: ${msg}`, `volume: ${volume}`);
 
     this.audioRecorderPlayer.addPlayBackListener((e: PlayBackType) => {
-      if (e.currentPosition === e.duration) {
-        console.log('finished');
-        this.audioRecorderPlayer.stopPlayer();
-      }
       this.setState({
         currentPositionSec: e.currentPosition,
         currentDurationSec: e.duration,
