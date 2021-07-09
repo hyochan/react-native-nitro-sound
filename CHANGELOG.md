@@ -1,4 +1,8 @@
 ## Changelogs
+- **[3.1.0]**
+  - Automatically stop player when it reached the end [#353](https://github.com/hyochan/react-native-audio-recorder-player/pull/353)
+  - [iOS] - Set AVAudioSession active before startPlayer [#355](https://github.com/hyochan/react-native-audio-recorder-player/pull/355)
+
 - **[3.0.12]**
   - [iOS] Fix unexpectedly found nil in swift [#341](https://github.com/hyochan/react-native-audio-recorder-player/pull/341).
 
