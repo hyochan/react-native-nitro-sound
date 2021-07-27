@@ -216,7 +216,13 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                     audioRecorder.prepareToRecord()
                     audioRecorder.delegate = self
                     audioRecorder.isMeteringEnabled = _meteringEnabled
-                    audioRecorder.record()
+                    let isRecordStarted = audioRecorder.record()
+
+                    if !isRecordStarted {
+                        reject("RNAudioPlayerRecorder", "Error occured during initiating recorder", nil)
+                        return
+                    }
+
                     startRecorderTimer()
 
                     resolve(audioFileURL?.absoluteString)
@@ -245,7 +251,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 }
             }
         } catch {
-            reject("RNAudioPlayerRecorder", "Faled to record", nil)
+            reject("RNAudioPlayerRecorder", "Failed to record", nil)
         }
     }
 
@@ -255,7 +261,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
         if (audioRecorder == nil) {
-            reject("RNAudioPlayerRecorder", "Faled to stop recorder. It is already nil.", nil)
+            reject("RNAudioPlayerRecorder", "Failed to stop recorder. It is already nil.", nil)
             return
         }
 
@@ -313,7 +319,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             try audioSession.setCategory(.playAndRecord, mode: .default, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth])
             try audioSession.setActive(true)
         } catch {
-            reject("RNAudioPlayerRecorder", "Faled to play", nil)
+            reject("RNAudioPlayerRecorder", "Failed to play", nil)
         }
         
         setAudioFileURL(path: path)
