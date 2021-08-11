@@ -303,14 +303,13 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     }
 
     @ReactMethod
-    fun seekToPlayer(time: Int, promise: Promise) {
+    fun seekToPlayer(time: Double, promise: Promise) {
         if (mediaPlayer == null) {
             promise.reject("seekTo", "mediaPlayer is null on seek.")
             return
         }
 
-        val millis = time * 1000
-        mediaPlayer!!.seekTo(millis)
+        mediaPlayer!!.seekTo(time.toInt())
         promise.resolve("pause player")
     }
 

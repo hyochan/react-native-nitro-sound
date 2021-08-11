@@ -359,12 +359,10 @@ class AudioRecorderPlayer {
 
   /**
    * Seek to.
-   * @param {number} time position seek to in second.
+   * @param {number} time position seek to in millisecond.
    * @returns {Promise<string>}
    */
   seekToPlayer = async (time: number): Promise<string> => {
-    if (Platform.OS === 'ios') time = time / 1000;
-
     return RNAudioRecorderPlayer.seekToPlayer(time);
   };
 
