@@ -155,7 +155,8 @@ class Page extends Component<any, State> {
             <Button
               style={styles.btn}
               onPress={this.onStartRecord}
-              textStyle={styles.txt}>
+              textStyle={styles.txt}
+            >
               Record
             </Button>
             <Button
@@ -166,7 +167,8 @@ class Page extends Component<any, State> {
                 },
               ]}
               onPress={this.onPauseRecord}
-              textStyle={styles.txt}>
+              textStyle={styles.txt}
+            >
               Pause
             </Button>
             <Button
@@ -177,13 +179,15 @@ class Page extends Component<any, State> {
                 },
               ]}
               onPress={this.onResumeRecord}
-              textStyle={styles.txt}>
+              textStyle={styles.txt}
+            >
               Resume
             </Button>
             <Button
               style={[styles.btn, {marginLeft: 12}]}
               onPress={this.onStopRecord}
-              textStyle={styles.txt}>
+              textStyle={styles.txt}
+            >
               Stop
             </Button>
           </View>
@@ -191,7 +195,8 @@ class Page extends Component<any, State> {
         <View style={styles.viewPlayer}>
           <TouchableOpacity
             style={styles.viewBarWrapper}
-            onPress={this.onStatusPress}>
+            onPress={this.onStatusPress}
+          >
             <View style={styles.viewBar}>
               <View style={[styles.viewBarPlay, {width: playWidth}]} />
             </View>
@@ -203,7 +208,8 @@ class Page extends Component<any, State> {
             <Button
               style={styles.btn}
               onPress={this.onStartPlay}
-              textStyle={styles.txt}>
+              textStyle={styles.txt}
+            >
               Play
             </Button>
             <Button
@@ -214,7 +220,8 @@ class Page extends Component<any, State> {
                 },
               ]}
               onPress={this.onPausePlay}
-              textStyle={styles.txt}>
+              textStyle={styles.txt}
+            >
               Pause
             </Button>
             <Button
@@ -225,7 +232,8 @@ class Page extends Component<any, State> {
                 },
               ]}
               onPress={this.onResumePlay}
-              textStyle={styles.txt}>
+              textStyle={styles.txt}
+            >
               Resume
             </Button>
             <Button
@@ -236,7 +244,8 @@ class Page extends Component<any, State> {
                 },
               ]}
               onPress={this.onStopPlay}
-              textStyle={styles.txt}>
+              textStyle={styles.txt}
+            >
               Stop
             </Button>
           </View>
