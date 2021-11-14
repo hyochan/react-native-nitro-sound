@@ -11,8 +11,8 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
-    "react": "17.0.1",
-    "react-native": "0.64.1",
+    "react": "17.0.2",
+    "react-native": "0.66.3",
     "rn-fetch-blob": "^0.12.0",
     "react-native-audio-recorder-player": "file:../"
   },
@@ -21,7 +21,7 @@
     "@babel/runtime": "^7.12.5",
     "@react-native-community/eslint-config": "^2.0.0",
     "@types/jest": "^26.0.20",
-    "@types/react-native": "^0.64.0",
+    "@types/react-native": "^0.66.2",
     "@types/react-test-renderer": "^16.9.2",
     "babel-jest": "^26.6.3",
     "eslint": "^7.14.0",
