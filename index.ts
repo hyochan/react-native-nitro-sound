@@ -330,11 +330,7 @@ class AudioRecorderPlayer {
       this._isPlaying = true;
       this._hasPaused = false;
 
-      if (Platform.OS === 'android') {
-        return RNAudioRecorderPlayer.startPlayer(uri, httpHeaders);
-      }
-
-      return RNAudioRecorderPlayer.startPlayer(uri);
+      return RNAudioRecorderPlayer.startPlayer(uri, httpHeaders);
     }
   };
 

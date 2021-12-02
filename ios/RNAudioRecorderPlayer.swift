@@ -21,6 +21,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
     // Player
     var pausedPlayTime: CMTime?
+    var audioPlayerAsset: AVURLAsset!
     var audioPlayerItem: AVPlayerItem!
     var audioPlayer: AVPlayer!
     var playTimer: Timer?
@@ -307,9 +308,10 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     }
 
 
-    @objc(startPlayer:resolve:rejecter:)
+    @objc(startPlayer:httpHeaders:resolve:rejecter:)
     public func startPlayer(
         path: String,
+        httpHeaders: [String: String],
         resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
@@ -321,9 +323,10 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         } catch {
             reject("RNAudioPlayerRecorder", "Failed to play", nil)
         }
-        
+
         setAudioFileURL(path: path)
-        audioPlayerItem = AVPlayerItem(url: audioFileURL!)
+        audioPlayerAsset = AVURLAsset(url: URL(string: path)!, options:["AVURLAssetHTTPHeaderFieldsKey": httpHeaders])
+        audioPlayerItem = AVPlayerItem(asset: audioPlayerAsset!)
 
         if (audioPlayer == nil) {
             audioPlayer = AVPlayer(playerItem: audioPlayerItem)
