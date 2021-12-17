@@ -232,6 +232,7 @@ All methods are implemented with promises.
 interface AudioSet {
   AVSampleRateKeyIOS?: number;
   AVFormatIDKeyIOS?: AVEncodingType;
+  AVModeIOS?: AVModeType;
   AVNumberOfChannelsKeyIOS?: number;
   AVEncoderAudioQualityKeyIOS?: AVEncoderAudioQualityIOSType;
   AudioSourceAndroid?: AudioSourceAndroidType;
@@ -246,6 +247,7 @@ interface AudioSet {
 const audioSet: AudioSet = {
   AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
   AudioSourceAndroid: AudioSourceAndroidType.MIC,
+  AVModeIOS: AVModeIOSOption.measurement,
   AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
   AVNumberOfChannelsKeyIOS: 2,
   AVFormatIDKeyIOS: AVEncodingOption.aac,
