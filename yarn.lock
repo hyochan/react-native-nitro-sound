@@ -926,10 +926,10 @@ flow-bin@^0.166.1:
   resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.166.1.tgz#b8f02247c4134aa41cba97aa8b281cae3448c895"
   integrity sha512-x0T0sM+rfr4scmVkBY++j2SfqzE8KwkeFmu6+WRe2qOT+TCf2Ze1gx2R/uwXBRL9S8TpPPogXiyW6urVyXIE/Q==
 
-flowgen@^1.16.0:
-  version "1.16.0"
-  resolved "https://registry.yarnpkg.com/flowgen/-/flowgen-1.16.0.tgz#b3663cd06e1161e228eb98b946cdf53049d6bf20"
-  integrity sha512-tnaPgFK2tuUG2EEJLycJlOWfnbB0Z7RiqWNl+rRWCxNBoeJTS7t78XCZY7YZdQjBxC77ZeHzfQ+AgIveXXLUJA==
+flowgen@^1.16.1:
+  version "1.16.1"
+  resolved "https://registry.yarnpkg.com/flowgen/-/flowgen-1.16.1.tgz#cfb5bc27be2a4d7e9ecb60ec827ade8571753e81"
+  integrity sha512-Ez6P0rWrZA6ogG3/EYdKpl8lkSwsFixT14zO5h2wm2sQKSrzW114B9+2DrbPNUlcxMOQAKol4XLoPAxYRncHkg==
   dependencies:
     "@babel/code-frame" "^7.10.4"
     "@babel/highlight" "^7.10.4"
