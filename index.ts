@@ -88,15 +88,15 @@ export enum AVModeIOSOption {
   voiceprompt = 'voiceprompt',
 }
 
-type AVModeIOSType =
-  | AVModeOption.gamechat
-  | AVModeOption.measurement
-  | AVModeOption.movieplayback
-  | AVModeOption.spokenaudio
-  | AVModeOption.videochat
-  | AVModeOption.videorecording
-  | AVModeOption.voicechat
-  | AVModeOption.voiceprompt;
+export type AVModeIOSType =
+  | AVModeIOSOption.gamechat
+  | AVModeIOSOption.measurement
+  | AVModeIOSOption.movieplayback
+  | AVModeIOSOption.spokenaudio
+  | AVModeIOSOption.videochat
+  | AVModeIOSOption.videorecording
+  | AVModeIOSOption.voicechat
+  | AVModeIOSOption.voiceprompt;
 
 export enum AVEncoderAudioQualityIOSType {
   min = 0,
