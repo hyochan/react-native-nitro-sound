@@ -319,7 +319,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 self.sendEvent(withName: "rn-playback", body: [
                     "isMuted": self.audioPlayer.isMuted,
                     "currentPosition": self.audioPlayerItem.currentTime().seconds * 1000,
-                    "duration": self.audioPlayerItem.duration.seconds * 1000,
+                    "duration": self.audioPlayerItem.asset.duration.seconds * 1000,
                 ])
             }
         }
