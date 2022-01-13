@@ -350,7 +350,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         }
 
         setAudioFileURL(path: path)
-        audioPlayerAsset = AVURLAsset(url: URL(string: path)!, options:["AVURLAssetHTTPHeaderFieldsKey": httpHeaders])
+        audioPlayerAsset = AVURLAsset(url: audioFileURL!, options:["AVURLAssetHTTPHeaderFieldsKey": httpHeaders])
         audioPlayerItem = AVPlayerItem(asset: audioPlayerAsset!)
 
         if (audioPlayer == nil) {
