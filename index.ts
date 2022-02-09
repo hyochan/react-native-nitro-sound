@@ -119,6 +119,8 @@ export interface AudioSet {
   AVModeIOS?: AVModeIOSType;
   AVNumberOfChannelsKeyIOS?: number;
   AVEncoderAudioQualityKeyIOS?: AVEncoderAudioQualityIOSType;
+  AVEncoderBitRatePerChannelKey?: number;
+  AVEncoderBitRateKey?: number;
   AudioSourceAndroid?: AudioSourceAndroidType;
   AVLinearPCMBitDepthKeyIOS?: AVLinearPCMBitDepthKeyIOSType;
   AVLinearPCMIsBigEndianKeyIOS?: boolean;
