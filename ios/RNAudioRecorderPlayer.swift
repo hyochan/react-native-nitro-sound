@@ -151,6 +151,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         var sampleRate = audioSets["AVSampleRateKeyIOS"] as? Int
         var numberOfChannel = audioSets["AVNumberOfChannelsKeyIOS"] as? Int
         var audioQuality = audioSets["AVEncoderAudioQualityKeyIOS"] as? Int
+        var bitRate = audioSets["AVEncoderBitRateKey"] as? Int
+        var bitRatePerChannel = audioSets["AVEncoderBitRatePerChannelKey"] as? Int
 
         setAudioFileURL(path: path)
 
@@ -229,6 +231,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 AVFormatIDKey: avFormat!,
                 AVNumberOfChannelsKey: numberOfChannel!,
                 AVEncoderAudioQualityKey: audioQuality!,
+                AVEncoderBitRateKey: bitRate!,
+                AVEncoderBitRatePerChannelKey: bitRatePerChannel!,
                 AVLinearPCMBitDepthKey: avLPCMBitDepth ?? AVLinearPCMBitDepthKey.count,
                 AVLinearPCMIsBigEndianKey: avLPCMIsBigEndian ?? true,
                 AVLinearPCMIsFloatKey: avLPCMIsFloatKey ?? false,
