@@ -179,6 +179,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 avFormat = Int(kAudioFormatMPEGLayer1)
             } else if (encoding == "mp2") {
                 avFormat = Int(kAudioFormatMPEGLayer2)
+            } else if (encoding == "mp4") {
+                avFormat = Int(kAudioFormatMPEG4AAC)
             } else if (encoding == "alac") {
                 avFormat = Int(kAudioFormatAppleLossless)
             } else if (encoding == "amr") {

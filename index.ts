@@ -56,6 +56,7 @@ export enum AVEncodingOption {
   alaw = 'alaw',
   mp1 = 'mp1',
   mp2 = 'mp2',
+  mp4 = 'mp4',
   alac = 'alac',
   amr = 'amr',
   flac = 'flac',
@@ -72,6 +73,7 @@ type AVEncodingType =
   | AVEncodingOption.alaw
   | AVEncodingOption.mp1
   | AVEncodingOption.mp2
+  | AVEncodingOption.mp4
   | AVEncodingOption.alac
   | AVEncodingOption.amr
   | AVEncodingOption.flac
