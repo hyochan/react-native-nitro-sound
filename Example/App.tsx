@@ -327,7 +327,7 @@ class Page extends Component<any, State> {
     );
 
     this.audioRecorderPlayer.addRecordBackListener((e: RecordBackType) => {
-      console.log('record-back', e);
+      // console.log('record-back', e);
       this.setState({
         recordSecs: e.currentPosition,
         recordTime: this.audioRecorderPlayer.mmssss(
@@ -340,7 +340,8 @@ class Page extends Component<any, State> {
 
   private onPauseRecord = async () => {
     try {
-      await this.audioRecorderPlayer.pauseRecorder();
+      const r = await this.audioRecorderPlayer.pauseRecorder();
+      console.log(r);
     } catch (err) {
       console.log('pauseRecord', err);
     }

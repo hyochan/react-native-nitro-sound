@@ -285,6 +285,7 @@ class AudioRecorderPlayer {
   stopRecorder = async (): Promise<string> => {
     if (this._isRecording) {
       this._isRecording = false;
+      this._hasPausedRecord = false;
 
       return RNAudioRecorderPlayer.stopRecorder();
     }
