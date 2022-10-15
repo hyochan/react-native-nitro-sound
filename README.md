@@ -189,7 +189,7 @@ buildscript {
 +     minSdkVersion = 24
       compileSdkVersion = 29
       targetSdkVersion = 29
-+     kotlinVersion = '1.5.0'
++     kotlinVersion = '1.6.10'
 
       ndkVersion = "20.1.5948944"
   }
@@ -198,7 +198,7 @@ buildscript {
       jcenter()
   }
   dependencies {
-      classpath("com.android.tools.build:gradle:4.1.0")
+      classpath("com.android.tools.build:gradle:4.2.2")
 +     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
   }
 ...
