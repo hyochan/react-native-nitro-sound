@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {Component} from 'react';
+import type {ReactElement, ReactNode} from 'react';
+
+import {Component} from 'react';
 
 // import NativeButton from 'apsl-react-native-button';
 
@@ -48,6 +50,7 @@ const styles: any = StyleSheet.create({
 });
 
 interface ItemProps {
+  children?: ReactNode;
   isLoading?: boolean;
   isDisabled?: boolean;
   onPress?: () => void;
@@ -76,7 +79,7 @@ class Button extends Component<ItemProps, any> {
     this.state = {};
   }
 
-  public render() {
+  public render(): ReactElement {
     if (this.props.isDisabled) {
       return (
         <View style={this.props.disabledStyle}>
@@ -84,6 +87,7 @@ class Button extends Component<ItemProps, any> {
         </View>
       );
     }
+
     if (this.props.isLoading) {
       return (
         <View style={this.props.style}>
@@ -91,6 +95,7 @@ class Button extends Component<ItemProps, any> {
         </View>
       );
     }
+
     return (
       <TouchableOpacity
         activeOpacity={this.props.activeOpacity}
