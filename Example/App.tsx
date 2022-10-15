@@ -360,25 +360,30 @@ class Page extends Component<any, State> {
   };
 
   private onStartPlay = async (): Promise<void> => {
-    console.log('onStartPlay');
-    //? Custom path
-    // const msg = await this.audioRecorderPlayer.startPlayer(this.path);
+    console.log('onStartPlay', this.path);
 
-    //? Default path
-    const msg = await this.audioRecorderPlayer.startPlayer();
-    const volume = await this.audioRecorderPlayer.setVolume(1.0);
-    console.log(`file: ${msg}`, `volume: ${volume}`);
+    try {
+      const msg = await this.audioRecorderPlayer.startPlayer(this.path);
 
-    this.audioRecorderPlayer.addPlayBackListener((e: PlayBackType) => {
-      this.setState({
-        currentPositionSec: e.currentPosition,
-        currentDurationSec: e.duration,
-        playTime: this.audioRecorderPlayer.mmssss(
-          Math.floor(e.currentPosition),
-        ),
-        duration: this.audioRecorderPlayer.mmssss(Math.floor(e.duration)),
+      //? Default path
+      // const msg = await this.audioRecorderPlayer.startPlayer();
+      const volume = await this.audioRecorderPlayer.setVolume(1.0);
+      console.log(`path: ${msg}`, `volume: ${volume}`);
+
+      this.audioRecorderPlayer.addPlayBackListener((e: PlayBackType) => {
+        console.log('playBackListener', e);
+        this.setState({
+          currentPositionSec: e.currentPosition,
+          currentDurationSec: e.duration,
+          playTime: this.audioRecorderPlayer.mmssss(
+            Math.floor(e.currentPosition),
+          ),
+          duration: this.audioRecorderPlayer.mmssss(Math.floor(e.duration)),
+        });
       });
-    });
+    } catch (err) {
+      console.log('startPlayer error', err);
+    }
   };
 
   private onPausePlay = async (): Promise<void> => {

@@ -126,6 +126,13 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         return true
     }
 
+    @objc(audioPlayerDecodeErrorDidOccur:)
+    public static func audioPlayerDecodeErrorDidOccur(error: Error?) -> Void {
+        print("Playing failed with error")
+        print(error ?? "")
+        return
+    }
+
     @objc(setSubscriptionDuration:)
     func setSubscriptionDuration(duration: Double) -> Void {
         subscriptionDuration = duration
@@ -310,7 +317,6 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     }
 
     /**********               Player               **********/
-
     func addPeriodicTimeObserver() {
         let timeScale = CMTimeScale(NSEC_PER_SEC)
         let time = CMTime(seconds: subscriptionDuration, preferredTimescale: timeScale)
@@ -372,7 +378,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
         if (audioPlayer == nil) {
-            return reject("RNAudioPlayerRecorder", "Player is already stopped.", nil)
+            return reject("RNAudioPlayerRecorder", "Player has already stopped.", nil)
         }
 
         audioPlayer.pause()
