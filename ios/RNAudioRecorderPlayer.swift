@@ -158,6 +158,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         var sampleRate = audioSets["AVSampleRateKeyIOS"] as? Int
         var numberOfChannel = audioSets["AVNumberOfChannelsKeyIOS"] as? Int
         var audioQuality = audioSets["AVEncoderAudioQualityKeyIOS"] as? Int
+        var bitRate = audioSets["AVEncoderBitRateKeyIOS"] as? Int
 
         setAudioFileURL(path: path)
 
@@ -232,6 +233,10 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             audioQuality = AVAudioQuality.medium.rawValue
         }
 
+        if (bitRate == nil) {
+            bitRate = 128000
+        }
+
         func startRecording() {
             let settings = [
                 AVSampleRateKey: sampleRate!,
@@ -241,7 +246,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 AVLinearPCMBitDepthKey: avLPCMBitDepth ?? AVLinearPCMBitDepthKey.count,
                 AVLinearPCMIsBigEndianKey: avLPCMIsBigEndian ?? true,
                 AVLinearPCMIsFloatKey: avLPCMIsFloatKey ?? false,
-                AVLinearPCMIsNonInterleaved: avLPCMIsNonInterleaved ?? false
+                AVLinearPCMIsNonInterleaved: avLPCMIsNonInterleaved ?? false,
+                AVEncoderBitRateKey: bitRate!
             ] as [String : Any]
 
             do {

@@ -126,10 +126,12 @@ export interface AudioSet {
   AVLinearPCMIsBigEndianKeyIOS?: boolean;
   AVLinearPCMIsFloatKeyIOS?: boolean;
   AVLinearPCMIsNonInterleavedIOS?: boolean;
+  AVEncoderBitRateKeyIOS?: number;
   OutputFormatAndroid?: OutputFormatAndroidType;
   AudioEncoderAndroid?: AudioEncoderAndroidType;
   AudioEncodingBitRateAndroid?: number;
   AudioSamplingRateAndroid?: number;
+  AudioChannelsAndroid?: number;
 }
 
 const pad = (num: number): string => {
