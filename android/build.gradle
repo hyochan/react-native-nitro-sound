@@ -1,5 +1,9 @@
 
 buildscript {
+    ext.getExtOrDefault = {name ->
+        return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.ext.get(name)
+    }
+    
     ext {
         gradleVersion = '4.1.0'
         kotlinVersion = '1.6.0'
@@ -11,7 +15,8 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.2'
+        classpath "com.android.tools.build:gradle:4.2.2"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${getExtOrDefault('kotlinVersion')}"
     }
 }
 
@@ -47,7 +52,7 @@ repositories {
 
 dependencies {
   implementation 'com.facebook.react:react-native:+'
-  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${project.ext.kotlinVersion}"
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${safeExtGet('kotlinVersion', project.ext.kotlinVersion)}"
 
   def supportLibVersion = safeExtGet('supportLibVersion', safeExtGet('supportVersion', null))
   def androidXVersion = safeExtGet('androidXVersion', null)
