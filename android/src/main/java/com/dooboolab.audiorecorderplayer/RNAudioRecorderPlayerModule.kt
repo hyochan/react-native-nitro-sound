@@ -38,9 +38,10 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     fun startRecorder(path: String, audioSet: ReadableMap?, meteringEnabled: Boolean, promise: Promise) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                // TIRAMISU (33)
-                // https://github.com/hyochan/react-native-audio-recorder-player/issues/503
-                if (Build.VERSION.SDK_INT < 33 &&
+                // On devices that run Android 10 (API level 29) or higher
+                // your app can contribute to well-defined media collections such as MediaStore.Downloads without requesting any storage-related permissions
+                // https://developer.android.com/about/versions/11/privacy/storage#permissions-target-11
+                if (Build.VERSION.SDK_INT < 29 &&
                         (ActivityCompat.checkSelfPermission(reactContext, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED ||
                         ActivityCompat.checkSelfPermission(reactContext, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED))  {
                     ActivityCompat.requestPermissions((currentActivity)!!, arrayOf(
