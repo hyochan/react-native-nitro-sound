@@ -138,6 +138,44 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         subscriptionDuration = duration
     }
 
+    func getAvFormatFromEncoding(encoding: String?) -> Int? {
+        var avFormat: Int?
+
+        if (encoding == "lpcm") {
+            avFormat = Int(kAudioFormatAppleIMA4)
+        } else if (encoding == "ima4") {
+            avFormat = Int(kAudioFormatAppleIMA4)
+        } else if (encoding == "aac") {
+            avFormat = Int(kAudioFormatMPEG4AAC)
+        } else if (encoding == "MAC3") {
+            avFormat = Int(kAudioFormatMACE3)
+        } else if (encoding == "MAC6") {
+            avFormat = Int(kAudioFormatMACE6)
+        } else if (encoding == "ulaw") {
+            avFormat = Int(kAudioFormatULaw)
+        } else if (encoding == "alaw") {
+            avFormat = Int(kAudioFormatALaw)
+        } else if (encoding == "mp1") {
+            avFormat = Int(kAudioFormatMPEGLayer1)
+        } else if (encoding == "mp2") {
+            avFormat = Int(kAudioFormatMPEGLayer2)
+        } else if (encoding == "mp4") {
+            avFormat = Int(kAudioFormatMPEG4AAC)
+        } else if (encoding == "alac") {
+            avFormat = Int(kAudioFormatAppleLossless)
+        } else if (encoding == "amr") {
+            avFormat = Int(kAudioFormatAMR)
+        } else if (encoding == "flac") {
+            if #available(iOS 11.0, *) {
+                avFormat = Int(kAudioFormatFLAC)
+            }
+        } else if (encoding == "opus") {
+            avFormat = Int(kAudioFormatOpus)
+        }
+        
+        return avFormat
+    }
+
     /**********               Player               **********/
 
     @objc(startRecorder:audioSets:meteringEnabled:resolve:reject:)
@@ -146,60 +184,69 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
         _meteringEnabled = meteringEnabled;
 
-        let encoding = audioSets["AVFormatIDKeyIOS"] as? String
-        let mode = audioSets["AVModeIOS"] as? String
         let avLPCMBitDepth = audioSets["AVLinearPCMBitDepthKeyIOS"] as? Int
         let avLPCMIsBigEndian = audioSets["AVLinearPCMIsBigEndianKeyIOS"] as? Bool
         let avLPCMIsFloatKey = audioSets["AVLinearPCMIsFloatKeyIOS"] as? Bool
         let avLPCMIsNonInterleaved = audioSets["AVLinearPCMIsNonInterleavedIOS"] as? Bool
+        let sampleRate = audioSets["AVSampleRateKeyIOS"] as? Int
+        let numberOfChannel = audioSets["AVNumberOfChannelsKeyIOS"] as? Int
+        let audioQuality = audioSets["AVEncoderAudioQualityKeyIOS"] as? Int
+        let bitRate = audioSets["AVEncoderBitRateKeyIOS"] as? Int
+        let avFormat: Int? = getAvFormatFromEncoding(encoding: audioSets["AVFormatIDKeyIOS"] as? String)
 
-        var avFormat: Int? = nil
+        let mode = audioSets["AVModeIOS"] as? String
         var avMode: AVAudioSession.Mode = AVAudioSession.Mode.default
-        var sampleRate = audioSets["AVSampleRateKeyIOS"] as? Int
-        var numberOfChannel = audioSets["AVNumberOfChannelsKeyIOS"] as? Int
-        var audioQuality = audioSets["AVEncoderAudioQualityKeyIOS"] as? Int
-        var bitRate = audioSets["AVEncoderBitRateKeyIOS"] as? Int
+       
+        let defaultSettings: [String: Any] = [
+            AVSampleRateKey: 44100,
+            AVFormatIDKey: Int(kAudioFormatAppleLossless),
+            AVNumberOfChannelsKey: 2,
+            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue,
+            AVLinearPCMBitDepthKey: AVLinearPCMBitDepthKey.count,
+            AVLinearPCMIsBigEndianKey: true,
+            AVLinearPCMIsFloatKey: false,
+            AVLinearPCMIsNonInterleaved: false,
+            AVEncoderBitRateKey: 128000
+        ]
+        
+        var customSettings: [String : Any] = [:]
 
         setAudioFileURL(path: path)
 
-        if (sampleRate == nil) {
-            sampleRate = 44100;
+        if (sampleRate != nil) {
+            customSettings[AVSampleRateKey] = sampleRate
         }
 
-        if (encoding == nil) {
-            avFormat = Int(kAudioFormatAppleLossless)
-        } else {
-            if (encoding == "lpcm") {
-                avFormat = Int(kAudioFormatAppleIMA4)
-            } else if (encoding == "ima4") {
-                avFormat = Int(kAudioFormatAppleIMA4)
-            } else if (encoding == "aac") {
-                avFormat = Int(kAudioFormatMPEG4AAC)
-            } else if (encoding == "MAC3") {
-                avFormat = Int(kAudioFormatMACE3)
-            } else if (encoding == "MAC6") {
-                avFormat = Int(kAudioFormatMACE6)
-            } else if (encoding == "ulaw") {
-                avFormat = Int(kAudioFormatULaw)
-            } else if (encoding == "alaw") {
-                avFormat = Int(kAudioFormatALaw)
-            } else if (encoding == "mp1") {
-                avFormat = Int(kAudioFormatMPEGLayer1)
-            } else if (encoding == "mp2") {
-                avFormat = Int(kAudioFormatMPEGLayer2)
-            } else if (encoding == "mp4") {
-                avFormat = Int(kAudioFormatMPEG4AAC)
-            } else if (encoding == "alac") {
-                avFormat = Int(kAudioFormatAppleLossless)
-            } else if (encoding == "amr") {
-                avFormat = Int(kAudioFormatAMR)
-            } else if (encoding == "flac") {
-                if #available(iOS 11.0, *) {
-                    avFormat = Int(kAudioFormatFLAC)
-                }
-            } else if (encoding == "opus") {
-                avFormat = Int(kAudioFormatOpus)
-            }
+        if (avFormat != nil) {
+            customSettings[AVFormatIDKey] = avFormat
+        }
+
+        if (numberOfChannel != nil) {
+            customSettings[AVNumberOfChannelsKey] = numberOfChannel
+        }
+
+        if (audioQuality != nil) {
+            customSettings[AVEncoderAudioQualityKey] = audioQuality
+        }
+
+        if (bitRate != nil) {
+            customSettings[AVEncoderBitRateKey] = bitRate
+        }
+        
+        if (avLPCMBitDepth != nil) {
+            customSettings[AVLinearPCMBitDepthKey] = avLPCMBitDepth
+        }
+        
+        if (avLPCMIsBigEndian != nil) {
+            customSettings[AVLinearPCMIsBigEndianKey] = avLPCMIsBigEndian
+        }
+        
+        if (avLPCMIsFloatKey != nil) {
+            customSettings[AVLinearPCMIsFloatKey] = avLPCMIsFloatKey
+        }
+        
+        if(avLPCMIsNonInterleaved != nil) {
+            customSettings[AVLinearPCMIsNonInterleaved] = avLPCMIsNonInterleaved
         }
 
         if (mode == "measurement") {
@@ -224,31 +271,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             }
         }
 
-
-        if (numberOfChannel == nil) {
-            numberOfChannel = 2
-        }
-
-        if (audioQuality == nil) {
-            audioQuality = AVAudioQuality.medium.rawValue
-        }
-
-        if (bitRate == nil) {
-            bitRate = 128000
-        }
-
         func startRecording() {
-            let settings = [
-                AVSampleRateKey: sampleRate!,
-                AVFormatIDKey: avFormat!,
-                AVNumberOfChannelsKey: numberOfChannel!,
-                AVEncoderAudioQualityKey: audioQuality!,
-                AVLinearPCMBitDepthKey: avLPCMBitDepth ?? AVLinearPCMBitDepthKey.count,
-                AVLinearPCMIsBigEndianKey: avLPCMIsBigEndian ?? true,
-                AVLinearPCMIsFloatKey: avLPCMIsFloatKey ?? false,
-                AVLinearPCMIsNonInterleaved: avLPCMIsNonInterleaved ?? false,
-                AVEncoderBitRateKey: bitRate!
-            ] as [String : Any]
+            let settings = customSettings.count > 0 ? customSettings : defaultSettings
 
             do {
                 audioRecorder = try AVAudioRecorder(url: audioFileURL!, settings: settings)
