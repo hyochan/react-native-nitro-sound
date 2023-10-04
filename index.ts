@@ -61,6 +61,7 @@ export enum AVEncodingOption {
   amr = 'amr',
   flac = 'flac',
   opus = 'opus',
+  wav = 'wav'
 }
 
 type AVEncodingType =
@@ -77,7 +78,8 @@ type AVEncodingType =
   | AVEncodingOption.alac
   | AVEncodingOption.amr
   | AVEncodingOption.flac
-  | AVEncodingOption.opus;
+  | AVEncodingOption.opus
+  | AVEncodingOption.wav;
 
 export enum AVModeIOSOption {
   gamechat = 'gamechat',
