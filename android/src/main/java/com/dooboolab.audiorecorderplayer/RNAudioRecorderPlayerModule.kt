@@ -231,10 +231,12 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                  */
                 mTask = object : TimerTask() {
                     override fun run() {
-                        val obj = Arguments.createMap()
-                        obj.putInt("duration", mp.duration)
-                        obj.putInt("currentPosition", mp.currentPosition)
-                        sendEvent(reactContext, "rn-playback", obj)
+                         if (mp.isPlaying) {
+                            val obj = Arguments.createMap()
+                            obj.putInt("duration", mp.duration)
+                            obj.putInt("currentPosition", mp.currentPosition)
+                            sendEvent(reactContext, "rn-playback", obj)
+                        }
                     }
                 }
 
