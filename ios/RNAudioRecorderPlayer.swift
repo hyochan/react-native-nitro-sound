@@ -199,6 +199,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 }
             } else if (encoding == "opus") {
                 avFormat = Int(kAudioFormatOpus)
+            } else if (encoding == "wav") {
+                avFormat = Int(kAudioFormatLinearPCM)
             }
         }
 
