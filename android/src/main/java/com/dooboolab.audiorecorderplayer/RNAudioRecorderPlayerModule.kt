@@ -261,6 +261,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                 Log.d(tag, "Plays completed.")
                 mTimer!!.cancel()
                 mp.stop()
+                mp.reset()
                 mp.release()
                 mediaPlayer = null
             }
@@ -343,6 +344,8 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         }
 
         try {
+            mediaPlayer!!.stop()
+            mediaPlayer!!.reset()
             mediaPlayer!!.release()
             mediaPlayer = null
             promise.resolve("stopped player")
