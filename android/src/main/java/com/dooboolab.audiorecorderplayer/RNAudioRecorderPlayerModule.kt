@@ -255,7 +255,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                  */
                 val obj = Arguments.createMap()
                 obj.putInt("duration", mp.duration)
-                obj.putInt("currentPosition", mp.duration)
+                obj.putInt("currentPosition", mp.currentPosition)
                 sendEvent(reactContext, "rn-playback", obj)
                 /**
                  * Reset player.
