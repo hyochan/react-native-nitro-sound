@@ -376,8 +376,21 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         }
 
         addPeriodicTimeObserver()
+        NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying), name: Notification.Name.AVPlayerItemDidPlayToEndTime, object: audioPlayer.currentItem)
         audioPlayer.play()
         resolve(audioFileURL?.absoluteString)
+    }
+    
+    @objc
+    public func playerDidFinishPlaying(notification: Notification) {
+        if let playerItem = notification.object as? AVPlayerItem {
+            let duration = playerItem.duration.seconds * 1000
+            self.sendEvent(withName: "rn-playback", body: [
+                "isMuted": self.audioPlayer?.isMuted as Any,
+                "currentPosition": duration,
+                "duration": duration,
+            ])
+        }
     }
 
     @objc(stopPlayer:rejecter:)
