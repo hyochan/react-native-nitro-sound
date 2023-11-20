@@ -34,7 +34,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     override func supportedEvents() -> [String]! {
         return ["rn-playback", "rn-recordback"]
     }
-
+    
     func setAudioFileURL(path: String) {
         if (path == "DEFAULT") {
             let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
@@ -42,10 +42,92 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         } else if (path.hasPrefix("http://") || path.hasPrefix("https://") || path.hasPrefix("file://")) {
             audioFileURL = URL(string: path)
         } else {
-            let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-            audioFileURL = cachesDirectory.appendingPathComponent(path)
+            let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            audioFileURL = documentDirectory.appendingPathComponent(path)
+            print(audioFileURL, path)
         }
     }
+    
+    func setAudioFileURLForFolder( appointmentID: String, path: String) {
+        if (path == "DEFAULT") {
+            let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            audioFileURL = cachesDirectory.appendingPathComponent("sound.m4a")
+        } else if (path.hasPrefix("http://") || path.hasPrefix("https://") || path.hasPrefix("file://")) {
+            audioFileURL = URL(string: path)
+        } else {
+            self.createFolder( folderName: appointmentID, filename: path)
+        }
+    }
+
+    
+    func createFolder(folderName: String, filename: String) -> Void {
+        let fileManager = FileManager.default
+        // Get document directory for device, this should succeed
+        if let documentDirectory = fileManager.urls(for: .documentDirectory,
+                                                    in: .userDomainMask).first {
+            // Construct a URL with desired folder name
+            let folderURL = documentDirectory.appendingPathComponent(folderName)
+            // If folder URL does not exist, create it
+            if !fileManager.fileExists(atPath: folderURL.path) {
+                do {
+                    // Attempt to create folder
+                    try fileManager.createDirectory(atPath: folderURL.path,
+                                                    withIntermediateDirectories: true,
+                                                    attributes: nil)
+                   
+                        audioFileURL = folderURL.appendingPathComponent(filename)
+                } catch {
+                    // Creation failed. Print error & return nil
+                    print(error.localizedDescription)
+                  //  return nil
+                }
+            } else {
+                // if folder name exists then insert image inside folder
+             
+                    audioFileURL = folderURL.appendingPathComponent(filename)
+
+            }
+        }
+      
+    }
+    
+
+ 
+    
+
+    
+    @objc(getFilesFromFolder:resolve:rejecter:)
+    public func getFilesFromFolder(
+        name: String,
+        resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        let fileManager = FileManager.default
+        if let documentDirectory = fileManager.urls(for: .documentDirectory,
+                                                    in: .userDomainMask).first {
+            // Construct a URL with desired folder name
+            let path = documentDirectory.appendingPathComponent(name)
+            var files = [URL]() 
+            if let enumerator = FileManager.default.enumerator(at: path, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles, .skipsPackageDescendants]) {
+                for case let fileURL as URL in enumerator {
+                    do {
+                        let fileAttributes = try fileURL.resourceValues(forKeys:[.isRegularFileKey])
+                        if fileAttributes.isRegularFile! {
+                            files.append(fileURL)
+                        }
+                    } catch { print(error, fileURL) }
+                }
+                print(files)
+                let stringArray: [NSString] = files.map { $0.absoluteString as NSString }
+
+                resolve(stringArray);
+        }
+       
+        }
+    }
+    
+    
+    
 
     /**********               Recorder               **********/
 
@@ -140,8 +222,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
     /**********               Player               **********/
 
-    @objc(startRecorder:audioSets:meteringEnabled:resolve:reject:)
-    func startRecorder(path: String,  audioSets: [String: Any], meteringEnabled: Bool, resolve: @escaping RCTPromiseResolveBlock,
+    @objc(startRecorder:audioSets:appointmentID:meteringEnabled:resolve:reject:)
+    func startRecorder(path: String,  audioSets: [String: Any], appointmentID: String, meteringEnabled: Bool, resolve: @escaping RCTPromiseResolveBlock,
        rejecter reject: @escaping RCTPromiseRejectBlock) -> Void {
 
         _meteringEnabled = meteringEnabled;
@@ -152,15 +234,15 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         let avLPCMIsBigEndian = audioSets["AVLinearPCMIsBigEndianKeyIOS"] as? Bool
         let avLPCMIsFloatKey = audioSets["AVLinearPCMIsFloatKeyIOS"] as? Bool
         let avLPCMIsNonInterleaved = audioSets["AVLinearPCMIsNonInterleavedIOS"] as? Bool
-
+        
         var avFormat: Int? = nil
         var avMode: AVAudioSession.Mode = AVAudioSession.Mode.default
         var sampleRate = audioSets["AVSampleRateKeyIOS"] as? Int
         var numberOfChannel = audioSets["AVNumberOfChannelsKeyIOS"] as? Int
         var audioQuality = audioSets["AVEncoderAudioQualityKeyIOS"] as? Int
         var bitRate = audioSets["AVEncoderBitRateKeyIOS"] as? Int
-
-        setAudioFileURL(path: path)
+        
+        setAudioFileURLForFolder(appointmentID: appointmentID, path: path)
 
         if (sampleRate == nil) {
             sampleRate = 44100;
@@ -253,7 +335,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             ] as [String : Any]
 
             do {
-                audioRecorder = try AVAudioRecorder(url: audioFileURL!, settings: settings)
+                audioRecorder = try AVAudioRecorder(url: audioFileURL!, settings: settings)                
 
                 if (audioRecorder != nil) {
                     audioRecorder.prepareToRecord()
@@ -307,13 +389,18 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             reject("RNAudioPlayerRecorder", "Failed to stop recorder. It is already nil.", nil)
             return
         }
-
+        audioRecorder.pause()
         audioRecorder.stop()
 
         if (recordTimer != nil) {
             recordTimer!.invalidate()
             recordTimer = nil
         }
+        do {
+                   try audioSession.setActive(false)
+               } catch {
+                   print("Error deactivating audio session: \(error.localizedDescription)")
+               }
 
         resolve(audioFileURL?.absoluteString)
     }
@@ -390,7 +477,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         }
 
         audioPlayer.pause()
-        self.removePeriodicTimeObserver()
+       self.removePeriodicTimeObserver()
         self.audioPlayer = nil;
 
         resolve(audioFileURL?.absoluteString)

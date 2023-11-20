@@ -23,6 +23,7 @@ import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
 import com.facebook.react.modules.core.PermissionListener
 import java.io.IOException
+import java.io.File
 import java.util.*
 import kotlin.math.log10
 
@@ -45,7 +46,8 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     }
 
     @ReactMethod
-    fun startRecorder(path: String, audioSet: ReadableMap?, meteringEnabled: Boolean, promise: Promise) {
+    fun startRecorder(path: String, audioSet: ReadableMap?, appointmentId: String,
+ meteringEnabled: Boolean, promise: Promise) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // On devices that run Android 10 (API level 29) or higher
@@ -69,6 +71,11 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
             Log.w(tag, ne.toString())
             promise.reject("No permission granted.", "Try again after adding permission.")
             return
+        }
+        try {
+            val file: File = File("${reactContext.filesDir}/${appointmentId}")
+            file.mkdirs()
+        }catch (e: Exception){
         }
         audioFileURL = if (((path == "DEFAULT"))) "${reactContext.cacheDir}/$defaultFileName" else path
         _meteringEnabled = meteringEnabled

@@ -152,6 +152,11 @@ export type PlayBackType = {
   duration: number;
 };
 
+export const getFilesFromFolder = async (name): Promise<any> => {
+  const result = await RNAudioRecorderPlayer.getFilesFromFolder(name);
+  return result;
+};
+
 class AudioRecorderPlayer {
   private _isRecording: boolean;
   private _isPlaying: boolean;
@@ -239,6 +244,7 @@ class AudioRecorderPlayer {
   startRecorder = async (
     uri?: string,
     audioSets?: AudioSet,
+    appointmentId?: string,
     meteringEnabled?: boolean,
   ): Promise<string> => {
     if (!this._isRecording) {
@@ -247,6 +253,7 @@ class AudioRecorderPlayer {
       return RNAudioRecorderPlayer.startRecorder(
         uri ?? 'DEFAULT',
         audioSets,
+        appointmentId,
         meteringEnabled ?? false,
       );
     }
