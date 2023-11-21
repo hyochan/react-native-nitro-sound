@@ -381,29 +381,24 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     }
 
     @objc(stopRecorder:rejecter:)
-    public func stopRecorder(
-        resolve: @escaping RCTPromiseResolveBlock,
-        rejecter reject: @escaping RCTPromiseRejectBlock
-    ) -> Void {
-        if (audioRecorder == nil) {
-            reject("RNAudioPlayerRecorder", "Failed to stop recorder. It is already nil.", nil)
-            return
-        }
-        audioRecorder.pause()
-        audioRecorder.stop()
+     public func stopRecorder(
+         resolve: @escaping RCTPromiseResolveBlock,
+         rejecter reject: @escaping RCTPromiseRejectBlock
+     ) -> Void {
+         if (audioRecorder == nil) {
+             reject("RNAudioPlayerRecorder", "Failed to stop recorder. It is already nil.", nil)
+             return
+         }
 
-        if (recordTimer != nil) {
-            recordTimer!.invalidate()
-            recordTimer = nil
-        }
-        do {
-                   try audioSession.setActive(false)
-               } catch {
-                   print("Error deactivating audio session: \(error.localizedDescription)")
-               }
+         audioRecorder.stop()
 
-        resolve(audioFileURL?.absoluteString)
-    }
+         if (recordTimer != nil) {
+             recordTimer!.invalidate()
+             recordTimer = nil
+         }
+
+         resolve(audioFileURL?.absoluteString)
+     }
 
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         if !flag {
