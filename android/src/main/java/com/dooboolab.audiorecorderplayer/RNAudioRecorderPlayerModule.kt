@@ -264,7 +264,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                  * Reset player.
                  */
                 Log.d(tag, "Plays completed.")
-                mTimer!!.cancel()
+                mTimer?.cancel()
                 mp.stop()
                 mp.reset()
                 mp.release()
