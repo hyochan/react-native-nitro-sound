@@ -363,8 +363,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         audioSession = AVAudioSession.sharedInstance()
 
         do {
-            try audioSession.setCategory(.playAndRecord, mode: avMode, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth])
-            try audioSession.setActive(true)
+            try audioSession.setCategory(.playAndRecord, mode: avMode, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth,AVAudioSession.CategoryOptions.mixWithOthers])
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 
             audioSession.requestRecordPermission { granted in
                 DispatchQueue.main.async {
