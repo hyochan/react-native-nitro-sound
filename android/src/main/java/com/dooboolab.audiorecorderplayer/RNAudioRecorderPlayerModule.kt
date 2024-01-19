@@ -1,10 +1,8 @@
 package com.dooboolab.audiorecorderplayer
 
 import android.Manifest
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
@@ -16,18 +14,25 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
-import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
-import com.facebook.react.bridge.*
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactContext
+import com.facebook.react.bridge.ReactContextBaseJavaModule
+import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.WritableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule.RCTDeviceEventEmitter
 import com.facebook.react.modules.core.PermissionListener
-import java.io.IOException
 import java.io.File
-import java.util.*
+import java.io.IOException
+import java.util.Timer
+import java.util.TimerTask
 import kotlin.math.log10
 
-class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), PermissionListener {
+ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), PermissionListener {
+
     private var audioFileURL = ""
     private var subsDurationMillis = 500
     private var _meteringEnabled = false
@@ -44,6 +49,9 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     override fun getName(): String {
         return tag
     }
+    private var currentServiceIntent: Intent? = null
+
+
 
     @ReactMethod
     fun startRecorder(path: String, audioSet: ReadableMap?, appointmentId: String,
@@ -212,6 +220,24 @@ mediaRecorder!!.reset()
             stopException.message?.let { Log.d(tag,"" + it) }
             promise.reject("stopRecord", stopException.message)
         }
+    }
+
+     @ReactMethod
+     fun startService(promise: Promise) {
+         try {
+             currentServiceIntent = Intent(reactContext, ForegroundService::class.java)
+             reactContext.startService(currentServiceIntent)
+             promise.resolve(true)
+         }catch (exception: Exception){
+             promise.resolve(false)
+         }
+
+     }
+
+    @ReactMethod
+    fun stopService(promise: Promise) {
+        if (currentServiceIntent != null) reactContext.stopService(currentServiceIntent)
+        promise.resolve(true)
     }
 
     @ReactMethod
@@ -417,5 +443,11 @@ mediaPlayer!!.stop()
     companion object {
         private var tag = "RNAudioRecorderPlayer"
         private var defaultFileName = "sound.mp4"
+        var reactApplicationContex: ReactApplicationContext? = null
     }
+
+     init {
+         //don't use >> this.
+         reactApplicationContex = reactContext
+     }
 }
