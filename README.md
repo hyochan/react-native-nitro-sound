@@ -346,6 +346,18 @@ const uri = await audioRecorderPlayer.startRecord(path);
 
 Also, above example helps you to setup manual path to record audio. Not giving path param will record in `default` path as mentioned above.
 
+To pass in specific URI in IOS, you need to append `file://` to the path. As an example using [RFNS](https://github.com/itinance/react-native-fs).
+
+```javascript
+const dirs = RNFetchBlob.fs.dirs;
+const path = Platform.select({
+  ios: `file://${RNFS.DocumentDirectoryPath}/hello.m4a`,
+  android: `${this.dirs.CacheDir}/hello.mp3`,
+});
+
+const uri = await audioRecorderPlayer.startRecord(path);
+```
+
 ## Try yourself
 
 1. Goto `Example` folder by running `cd Example`.
