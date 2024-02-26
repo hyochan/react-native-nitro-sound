@@ -303,7 +303,26 @@ class AudioRecorderPlayer {
 
     return 'Already stopped';
   };
+/**
+   * start service.
+   * @returns {Promise<string>}
+   */
+startService = async (): Promise<string> => {
+    
+  return RNAudioRecorderPlayer.startService();
 
+};
+
+
+/**
+* stop service.
+* @returns {Promise<string>}
+*/
+stopService = async (): Promise<string> => {
+
+    return RNAudioRecorderPlayer.stopService();
+
+};
   /**
    * Resume playing.
    * @returns {Promise<string>}
