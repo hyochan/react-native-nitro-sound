@@ -380,8 +380,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         }
     }
 
-    @objc(stopRecorder:rejecter:)
+    @objc(stopRecorder:resolve:rejecter:)
      public func stopRecorder(
+        backgroundMode: Bool,
          resolve: @escaping RCTPromiseResolveBlock,
          rejecter reject: @escaping RCTPromiseRejectBlock
      ) -> Void {
@@ -389,8 +390,16 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
              reject("RNAudioPlayerRecorder", "Failed to stop recorder. It is already nil.", nil)
              return
          }
-
+         
          audioRecorder.stop()
+         
+         if(backgroundMode == true){
+            do{
+             try audioSession.setActive(false)
+             
+         }catch{
+         }
+         }
 
          if (recordTimer != nil) {
              recordTimer!.invalidate()

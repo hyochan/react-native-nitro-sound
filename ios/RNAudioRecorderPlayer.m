@@ -18,7 +18,8 @@ RCT_EXTERN_METHOD(startRecorder:(NSString *)path
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject);
 
-RCT_EXTERN_METHOD(stopRecorder:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(stopRecorder:(BOOL)backgroundMode
+                 resolve:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
 RCT_EXTERN_METHOD(pauseRecorder:(RCTPromiseResolveBlock)resolve
