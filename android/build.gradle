@@ -1,3 +1,6 @@
+def isNewArchitectureEnabled() {
+    return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+}
 
 buildscript {
     ext.getExtOrDefault = {name ->
@@ -39,6 +42,17 @@ android {
     targetSdkVersion safeExtGet('targetSdkVersion', 31)
     versionCode 1
     versionName "1.0"
+    buildConfigField("boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString())
+  }
+
+  sourceSets {
+    main {
+      if (isNewArchitectureEnabled()) {
+        java.srcDirs += ['src/newarch']
+      } else {
+          java.srcDirs += ['src/oldarch']
+        }
+    }
   }
 
   compileOptions {

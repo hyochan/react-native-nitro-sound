@@ -3,8 +3,8 @@
   "version": "3.6.9",
   "description": "React Native Audio Recorder and Player.",
   "homepage": "https://github.com/dooboolab/react-native-audio-recorder-player",
-  "main": "index.ts",
-  "types": "index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.d.ts",
   "postinstall": "dooboolab-welcome postinstall",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -43,5 +43,13 @@
     "prettier": "^3.3.0",
     "react-native": "^0.74.2",
     "typescript": "^4.9.4"
+  },
+  "codegenConfig": {
+    "name": "RNAudioRecorderPlayerSpec",
+    "type": "modules",
+    "jsSrcsDir": "./src",
+    "android": {
+      "javaPackageName": "com.dooboolab.audiorecorderplayer"
+    }
   }
 }
