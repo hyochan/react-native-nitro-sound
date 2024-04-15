@@ -8,7 +8,6 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
 
 class RNAudioRecorderPlayerModule(context: ReactApplicationContext) : ReactContextBaseJavaModule(context) {
-    // declare an instance of the implementation and use it in all the methods
     private var implementation: RNAudioRecorderPlayerModuleImpl = RNAudioRecorderPlayerModuleImpl(context)
 
     override fun getName(): String = RNAudioRecorderPlayerModuleImpl.TAG

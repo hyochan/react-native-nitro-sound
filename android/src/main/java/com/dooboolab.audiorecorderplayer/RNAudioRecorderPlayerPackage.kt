@@ -1,6 +1,6 @@
 package com.dooboolab.audiorecorderplayer
 
-//import com.RNAudioRecorderPlayerModule
+import com.RNAudioRecorderPlayerModule
 import com.facebook.react.TurboReactPackage
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
@@ -11,8 +11,7 @@ class RNAudioRecorderPlayerPackage : TurboReactPackage() {
 
     override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? =
       if (name == RNAudioRecorderPlayerModuleImpl.TAG) {
-//        RNAudioRecorderPlayerModule(reactContext)
-          null
+        RNAudioRecorderPlayerModule(reactContext)
       } else {
         null
      }
