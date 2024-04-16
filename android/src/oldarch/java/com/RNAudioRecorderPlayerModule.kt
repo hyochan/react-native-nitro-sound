@@ -13,7 +13,7 @@ class RNAudioRecorderPlayerModule(context: ReactApplicationContext) : ReactConte
     override fun getName(): String = RNAudioRecorderPlayerModuleImpl.TAG
 
     @ReactMethod
-    fun startRecorder(path: String, audioSet: ReadableMap?, meteringEnabled: Boolean, promise: Promise) {
+    fun startRecorder(path: String, meteringEnabled: Boolean, audioSet: ReadableMap?,  promise: Promise) {
         implementation.startRecorder(path, meteringEnabled, audioSet , promise)
     }
     @ReactMethod
