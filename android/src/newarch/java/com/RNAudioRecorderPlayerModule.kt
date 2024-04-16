@@ -10,7 +10,7 @@ import com.dooboolab.audiorecorderplayer.RNAudioRecorderPlayerModuleImpl
 class RNAudioRecorderPlayerModule(reactContext: ReactApplicationContext) : NativeAudioRecorderPlayerSpec(reactContext) {
     private var implementation: RNAudioRecorderPlayerModuleImpl = RNAudioRecorderPlayerModuleImpl(reactContext)
 
-    override fun getName() = NAME
+    override fun getName() = RNAudioRecorderPlayerModuleImpl.TAG
 
     override fun startRecorder(uri: String, meteringEnabled: Boolean, audioSets: ReadableMap?, promise: Promise) {
         implementation.startRecorder(uri, meteringEnabled, audioSets, promise)
