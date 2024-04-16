@@ -14,7 +14,7 @@ class RNAudioRecorderPlayerModule(context: ReactApplicationContext) : ReactConte
 
     @ReactMethod
     fun startRecorder(path: String, audioSet: ReadableMap?, meteringEnabled: Boolean, promise: Promise) {
-        implementation.startRecorder(path, audioSet, meteringEnabled, promise)
+        implementation.startRecorder(path, meteringEnabled, audioSet , promise)
     }
     @ReactMethod
     fun resumeRecorder(promise: Promise) {

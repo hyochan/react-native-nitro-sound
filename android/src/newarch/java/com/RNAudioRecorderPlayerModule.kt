@@ -12,8 +12,8 @@ class RNAudioRecorderPlayerModule(reactContext: ReactApplicationContext) : Nativ
 
     override fun getName() = RNAudioRecorderPlayerModuleImpl.TAG
 
-    override fun startRecorder(uri: String, meteringEnabled: Boolean, audioSets: ReadableMap?, promise: Promise) {
-        implementation.startRecorder(uri, meteringEnabled, audioSets, promise)
+    override fun startRecorder(path: String, meteringEnabled: Boolean, audioSets: ReadableMap?, promise: Promise) {
+        implementation.startRecorder(path, meteringEnabled, audioSets, promise)
     }
 
     override fun resumeRecorder(promise: Promise) {
@@ -32,8 +32,8 @@ class RNAudioRecorderPlayerModule(reactContext: ReactApplicationContext) : Nativ
         implementation.setVolume(volume, promise)
     }
 
-    override fun startPlayer(uri: String, httpHeaders: ReadableMap?, promise: Promise) {
-        implementation.startPlayer(uri, httpHeaders, promise)
+    override fun startPlayer(path: String, httpHeaders: ReadableMap?, promise: Promise) {
+        implementation.startPlayer(path, httpHeaders, promise)
     }
 
     override fun resumePlayer(promise: Promise) {
