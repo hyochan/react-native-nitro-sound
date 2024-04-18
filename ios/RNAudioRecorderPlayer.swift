@@ -8,8 +8,8 @@
 import Foundation
 import AVFoundation
 
-@objc(RNAudioRecorderPlayer)
-class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
+@objc(RNAudioRecorderPlayerImpl)
+public class RNAudioRecorderPlayer: NSObject, AVAudioRecorderDelegate {
     var subscriptionDuration: Double = 0.5
     var audioFileURL: URL?
 
@@ -26,20 +26,24 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     var audioPlayer: AVPlayer!
     var timeObserverToken: Any?
 
-    override init() {
+    // Emitter
+    var emitter: RCTEventEmitter?
+
+    public override init() {
         super.init()
         NotificationCenter.default.addObserver(self, selector: #selector(handleAudioSessionInterruption(_:)), name: AVAudioSession.interruptionNotification, object: AVAudioSession.sharedInstance())
+    }
+
+    @objc(setEmitter:)
+    public func setEmitter(emitter: RCTEventEmitter) {
+        self.emitter = emitter
     }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
 
-    override static func requiresMainQueueSetup() -> Bool {
-      return true
-    }
-
-    override func supportedEvents() -> [String]! {
+    @objc public func supportedEvents() -> [String]! {
         return ["rn-playback", "rn-recordback"]
     }
 
@@ -73,7 +77,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 "currentMetering": currentMetering,
             ] as [String : Any];
 
-            sendEvent(withName: "rn-recordback", body: status)
+            self.emitter?.sendEvent(withName: "rn-recordback", body: status)
         }
     }
 
@@ -145,7 +149,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     }
 
     @objc(setSubscriptionDuration:)
-    func setSubscriptionDuration(duration: Double) -> Void {
+    public func setSubscriptionDuration(duration: Double) -> Void {
         subscriptionDuration = duration
     }
 
@@ -171,9 +175,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
     /**********               Player               **********/
 
-    @objc(startRecorder:audioSets:meteringEnabled:resolve:reject:)
-    func startRecorder(path: String,  audioSets: [String: Any], meteringEnabled: Bool, resolve: @escaping RCTPromiseResolveBlock,
-       rejecter reject: @escaping RCTPromiseRejectBlock) -> Void {
+    @objc(startRecorder:meteringEnabled:audioSets:resolve:reject:)
+    public func startRecorder(path: String,  meteringEnabled: Bool, audioSets: [String: Any], resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock) -> Void {
 
         _meteringEnabled = meteringEnabled;
 
@@ -256,7 +260,6 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 // Fallback on earlier versions
             }
         }
-
 
         if (numberOfChannel == nil) {
             numberOfChannel = 2
@@ -351,7 +354,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         }
     }
 
-    func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+    public func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         if !flag {
             print("Failed to stop recorder")
         }
@@ -365,7 +368,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         timeObserverToken = audioPlayer.addPeriodicTimeObserver(forInterval: time,
                                                                 queue: .main) {_ in
             if (self.audioPlayer != nil) {
-                self.sendEvent(withName: "rn-playback", body: [
+                self.emitter?.sendEvent(withName: "rn-playback", body: [
                     "isMuted": self.audioPlayer.isMuted,
                     "currentPosition": self.audioPlayerItem.currentTime().seconds * 1000,
                     "duration": self.audioPlayerItem.asset.duration.seconds * 1000,
@@ -381,7 +384,6 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             self.timeObserverToken = nil
         }
     }
-
 
     @objc(startPlayer:httpHeaders:resolve:rejecter:)
     public func startPlayer(
@@ -414,12 +416,12 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         audioPlayer.play()
         resolve(audioFileURL?.absoluteString)
     }
-    
+
     @objc
     public func playerDidFinishPlaying(notification: Notification) {
         if let playerItem = notification.object as? AVPlayerItem {
             let duration = playerItem.duration.seconds * 1000
-            self.sendEvent(withName: "rn-playback", body: [
+            self.emitter?.sendEvent(withName: "rn-playback", body: [
                 "isMuted": self.audioPlayer?.isMuted as Any,
                 "currentPosition": duration,
                 "duration": duration,

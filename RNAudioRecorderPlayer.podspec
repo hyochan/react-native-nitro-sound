@@ -16,6 +16,6 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/hyochan/react-native-audio-recorder-player.git", :tag => "#{s.version}" }
   s.source_files = "ios/**/*.{h,c,cc,cpp,m,mm,swift}"
 
-  s.dependency 'React-Core'
+  # React Native Core dependency
+  install_modules_dependencies(s)
 end
-
