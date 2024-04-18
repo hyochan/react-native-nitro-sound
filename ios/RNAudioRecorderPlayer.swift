@@ -488,11 +488,11 @@ public class RNAudioRecorderPlayer: NSObject, AVAudioRecorderDelegate {
 
     @objc(setVolume:resolve:rejecter:)
     public func setVolume(
-        volume: Float,
+        volume: Double,
         resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
-        audioPlayer.volume = volume
+        audioPlayer.volume = Float(volume)
         resolve(volume)
     }
 }

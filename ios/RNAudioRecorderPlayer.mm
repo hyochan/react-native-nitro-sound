@@ -37,7 +37,9 @@ RCT_EXPORT_MODULE()
     return [impl supportedEvents];
 }
 
-RCT_EXPORT_METHOD(setSubscriptionDuration:(double)duration) 
+RCT_EXPORT_METHOD(setSubscriptionDuration:(double) duration
+                  resolve:(RCTPromiseResolveBlock) resolve
+                  reject:(RCTPromiseRejectBlock) reject)
 {
     [impl setSubscriptionDuration:duration];
 }
@@ -52,26 +54,26 @@ RCT_EXPORT_METHOD(startRecorder:(NSString *)path
 }
 
 RCT_EXPORT_METHOD(stopRecorder:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject)
 {
     [impl stopRecorder:resolve rejecter:reject];
 }
 
 RCT_EXPORT_METHOD(pauseRecorder:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject)
 {
     [impl pauseRecorder:resolve rejecter:reject];
 }
 
 RCT_EXPORT_METHOD(resumeRecorder:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject)
 {
     [impl resumeRecorder:resolve rejecter:reject];
 }
 
-RCT_EXPORT_METHOD(setVolume:(float)volume
+RCT_EXPORT_METHOD(setVolume:(double)volume
                   resolve:(RCTPromiseResolveBlock) resolve
-                  rejecter:(RCTPromiseRejectBlock) reject)
+                  reject:(RCTPromiseRejectBlock) reject)
 {
     [impl setVolume:volume resolve:resolve rejecter:reject];
 }
@@ -79,42 +81,41 @@ RCT_EXPORT_METHOD(setVolume:(float)volume
 RCT_EXPORT_METHOD(startPlayer:(NSString*)path
                   httpHeaders:(NSDictionary*)httpHeaders
                   resolve:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject)
 {
     [impl startPlayer:path httpHeaders:httpHeaders resolve:resolve rejecter:reject];
 }
 
 RCT_EXPORT_METHOD(resumePlayer:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject)
 {
     [impl resumePlayer:resolve rejecter:reject];
 }
 
 RCT_EXPORT_METHOD(seekToPlayer:(double) time
                   resolve:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject)
 {
     [impl seekToPlayer:time resolve:resolve rejecter:reject];
 }
 
 RCT_EXPORT_METHOD(pausePlayer:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject)
 {
     [impl pausePlayer:resolve rejecter:reject];
 }
 
 RCT_EXPORT_METHOD(stopPlayer:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
+                  reject:(RCTPromiseRejectBlock)reject)
 {
     [impl stopPlayer:resolve rejecter:reject];
 }
-
 
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
-    return std::make_shared<facebook::react::RNAudioRecorderPlayerSpecJSI>(params);
+    return std::make_shared<facebook::react::NativeAudioRecorderPlayerSpecJSI>(params);
 }
 #endif
 

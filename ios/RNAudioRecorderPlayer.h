@@ -1,16 +1,16 @@
 #import <React/RCTEventEmitter.h>
-#import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <RNAudioRecorderPlayerSpec/RNAudioRecorderPlayerSpec.h>
 
-@interface RNAudioRecorderPlayer : RCTEventEmitter <NativeCalculatorSpec, AVAudioPlayerDelegate>
+@interface RNAudioRecorderPlayer : RCTEventEmitter <NativeAudioRecorderPlayerSpec>
+
 #else
-@interface RNAudioRecorderPlayer : RCTEventEmitter <RCTBridgeModule, AVAudioPlayerDelegate>
+#import <React/RCTBridgeModule.h>
+
+@interface RNAudioRecorderPlayer : RCTEventEmitter <RCTBridgeModule>
+
 #endif
-- (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag;
-- (void)audioPlayerDecodeErrorDidOccur:(AVAudioPlayer *)player error:(NSError *)error;
-- (void)updateRecorderProgress:(NSTimer*) timer;
 
 @end
