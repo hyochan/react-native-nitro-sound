@@ -9,7 +9,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && flowgen index.d.ts -o index.js.flow",
-    "lint": "eslint -c .eslintrc.js 'index.ts'"
+    "lint": "eslint -c .eslintrc.js 'src'"
   },
   "repository": {
     "type": "git",
