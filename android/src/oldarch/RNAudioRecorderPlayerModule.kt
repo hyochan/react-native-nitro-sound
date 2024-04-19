@@ -1,6 +1,5 @@
-package com
+package com.dooboolab.audiorecorderplayer
 
-import com.dooboolab.audiorecorderplayer.RNAudioRecorderPlayerModuleImpl
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule

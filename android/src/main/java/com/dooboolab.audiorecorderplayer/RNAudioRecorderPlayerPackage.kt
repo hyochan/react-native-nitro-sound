@@ -1,6 +1,5 @@
 package com.dooboolab.audiorecorderplayer
 
-import com.RNAudioRecorderPlayerModule
 import com.facebook.react.TurboReactPackage
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
@@ -25,7 +24,7 @@ class RNAudioRecorderPlayerPackage : TurboReactPackage() {
         RNAudioRecorderPlayerModuleImpl.TAG,
         false,
         false,
-        true,
+        false,
         false,
          isTurboModule
         )

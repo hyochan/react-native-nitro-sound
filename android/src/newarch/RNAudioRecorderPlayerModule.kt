@@ -1,16 +1,16 @@
-package com
+package com.dooboolab.audiorecorderplayer
 
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 
-import com.dooboolab.audiorecorderplayer.NativeAudioRecorderPlayerSpec
-import com.dooboolab.audiorecorderplayer.RNAudioRecorderPlayerModuleImpl
-
 class RNAudioRecorderPlayerModule(reactContext: ReactApplicationContext) : NativeAudioRecorderPlayerSpec(reactContext) {
     private var implementation: RNAudioRecorderPlayerModuleImpl = RNAudioRecorderPlayerModuleImpl(reactContext)
 
     override fun getName() = RNAudioRecorderPlayerModuleImpl.TAG
+    override fun addListener(eventType: String) = Unit
+
+    override fun removeListeners(count: Double) = Unit
 
     override fun startRecorder(path: String, meteringEnabled: Boolean, audioSets: ReadableMap?, promise: Promise) {
         implementation.startRecorder(path, meteringEnabled, audioSets, promise)

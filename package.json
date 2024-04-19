@@ -47,7 +47,7 @@
   "codegenConfig": {
     "name": "RNAudioRecorderPlayerSpec",
     "type": "modules",
-    "jsSrcsDir": "./src",
+    "jsSrcsDir": "src",
     "android": {
       "javaPackageName": "com.dooboolab.audiorecorderplayer"
     }
