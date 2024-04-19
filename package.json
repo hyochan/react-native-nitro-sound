@@ -8,7 +8,7 @@
   "postinstall": "dooboolab-welcome postinstall",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && flowgen index.d.ts -o index.js.flow",
+    "build": "tsc && flowgen src/index.d.ts -o src/index.js.flow",
     "lint": "eslint -c .eslintrc.js 'src'"
   },
   "repository": {
