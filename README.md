@@ -332,10 +332,10 @@ onStopPlay = async () => {
 
 If you want to get actual uri from the record or play file to actually grab it and upload it to your bucket, just grab the resolved message when using `startPlay` or `startRecord` method like below.
 
-To access the file with more reliability, please use [rn-fetch-blob](https://www.npmjs.com/package/rn-fetch-blob). For example, below.
+To access the file with more reliability, please use [react-native-blob-util](https://www.npmjs.com/package/react-native-blob-util). For example, below.
 
 ```javascript
-const dirs = RNFetchBlob.fs.dirs;
+const dirs = ReactNativeBlobUtil.fs.dirs;
 const path = Platform.select({
   ios: 'hello.m4a',
   android: `${this.dirs.CacheDir}/hello.mp3`,
