@@ -98,12 +98,14 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         recordTimer?.invalidate()
         recordTimer = nil;
 
-        if (audioRecorder == nil) {
-            return reject("RNAudioPlayerRecorder", "Recorder is not recording", nil)
-        }
+        DispatchQueue.main.async {
+            if (self.audioRecorder == nil) {
+                return reject("RNAudioPlayerRecorder", "Recorder is not recording", nil)
+            }
 
-        audioRecorder.pause()
-        resolve("Recorder paused!")
+            self.audioRecorder.pause()
+            resolve("Recorder paused!")
+        }
     }
 
     @objc(resumeRecorder:rejecter:)
@@ -111,17 +113,18 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
-        if (audioRecorder == nil) {
-            return reject("RNAudioPlayerRecorder", "Recorder is nil", nil)
+        DispatchQueue.main.async {
+            if (self.audioRecorder == nil) {
+                return reject("RNAudioPlayerRecorder", "Recorder is nil", nil)
+            }
+
+            self.audioRecorder.record()
+
+            if (self.recordTimer == nil) {
+                self.startRecorderTimer()
+            }
+            resolve("Recorder paused!")
         }
-
-        audioRecorder.record()
-
-        if (recordTimer == nil) {
-            startRecorderTimer()
-        }
-
-        resolve("Recorder paused!")
     }
 
     @objc
@@ -336,14 +339,16 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             recordTimer = nil
         }
 
-        if (audioRecorder == nil) {
-            reject("RNAudioPlayerRecorder", "Failed to stop recorder. It is already nil.", nil)
-            return
+        DispatchQueue.main.async {
+            if (self.audioRecorder == nil) {
+                reject("RNAudioPlayerRecorder", "Failed to stop recorder. It is already nil.", nil)
+                return
+            }
+
+            self.audioRecorder.stop()
+
+            resolve(self.audioFileURL?.absoluteString)
         }
-
-        audioRecorder.stop()
-
-        resolve(audioFileURL?.absoluteString)
     }
 
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
