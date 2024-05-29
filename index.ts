@@ -150,6 +150,7 @@ export type PlayBackType = {
   isMuted?: boolean;
   currentPosition: number;
   duration: number;
+  isFinished: boolean;
 };
 
 class AudioRecorderPlayer {
@@ -320,7 +321,7 @@ class AudioRecorderPlayer {
       this._playerCallback(event);
     }
 
-    if (event.currentPosition === event.duration) {
+    if (event.isFinished) {
       this.stopPlayer();
     }
   };

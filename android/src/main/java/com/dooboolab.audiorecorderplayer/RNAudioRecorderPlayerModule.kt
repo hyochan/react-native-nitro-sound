@@ -235,6 +235,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                             val obj = Arguments.createMap()
                             obj.putInt("duration", mp.duration)
                             obj.putInt("currentPosition", mp.currentPosition)
+                            obj.putBoolean("isFinished", false);
                             sendEvent(reactContext, "rn-playback", obj)
                         } catch (e: IllegalStateException) {
                             // IllegalStateException 처리
@@ -259,6 +260,7 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
                 val obj = Arguments.createMap()
                 obj.putInt("duration", mp.duration)
                 obj.putInt("currentPosition", mp.currentPosition)
+                obj.putBoolean("isFinished", true);
                 sendEvent(reactContext, "rn-playback", obj)
                 /**
                  * Reset player.
