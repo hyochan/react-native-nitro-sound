@@ -332,13 +332,16 @@ onStopPlay = async () => {
 
 If you want to get actual uri from the record or play file to actually grab it and upload it to your bucket, just grab the resolved message when using `startPlay` or `startRecord` method like below.
 
-To access the file with more reliability, please use [react-native-blob-util](https://www.npmjs.com/package/react-native-blob-util). For example, below.
+To access the file with more reliability, please use [react-native-blob-util](https://www.npmjs.com/package/react-native-blob-util) or [react-native-file-access](https://github.com/alpha0010/react-native-file-access). See below for examples.
 
-```javascript
+`react-native-blob-util`
+```ts
+import ReactNativeBlobUtil from 'react-native-blob-util'
+...
 const dirs = ReactNativeBlobUtil.fs.dirs;
 const path = Platform.select({
   ios: 'hello.m4a',
-  android: `${this.dirs.CacheDir}/hello.mp3`,
+  android: `${dirs.CacheDir}/hello.mp3`,
 });
 
 const uri = await audioRecorderPlayer.startRecord(path);
@@ -357,6 +360,20 @@ const path = Platform.select({
 
 const uri = await audioRecorderPlayer.startRecord(path);
 ```
+
+`react-native-file-access`
+```ts
+import { Dirs } from "react-native-file-access";
+...
+const path = Platform.select({
+  ios: 'hello.m4a',
+  android: `${Dirs.CacheDir}/hello.mp3`,
+});
+
+const uri = await audioRecorderPlayer.startRecord(path);
+```
+
+
 
 ## Try yourself
 
