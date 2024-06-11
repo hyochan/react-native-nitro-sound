@@ -352,6 +352,8 @@ Also, above example helps you to setup manual path to record audio. Not giving p
 To pass in specific URI in IOS, you need to append `file://` to the path. As an example using [RFNS](https://github.com/itinance/react-native-fs).
 
 ```javascript
+import RNFetchBlob from 'rn-fetch-blob';
+...
 const dirs = RNFetchBlob.fs.dirs;
 const path = Platform.select({
   ios: `file://${RNFS.DocumentDirectoryPath}/hello.m4a`,
