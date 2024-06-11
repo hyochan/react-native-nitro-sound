@@ -99,8 +99,7 @@ class Button extends Component<ItemProps, any> {
     return (
       <TouchableOpacity
         activeOpacity={this.props.activeOpacity}
-        onPress={this.props.onPress}
-      >
+        onPress={this.props.onPress}>
         <View style={this.props.style}>
           {this.props.imgLeftSrc ? (
             <Image
