@@ -1,6 +1,7 @@
 import type {TurboModule} from 'react-native';
 import {TurboModuleRegistry} from 'react-native';
 import type {Double} from 'react-native/Libraries/Types/CodegenTypes';
+import {AudioSet} from './AudioRecorderPlayerTypes';
 
 export interface Spec extends TurboModule {
   addListener(eventType: string): void;
@@ -8,7 +9,7 @@ export interface Spec extends TurboModule {
   startRecorder(
     uri: string,
     meteringEnabled: boolean,
-    audioSets?: Record<string, unknown>,
+    audioSets?: AudioSet,
   ): Promise<string>;
   resumeRecorder(): Promise<string>;
   pauseRecorder(): Promise<string>;
