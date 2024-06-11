@@ -8,13 +8,16 @@ export interface Spec extends TurboModule {
   startRecorder(
     uri: string,
     meteringEnabled: boolean,
-    audioSets?: Object,
+    audioSets?: Record<string, unknown>,
   ): Promise<string>;
   resumeRecorder(): Promise<string>;
   pauseRecorder(): Promise<string>;
   stopRecorder(): Promise<string>;
   setVolume(volume: Double): Promise<string>;
-  startPlayer(uri: string, httpHeaders?: Object): Promise<string>;
+  startPlayer(
+    uri: string,
+    httpHeaders?: Record<string, unknown>,
+  ): Promise<string>;
   resumePlayer(): Promise<string>;
   pausePlayer(): Promise<string>;
   seekToPlayer(time: Double): Promise<string>;
