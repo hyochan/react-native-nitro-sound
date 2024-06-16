@@ -60,7 +60,13 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
             promise.reject("No permission granted.", "Try again after adding permission.")
             return
         }
-        audioFileURL = if (((path == "DEFAULT"))) "${reactContext.cacheDir}/$defaultFileName" else path
+
+        var outputFormat = if (audioSet != null && audioSet.hasKey("OutputFormatAndroid"))
+            audioSet.getInt("OutputFormatAndroid")
+        else
+            MediaRecorder.OutputFormat.MPEG_4
+
+        audioFileURL = if (((path == "DEFAULT"))) "${reactContext.cacheDir}/sound.${defaultFileExtensions.get(outputFormat)}" else path
         _meteringEnabled = meteringEnabled
 
         if (mediaRecorder == null) {
@@ -69,14 +75,14 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
 
         if (audioSet != null) {
             mediaRecorder!!.setAudioSource(if (audioSet.hasKey("AudioSourceAndroid")) audioSet.getInt("AudioSourceAndroid") else MediaRecorder.AudioSource.MIC)
-            mediaRecorder!!.setOutputFormat(if (audioSet.hasKey("OutputFormatAndroid")) audioSet.getInt("OutputFormatAndroid") else MediaRecorder.OutputFormat.MPEG_4)
+            mediaRecorder!!.setOutputFormat(outputFormat)
             mediaRecorder!!.setAudioEncoder(if (audioSet.hasKey("AudioEncoderAndroid")) audioSet.getInt("AudioEncoderAndroid") else MediaRecorder.AudioEncoder.AAC)
             mediaRecorder!!.setAudioSamplingRate(if (audioSet.hasKey("AudioSamplingRateAndroid")) audioSet.getInt("AudioSamplingRateAndroid") else 48000)
             mediaRecorder!!.setAudioEncodingBitRate(if (audioSet.hasKey("AudioEncodingBitRateAndroid")) audioSet.getInt("AudioEncodingBitRateAndroid") else 128000)
             mediaRecorder!!.setAudioChannels(if (audioSet.hasKey("AudioChannelsAndroid")) audioSet.getInt("AudioChannelsAndroid") else 2)
         } else {
             mediaRecorder!!.setAudioSource(MediaRecorder.AudioSource.MIC)
-            mediaRecorder!!.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            mediaRecorder!!.setOutputFormat(outputFormat)
             mediaRecorder!!.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
             mediaRecorder!!.setAudioEncodingBitRate(128000)
             mediaRecorder!!.setAudioSamplingRate(48000)
@@ -381,5 +387,19 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     companion object {
         private var tag = "RNAudioRecorderPlayer"
         private var defaultFileName = "sound.mp4"
+        private var defaultFileExtensions = listOf(
+            "mp4", // DEFAULT = 0,
+            "3gp", // THREE_GPP,
+            "mp4", // MPEG_4,
+            "amr", // AMR_NB,
+            "amr", // AMR_WB,
+            "aac", // AAC_ADIF,
+            "aac", // AAC_ADTS,
+            "rtp", // OUTPUT_FORMAT_RTP_AVP,
+            "ts",  // MPEG_2_TSMPEG_2_TS,
+            "webm",// WEBM
+            "xxx", // UNUSED
+            "ogg", // OGG
+        )
     }
 }

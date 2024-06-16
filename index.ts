@@ -34,6 +34,8 @@ export enum OutputFormatAndroidType {
   OUTPUT_FORMAT_RTP_AVP,
   MPEG_2_TS,
   WEBM,
+  UNUSED,
+  OGG,
 }
 
 export enum AudioEncoderAndroidType {
@@ -44,6 +46,7 @@ export enum AudioEncoderAndroidType {
   HE_AAC,
   AAC_ELD,
   VORBIS,
+  OPUS,
 }
 
 export enum AVEncodingOption {

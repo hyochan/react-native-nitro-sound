@@ -184,55 +184,26 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         let avLPCMIsFloatKey = audioSets["AVLinearPCMIsFloatKeyIOS"] as? Bool
         let avLPCMIsNonInterleaved = audioSets["AVLinearPCMIsNonInterleavedIOS"] as? Bool
 
-        var avFormat: Int? = nil
         var avMode: AVAudioSession.Mode = AVAudioSession.Mode.default
         var sampleRate = audioSets["AVSampleRateKeyIOS"] as? Int
         var numberOfChannel = audioSets["AVNumberOfChannelsKeyIOS"] as? Int
         var audioQuality = audioSets["AVEncoderAudioQualityKeyIOS"] as? Int
         var bitRate = audioSets["AVEncoderBitRateKeyIOS"] as? Int
 
-        setAudioFileURL(path: path)
-
         if (sampleRate == nil) {
             sampleRate = 44100;
         }
 
-        if (encoding == nil) {
-            avFormat = Int(kAudioFormatAppleLossless)
+        guard let avFormat: AudioFormatID = avFormat(fromString: encoding) else {
+            return reject("RNAudioPlayerRecorder", "Audio format not available", nil)
+        }
+
+        if (path == "DEFAULT") {
+            let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            let fileExt = fileExtension(forAudioFormat: avFormat)
+            audioFileURL = cachesDirectory.appendingPathComponent("sound." + fileExt)
         } else {
-            if (encoding == "lpcm") {
-                avFormat = Int(kAudioFormatAppleIMA4)
-            } else if (encoding == "ima4") {
-                avFormat = Int(kAudioFormatAppleIMA4)
-            } else if (encoding == "aac") {
-                avFormat = Int(kAudioFormatMPEG4AAC)
-            } else if (encoding == "MAC3") {
-                avFormat = Int(kAudioFormatMACE3)
-            } else if (encoding == "MAC6") {
-                avFormat = Int(kAudioFormatMACE6)
-            } else if (encoding == "ulaw") {
-                avFormat = Int(kAudioFormatULaw)
-            } else if (encoding == "alaw") {
-                avFormat = Int(kAudioFormatALaw)
-            } else if (encoding == "mp1") {
-                avFormat = Int(kAudioFormatMPEGLayer1)
-            } else if (encoding == "mp2") {
-                avFormat = Int(kAudioFormatMPEGLayer2)
-            } else if (encoding == "mp4") {
-                avFormat = Int(kAudioFormatMPEG4AAC)
-            } else if (encoding == "alac") {
-                avFormat = Int(kAudioFormatAppleLossless)
-            } else if (encoding == "amr") {
-                avFormat = Int(kAudioFormatAMR)
-            } else if (encoding == "flac") {
-                if #available(iOS 11.0, *) {
-                    avFormat = Int(kAudioFormatFLAC)
-                }
-            } else if (encoding == "opus") {
-                avFormat = Int(kAudioFormatOpus)
-            } else if (encoding == "wav") {
-                avFormat = Int(kAudioFormatLinearPCM)
-            }
+            setAudioFileURL(path: path)
         }
 
         if (mode == "measurement") {
@@ -273,14 +244,14 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         func startRecording() {
             let settings = [
                 AVSampleRateKey: sampleRate!,
-                AVFormatIDKey: avFormat!,
+                AVFormatIDKey: avFormat,
                 AVNumberOfChannelsKey: numberOfChannel!,
                 AVEncoderAudioQualityKey: audioQuality!,
                 AVLinearPCMBitDepthKey: avLPCMBitDepth ?? AVLinearPCMBitDepthKey.count,
                 AVLinearPCMIsBigEndianKey: avLPCMIsBigEndian ?? true,
                 AVLinearPCMIsFloatKey: avLPCMIsFloatKey ?? false,
                 AVLinearPCMIsNonInterleaved: avLPCMIsNonInterleaved ?? false,
-                AVEncoderBitRateKey: bitRate!
+                 AVEncoderBitRateKey: bitRate!
             ] as [String : Any]
 
             do {
@@ -492,5 +463,92 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     ) -> Void {
         audioPlayer.volume = volume
         resolve(volume)
+    }
+    private func avFormat(fromString encoding: String?) -> AudioFormatID? {
+        if (encoding == nil) {
+            return kAudioFormatAppleLossless
+        } else {
+            if (encoding == "lpcm") {
+                return kAudioFormatAppleIMA4
+            } else if (encoding == "ima4") {
+                return kAudioFormatAppleIMA4
+            } else if (encoding == "aac") {
+                return kAudioFormatMPEG4AAC
+            } else if (encoding == "MAC3") {
+                return kAudioFormatMACE3
+            } else if (encoding == "MAC6") {
+                return kAudioFormatMACE6
+            } else if (encoding == "ulaw") {
+                return kAudioFormatULaw
+            } else if (encoding == "alaw") {
+                return kAudioFormatALaw
+            } else if (encoding == "mp1") {
+                return kAudioFormatMPEGLayer1
+            } else if (encoding == "mp2") {
+                return kAudioFormatMPEGLayer2
+            } else if (encoding == "mp4") {
+                return kAudioFormatMPEG4AAC
+            } else if (encoding == "alac") {
+                return kAudioFormatAppleLossless
+            } else if (encoding == "amr") {
+                return kAudioFormatAMR
+            } else if (encoding == "flac") {
+                if #available(iOS 11.0, *) {
+                    return kAudioFormatFLAC
+                }
+            } else if (encoding == "opus") {
+                return kAudioFormatOpus
+            } else if (encoding == "wav") {
+                return kAudioFormatLinearPCM
+            }
+        }
+        return nil;
+    }
+
+    private func fileExtension(forAudioFormat format: AudioFormatID) -> String {
+        switch format {
+        case kAudioFormatOpus:
+            return "ogg"
+        case kAudioFormatLinearPCM:
+            return "wav"
+        case kAudioFormatAC3, kAudioFormat60958AC3:
+            return "ac3"
+        case kAudioFormatAppleIMA4:
+            return "caf"
+        case kAudioFormatMPEG4AAC, kAudioFormatMPEG4CELP, kAudioFormatMPEG4HVXC, kAudioFormatMPEG4TwinVQ, kAudioFormatMPEG4AAC_HE, kAudioFormatMPEG4AAC_LD, kAudioFormatMPEG4AAC_ELD, kAudioFormatMPEG4AAC_ELD_SBR, kAudioFormatMPEG4AAC_ELD_V2, kAudioFormatMPEG4AAC_HE_V2, kAudioFormatMPEG4AAC_Spatial:
+            return "m4a"
+        case kAudioFormatMACE3, kAudioFormatMACE6:
+            return "caf"
+        case kAudioFormatULaw, kAudioFormatALaw:
+            return "wav"
+        case kAudioFormatQDesign, kAudioFormatQDesign2:
+            return "mov"
+        case kAudioFormatQUALCOMM:
+            return "qcp"
+        case kAudioFormatMPEGLayer1:
+            return "mp1"
+        case kAudioFormatMPEGLayer2:
+            return "mp2"
+        case kAudioFormatMPEGLayer3:
+            return "mp3"
+        case kAudioFormatMIDIStream:
+            return "mid"
+        case kAudioFormatAppleLossless:
+            return "m4a"
+        case kAudioFormatAMR:
+            return "amr"
+        case kAudioFormatAMR_WB:
+            return "awb"
+        case kAudioFormatAudible:
+            return "aa"
+        case kAudioFormatiLBC:
+            return "ilbc"
+        case kAudioFormatDVIIntelIMA, kAudioFormatMicrosoftGSM:
+            return "wav"
+        default:
+            // Generic file extension for types that don't have a natural
+            // file extension
+            return "audio"
+        }
     }
 }
