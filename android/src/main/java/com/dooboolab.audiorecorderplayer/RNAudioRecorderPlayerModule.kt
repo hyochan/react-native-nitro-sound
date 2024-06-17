@@ -388,15 +388,15 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         private var tag = "RNAudioRecorderPlayer"
         private var defaultFileName = "sound.mp4"
         private var defaultFileExtensions = listOf(
-            "mp4", // DEFAULT = 0,
-            "3gp", // THREE_GPP,
-            "mp4", // MPEG_4,
-            "amr", // AMR_NB,
-            "amr", // AMR_WB,
-            "aac", // AAC_ADIF,
-            "aac", // AAC_ADTS,
-            "rtp", // OUTPUT_FORMAT_RTP_AVP,
-            "ts",  // MPEG_2_TSMPEG_2_TS,
+            "mp4", // DEFAULT = 0
+            "3gp", // THREE_GPP
+            "mp4", // MPEG_4
+            "amr", // AMR_NB
+            "amr", // AMR_WB
+            "aac", // AAC_ADIF
+            "aac", // AAC_ADTS
+            "rtp", // OUTPUT_FORMAT_RTP_AVP
+            "ts",  // MPEG_2_TSMPEG_2_TS
             "webm",// WEBM
             "xxx", // UNUSED
             "ogg", // OGG
