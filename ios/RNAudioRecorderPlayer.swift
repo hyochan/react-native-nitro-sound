@@ -464,6 +464,21 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         audioPlayer.volume = volume
         resolve(volume)
     }
+
+    @objc(setPlaybackSpeed:resolve:rejecter:)
+    public func setPlaybackSpeed(
+        playbackSpeed: Float,
+        resolve: @escaping RCTPromiseResolveBlock,
+        rejecter reject: @escaping RCTPromiseRejectBlock
+    ) -> Void {
+        if (audioPlayer == nil) {
+            return reject("RNAudioPlayerRecorder", "Player is null", nil)
+        }
+
+        audioPlayer.rate = playbackSpeed
+        resolve("setPlaybackSpeed")
+    }
+
     private func avFormat(fromString encoding: String?) -> AudioFormatID? {
         if (encoding == nil) {
             return kAudioFormatAppleLossless

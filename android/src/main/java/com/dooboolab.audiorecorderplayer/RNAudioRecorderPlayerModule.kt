@@ -195,6 +195,16 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     }
 
     @ReactMethod
+    fun setPlaybackSpeed(playbackSpeed: Float, promise: Promise) {
+        if (mediaPlayer == null) {
+            promise.reject("setPlaybackSpeed", "player is null.")
+            return
+        }
+        mediaPlayer!!.playbackParams = mediaPlayer!!.playbackParams.setSpeed(playbackSpeed)
+        promise.resolve("setPlaybackSpeed")
+    }
+
+    @ReactMethod
     fun startPlayer(path: String, httpHeaders: ReadableMap?, promise: Promise) {
         if (mediaPlayer != null) {
             val isPaused = !mediaPlayer!!.isPlaying && mediaPlayer!!.currentPosition > 1
