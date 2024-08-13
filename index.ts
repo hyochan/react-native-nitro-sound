@@ -248,11 +248,16 @@ class AudioRecorderPlayer {
     if (!this._isRecording) {
       this._isRecording = true;
 
-      return RNAudioRecorderPlayer.startRecorder(
-        uri ?? 'DEFAULT',
-        audioSets,
-        meteringEnabled ?? false,
-      );
+      try {
+        return await RNAudioRecorderPlayer.startRecorder(
+          uri ?? 'DEFAULT',
+          audioSets,
+          meteringEnabled ?? false,
+        );
+      } catch (error: any) {
+        this._isRecording = false;
+        throw error;
+      }
     }
 
     return 'Already recording';
