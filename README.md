@@ -146,6 +146,11 @@ On _Android_ you need to add a permission to `AndroidManifest.xml`:
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 ```
 
+If your app requires **broad** access to external storage, you'll need:
+```xml
+<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+```
+
 Also, android above `Marshmallow` needs runtime permission to record audio. Using [react-native-permissions](https://github.com/yonahforst/react-native-permissions) will help you out with this problem. Below is sample usage before when before staring the recording.
 
 ```ts
