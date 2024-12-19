@@ -417,7 +417,7 @@ mp.reset()
         }
 
         try {
-mediaPlayer!!.stop()
+            mediaPlayer!!.stop()
             mediaPlayer!!.reset()
             mediaPlayer!!.release()
             mediaPlayer = null

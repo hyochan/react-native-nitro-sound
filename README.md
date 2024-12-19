@@ -56,7 +56,7 @@ This is a react-native link module for audio recorder and player. This is not a 
   4. `subscriptionDuration` offset not defaults to `0.5` which is `500ms`.
      - Resolve [#273](https://github.com/hyochan/react-native-audio-recorder-player/issues/273)
 
-- There has been vast improvements in [#114](https://github.com/dooboolab/react-native-audio-recorder-player/pull/114) which is released in `2.3.0`. We now support all `RN` versions without any version differenciating. See below installation guide for your understanding.
+- There has been vast improvements in [#114](https://github.com/hyochan/react-native-audio-recorder-player/pull/114) which is released in `2.3.0`. We now support all `RN` versions without any version differentiating. See below installation guide for your understanding.
 
 ## Migration Guide
 
@@ -157,7 +157,7 @@ if (Platform.OS === 'android') {
       PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
     ]);
 
-    console.log('write external stroage', grants);
+    console.log('write external storage', grants);
 
     if (
       grants['android.permission.WRITE_EXTERNAL_STORAGE'] ===
@@ -212,7 +212,7 @@ All methods are implemented with promises.
 | mmss                     |                  `number` seconds                   |     `string`      | Convert seconds to `minute:second` string                                                                           |
 | setSubscriptionDuration  |                                                     |      `void`       | Set default callback time when starting recorder or player. Default to `0.5` which is `500ms`                       |
 | addRecordBackListener    |                 `Function` callBack                 |      `void`       | Get callback from native module. Will receive `currentPosition`, `currentMetering` (if configured in startRecorder) |
-| removeRecordBackListener |                 `Function` callBack                 |      `void`       | Removes recordback listener                                                                                         |
+| removeRecordBackListener |                 `Function` callBack                 |      `void`       | Removes recordBack listener                                                                                         |
 | addPlayBackListener      |                 `Function` callBack                 |      `void`       | Get callback from native module. Will receive `duration`, `currentPosition`                                         |
 | removePlayBackListener   |                 `Function` callBack                 |      `void`       | Removes playback listener                                                                                           |
 | startRecorder            |    `<string>` uri? `<boolean>` meteringEnabled?     |  `Promise<void>`  | Start recording. Not passing uri will save audio in default location.                                               |
@@ -222,7 +222,7 @@ All methods are implemented with promises.
 | startPlayer              | `string` uri? `Record<string, string>` httpHeaders? | `Promise<string>` | Start playing. Not passing the param will play audio in default location.                                           |
 | stopPlayer               |                                                     | `Promise<string>` | Stop playing.                                                                                                       |
 | pausePlayer              |                                                     | `Promise<string>` | Pause playing.                                                                                                      |
-| seekToPlayer             |                `number` miliseconds                 | `Promise<string>` | Seek audio.                                                                                                         |
+| seekToPlayer             |                `number` milliseconds                | `Promise<string>` | Seek audio.                                                                                                         |
 | setVolume                |                   `double` value                    | `Promise<string>` | Set volume of audio player (default 1.0, range: 0.0 ~ 1.0).                                                         |
 
 ## Able to customize recorded audio quality (from `2.3.0`)
@@ -332,19 +332,50 @@ onStopPlay = async () => {
 
 If you want to get actual uri from the record or play file to actually grab it and upload it to your bucket, just grab the resolved message when using `startPlay` or `startRecord` method like below.
 
-To access the file with more reliability, please use [rn-fetch-blob](https://www.npmjs.com/package/rn-fetch-blob). For example, below.
+To access the file with more reliability, please use [react-native-blob-util](https://www.npmjs.com/package/react-native-blob-util) or [react-native-file-access](https://github.com/alpha0010/react-native-file-access). See below for examples.
 
-```javascript
-const dirs = RNFetchBlob.fs.dirs;
+`react-native-blob-util`
+```ts
+import ReactNativeBlobUtil from 'react-native-blob-util'
+...
+const dirs = ReactNativeBlobUtil.fs.dirs;
 const path = Platform.select({
   ios: 'hello.m4a',
-  android: `${this.dirs.CacheDir}/hello.mp3`,
+  android: `${dirs.CacheDir}/hello.mp3`,
 });
 
 const uri = await audioRecorderPlayer.startRecord(path);
 ```
 
 Also, above example helps you to setup manual path to record audio. Not giving path param will record in `default` path as mentioned above.
+
+To pass in specific URI in IOS, you need to append `file://` to the path. As an example using [RFNS](https://github.com/itinance/react-native-fs).
+
+```javascript
+import RNFetchBlob from 'rn-fetch-blob';
+...
+const dirs = RNFetchBlob.fs.dirs;
+const path = Platform.select({
+  ios: `file://${RNFS.DocumentDirectoryPath}/hello.m4a`,
+  android: `${this.dirs.CacheDir}/hello.mp3`,
+});
+
+const uri = await audioRecorderPlayer.startRecord(path);
+```
+
+`react-native-file-access`
+```ts
+import { Dirs } from "react-native-file-access";
+...
+const path = Platform.select({
+  ios: 'hello.m4a',
+  android: `${Dirs.CacheDir}/hello.mp3`,
+});
+
+const uri = await audioRecorderPlayer.startRecord(path);
+```
+
+
 
 ## Try yourself
 
@@ -360,5 +391,5 @@ Also, above example helps you to setup manual path to record audio. Not giving p
 
 I've been maintaining quite many repos these days and burning out slowly. If you could help me cheer up, buying me a cup of coffee will make my life really happy and get much energy out of it.
 <br/>
-<a href="https://www.buymeacoffee.com/dooboolab" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/purple_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
+<a href="https://www.buymeacoffee.com/hyochan" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/purple_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" ></a>
 [![Paypal](https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png)](https://paypal.me/dooboolab)

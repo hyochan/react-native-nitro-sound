@@ -28,6 +28,10 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
+  def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+  if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
+    namespace "com.dooboolab.audiorecorderplayer"
+  }
   compileSdkVersion safeExtGet('compileSdkVersion', 31)
 
   defaultConfig {
@@ -37,8 +41,9 @@ android {
     versionName "1.0"
   }
 
-  kotlinOptions {
-      jvmTarget = "1.8"
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
   }
 
   lintOptions {
