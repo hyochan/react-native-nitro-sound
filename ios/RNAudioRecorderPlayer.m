@@ -13,11 +13,13 @@ RCT_EXTERN_METHOD(setSubscriptionDuration:(double)duration);
 
 RCT_EXTERN_METHOD(startRecorder:(NSString *)path
                   audioSets:(NSDictionary *)audioSets
+                  appointmentID: (NSString*)appointmentID
                   meteringEnabled:(BOOL)meteringEnabled
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject);
 
-RCT_EXTERN_METHOD(stopRecorder:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(stopRecorder:(BOOL)backgroundMode
+                 resolve:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
 
 RCT_EXTERN_METHOD(pauseRecorder:(RCTPromiseResolveBlock)resolve
@@ -51,5 +53,8 @@ RCT_EXTERN_METHOD(pausePlayer:(RCTPromiseResolveBlock)resolve
 
 RCT_EXTERN_METHOD(stopPlayer:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject);
-
+                  
+RCT_EXTERN_METHOD(getFilesFromFolder:(NSString *)name
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject);
 @end

@@ -34,8 +34,6 @@ export enum OutputFormatAndroidType {
   OUTPUT_FORMAT_RTP_AVP,
   MPEG_2_TS,
   WEBM,
-  UNUSED,
-  OGG,
 }
 
 export enum AudioEncoderAndroidType {
@@ -46,7 +44,6 @@ export enum AudioEncoderAndroidType {
   HE_AAC,
   AAC_ELD,
   VORBIS,
-  OPUS,
 }
 
 export enum AVEncodingOption {
@@ -153,7 +150,11 @@ export type PlayBackType = {
   isMuted?: boolean;
   currentPosition: number;
   duration: number;
-  isFinished: boolean;
+};
+
+export const getFilesFromFolder = async (name): Promise<any> => {
+  const result = await RNAudioRecorderPlayer.getFilesFromFolder(name);
+  return result;
 };
 
 class AudioRecorderPlayer {
@@ -243,21 +244,18 @@ class AudioRecorderPlayer {
   startRecorder = async (
     uri?: string,
     audioSets?: AudioSet,
+    appointmentId?: string,
     meteringEnabled?: boolean,
   ): Promise<string> => {
     if (!this._isRecording) {
       this._isRecording = true;
 
-      try {
-        return await RNAudioRecorderPlayer.startRecorder(
-          uri ?? 'DEFAULT',
-          audioSets,
-          meteringEnabled ?? false,
-        );
-      } catch (error: any) {
-        this._isRecording = false;
-        throw error;
-      }
+      return RNAudioRecorderPlayer.startRecorder(
+        uri ?? 'DEFAULT',
+        audioSets,
+        appointmentId,
+        meteringEnabled ?? false,
+      );
     }
 
     return 'Already recording';
@@ -295,17 +293,39 @@ class AudioRecorderPlayer {
    * stop recording.
    * @returns {Promise<string>}
    */
-  stopRecorder = async (): Promise<string> => {
+  stopRecorder = async (backgroundMode?: boolean): Promise<string> => {
     if (this._isRecording) {
       this._isRecording = false;
       this._hasPausedRecord = false;
 
-      return RNAudioRecorderPlayer.stopRecorder();
+      if (Platform.OS === 'android') {
+        return RNAudioRecorderPlayer.stopRecorder();
+      }
+      return RNAudioRecorderPlayer.stopRecorder(backgroundMode ?? false);
     }
 
     return 'Already stopped';
   };
+/**
+   * start service.
+   * @returns {Promise<string>}
+   */
+startService = async (): Promise<string> => {
+    
+  return RNAudioRecorderPlayer.startService();
 
+};
+
+
+/**
+* stop service.
+* @returns {Promise<string>}
+*/
+stopService = async (): Promise<string> => {
+
+    return RNAudioRecorderPlayer.stopService();
+
+};
   /**
    * Resume playing.
    * @returns {Promise<string>}
@@ -329,7 +349,7 @@ class AudioRecorderPlayer {
       this._playerCallback(event);
     }
 
-    if (event.isFinished) {
+    if (event.currentPosition === event.duration) {
       this.stopPlayer();
     }
   };
@@ -423,15 +443,6 @@ class AudioRecorderPlayer {
     }
 
     return RNAudioRecorderPlayer.setVolume(volume);
-  };
-
-  /**
-   * Set playback speed.
-   * @param {number} setPlaybackSpeed set playback speed.
-   * @returns {Promise<string>}
-   */
-  setPlaybackSpeed = async (playbackSpeed: number): Promise<string> => {
-    return RNAudioRecorderPlayer.setPlaybackSpeed(playbackSpeed);
   };
 
   /**
