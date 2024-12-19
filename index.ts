@@ -298,6 +298,9 @@ class AudioRecorderPlayer {
       this._isRecording = false;
       this._hasPausedRecord = false;
 
+      if (Platform.OS === 'android') {
+        return RNAudioRecorderPlayer.stopRecorder();
+      }
       return RNAudioRecorderPlayer.stopRecorder(backgroundMode ?? false);
     }
 

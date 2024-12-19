@@ -90,6 +90,10 @@ import kotlin.math.log10
 
         if (mediaRecorder == null) {
             mediaRecorder = MediaRecorder()
+        }else{
+            mediaRecorder!!.stop()
+            mediaRecorder == null
+            mediaRecorder = MediaRecorder()
         }
 
         if (audioSet != null) {

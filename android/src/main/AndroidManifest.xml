@@ -8,11 +8,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <application>
         <service
             android:name=".ForegroundService"
             android:foregroundServiceType="mediaPlayback|microphone"
             android:exported="false">
         </service>
+        <!-- Declare your BroadcastReceiver -->
     </application>
 </manifest>
