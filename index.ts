@@ -1,4 +1,4 @@
-import type { EmitterSubscription } from 'react-native';
+import type {EmitterSubscription} from 'react-native';
 import {
   DeviceEventEmitter,
   NativeEventEmitter,
@@ -16,8 +16,9 @@ import {
   PlayBackType,
   RecordBackType,
   Status,
-  pad
-} from './types'
+  pad,
+} from './types';
+import {AudioRecorderPlayerFC} from './index.fc';
 export {
   AVEncoderAudioQualityIOSType,
   AVEncodingOption,
@@ -28,12 +29,11 @@ export {
   PlayBackType,
   RecordBackType,
   Status,
-  pad
-}
-import { AudioRecorderPlayerFC } from './index.fc'
-export { AudioRecorderPlayerFC }
+  pad,
+};
+export {AudioRecorderPlayerFC};
 
-const { RNAudioRecorderPlayer } = NativeModules;
+const {RNAudioRecorderPlayer} = NativeModules;
 
 class AudioRecorderPlayer {
   private _isRecording: boolean;
@@ -329,9 +329,9 @@ class AudioRecorderPlayer {
       isRecording: this._isRecording,
       hasPaused: this._hasPaused,
       hasPausedRecord: this._hasPausedRecord,
-      isStopped: this._isStopped
-    }
-  }
+      isStopped: this._isStopped,
+    };
+  };
 }
 
 export default AudioRecorderPlayer;
