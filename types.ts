@@ -143,12 +143,12 @@ export type PlayBackType = {
 };
 
 export type Status = {
-  isRecording: boolean
-  isPlaying: boolean
-  hasPaused: boolean
-  hasPausedRecord: boolean
-  isStopped: boolean
-}
+  isRecording: boolean;
+  isPlaying: boolean;
+  hasPaused: boolean;
+  hasPausedRecord: boolean;
+  isStopped: boolean;
+};
 
 export const pad = (num: number): string => {
   return ('0' + num).slice(-2);

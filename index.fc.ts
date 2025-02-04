@@ -1,25 +1,28 @@
-import { useState } from 'react';
-import type { EmitterSubscription } from 'react-native';
+import {useState} from 'react';
+import type {EmitterSubscription} from 'react-native';
 import {
   DeviceEventEmitter,
   NativeEventEmitter,
   NativeModules,
   Platform,
 } from 'react-native';
+import {AudioSet, PlayBackType, RecordBackType, Status, pad} from './types';
 
-const { RNAudioRecorderPlayer } = NativeModules;
-import { AudioSet, PlayBackType, RecordBackType, Status, pad } from './types'
+const {RNAudioRecorderPlayer} = NativeModules;
 export function AudioRecorderPlayerFC() {
-  const [isRecording, setIsRecording] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [hasPaused, setHasPaused] = useState(false)
-  const [hasPausedRecord, setHasPausedRecord] = useState(false)
-  const [isStopped, setIsStopped] = useState(false)
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hasPaused, setHasPaused] = useState(false);
+  const [hasPausedRecord, setHasPausedRecord] = useState(false);
+  const [isStopped, setIsStopped] = useState(false);
 
-  const [recorderSubscription, setRecorderSubscription] = useState<EmitterSubscription | null>(null)
-  const [playerSubscription, setPlayerSubscription] = useState<EmitterSubscription | null>(null)
-  const [_playerCallback, setPlayerCallback] = useState<((event: PlayBackType) => void) | null>(null)
-
+  const [recorderSubscription, setRecorderSubscription] =
+    useState<EmitterSubscription | null>(null);
+  const [playerSubscription, setPlayerSubscription] =
+    useState<EmitterSubscription | null>(null);
+  const [_playerCallback, setPlayerCallback] = useState<
+    ((event: PlayBackType) => void) | null
+  >(null);
 
   const mmss = (secs: number): string => {
     let minutes = Math.floor(secs / 60);
@@ -48,16 +51,14 @@ export function AudioRecorderPlayerFC() {
     callback: (recordingMeta: RecordBackType) => void,
   ): void => {
     if (Platform.OS === 'android') {
-      setRecorderSubscription(DeviceEventEmitter.addListener(
-        'rn-recordback',
-        callback,
-      ));
+      setRecorderSubscription(
+        DeviceEventEmitter.addListener('rn-recordback', callback),
+      );
     } else {
       const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
-      setRecorderSubscription(myModuleEvt.addListener(
-        'rn-recordback',
-        callback,
-      ))
+      setRecorderSubscription(
+        myModuleEvt.addListener('rn-recordback', callback),
+      );
     }
   };
 
@@ -154,7 +155,7 @@ export function AudioRecorderPlayerFC() {
     if (isRecording) {
       setIsRecording(false);
       setHasPausedRecord(false);
-      setIsStopped(true)
+      setIsStopped(true);
       return RNAudioRecorderPlayer.stopRecorder();
     }
 
@@ -205,17 +206,15 @@ export function AudioRecorderPlayerFC() {
 
     if (!playerSubscription) {
       if (Platform.OS === 'android') {
-        setPlayerSubscription(DeviceEventEmitter.addListener(
-          'rn-playback',
-          playerCallback,
-        ))
+        setPlayerSubscription(
+          DeviceEventEmitter.addListener('rn-playback', playerCallback),
+        );
       } else {
         const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
 
-        setPlayerSubscription(myModuleEvt.addListener(
-          'rn-playback',
-          playerCallback,
-        ));
+        setPlayerSubscription(
+          myModuleEvt.addListener('rn-playback', playerCallback),
+        );
       }
     }
 
@@ -225,7 +224,7 @@ export function AudioRecorderPlayerFC() {
 
       return RNAudioRecorderPlayer.startPlayer(uri, httpHeaders);
     }
-    return `Playing out of sync: playing: ${isPlaying}, paused: ${hasPaused}, subscription: ${playerSubscription}`
+    return `Playing out of sync: playing: ${isPlaying}, paused: ${hasPaused}, subscription: ${playerSubscription}`;
   };
 
   /**
@@ -257,7 +256,7 @@ export function AudioRecorderPlayerFC() {
 
       return RNAudioRecorderPlayer.pausePlayer();
     }
-    return `Pausing out of sync: playing: ${isPlaying}, paused: ${hasPaused}`
+    return `Pausing out of sync: playing: ${isPlaying}, paused: ${hasPaused}`;
   };
 
   /**
@@ -306,12 +305,29 @@ export function AudioRecorderPlayerFC() {
       isRecording,
       hasPaused,
       hasPausedRecord,
-      isStopped
-    }
-  }
+      isStopped,
+    };
+  };
   return {
-    getStatus, setSubscriptionDuration, setPlaybackSpeed, setVolume, seekToPlayer, pausePlayer, stopPlayer, mmssss, mmss,
-    addRecordBackListener, startPlayer, playerCallback, stopRecorder, resumePlayer, resumeRecorder, pauseRecorder,
-    removePlayBackListener, startRecorder, addPlayBackListener, removeRecordBackListener
-  }
+    getStatus,
+    setSubscriptionDuration,
+    setPlaybackSpeed,
+    setVolume,
+    seekToPlayer,
+    pausePlayer,
+    stopPlayer,
+    mmssss,
+    mmss,
+    addRecordBackListener,
+    startPlayer,
+    playerCallback,
+    stopRecorder,
+    resumePlayer,
+    resumeRecorder,
+    pauseRecorder,
+    removePlayBackListener,
+    startRecorder,
+    addPlayBackListener,
+    removeRecordBackListener,
+  };
 }
