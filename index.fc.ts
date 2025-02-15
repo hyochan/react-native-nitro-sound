@@ -15,14 +15,13 @@ export function AudioRecorderPlayerFC() {
   const [hasPaused, setHasPaused] = useState(false);
   const [hasPausedRecord, setHasPausedRecord] = useState(false);
   const [isStopped, setIsStopped] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
 
   const [recorderSubscription, setRecorderSubscription] =
     useState<EmitterSubscription | null>(null);
   const [playerSubscription, setPlayerSubscription] =
     useState<EmitterSubscription | null>(null);
-  const [_playerCallback, setPlayerCallback] = useState<
-    ((event: PlayBackType) => void) | null
-  >(null);
+  let _playerCallback: ((event: PlayBackType) => void) | null;
 
   const mmss = (secs: number): string => {
     let minutes = Math.floor(secs / 60);
@@ -80,7 +79,7 @@ export function AudioRecorderPlayerFC() {
   const addPlayBackListener = (
     callback: (playbackMeta: PlayBackType) => void,
   ): void => {
-    setPlayerCallback(callback);
+    _playerCallback = callback;
   };
 
   /**
@@ -88,7 +87,7 @@ export function AudioRecorderPlayerFC() {
    * @returns {void}
    */
   const removePlayBackListener = (): void => {
-    setPlayerCallback(null);
+    _playerCallback = null;
   };
 
   /**
@@ -186,6 +185,7 @@ export function AudioRecorderPlayerFC() {
     }
 
     if (event.isFinished) {
+      setIsFinished(true);
       stopPlayer();
     }
   };
@@ -306,6 +306,7 @@ export function AudioRecorderPlayerFC() {
       hasPaused,
       hasPausedRecord,
       isStopped,
+      isFinished,
     };
   };
   return {

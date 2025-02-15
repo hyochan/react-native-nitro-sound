@@ -148,6 +148,7 @@ export type Status = {
   hasPaused: boolean;
   hasPausedRecord: boolean;
   isStopped: boolean;
+  isFinished: boolean;
 };
 
 export const pad = (num: number): string => {

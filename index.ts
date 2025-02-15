@@ -41,6 +41,7 @@ class AudioRecorderPlayer {
   private _hasPaused: boolean;
   private _hasPausedRecord: boolean;
   private _isStopped: boolean;
+  private _isFinished: boolean;
   private _recorderSubscription: EmitterSubscription;
   private _playerSubscription: EmitterSubscription;
   private _playerCallback: (event: PlayBackType) => void;
@@ -210,6 +211,7 @@ class AudioRecorderPlayer {
     }
 
     if (event.isFinished) {
+      this._isFinished = true;
       this.stopPlayer();
     }
   };
@@ -330,6 +332,7 @@ class AudioRecorderPlayer {
       hasPaused: this._hasPaused,
       hasPausedRecord: this._hasPausedRecord,
       isStopped: this._isStopped,
+      isFinished: this._isFinished,
     };
   };
 }
