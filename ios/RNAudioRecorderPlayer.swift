@@ -12,6 +12,14 @@ import AVFoundation
 class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     var subscriptionDuration: Double = 0.5
     var audioFileURL: URL?
+    
+    // Array to store segment file URLs
+    var audioSegmentURLs: [URL] = []
+    var currentSegmentURL: URL?
+    
+    // Track cumulative recording time across segments
+    var cumulativeRecordingTime: TimeInterval = 0
+    var previousSegmentsDuration: TimeInterval = 0
 
     // Recorder
     var audioRecorder: AVAudioRecorder!
@@ -54,6 +62,13 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             audioFileURL = cachesDirectory.appendingPathComponent(path)
         }
     }
+    
+    // Generate a unique URL for a new segment
+    func generateSegmentURL() -> URL {
+        let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let uuid = UUID().uuidString
+        return cachesDirectory.appendingPathComponent("segment_\(uuid).m4a")
+    }
 
     /**********               Recorder               **********/
 
@@ -66,10 +81,13 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 audioRecorder.updateMeters()
                 currentMetering = audioRecorder.averagePower(forChannel: 0)
             }
+            
+            // Calculate total recording time by adding current segment time to previous segments total
+            let totalRecordingTime = previousSegmentsDuration + audioRecorder.currentTime
 
             let status = [
                 "isRecording": audioRecorder.isRecording,
-                "currentPosition": audioRecorder.currentTime * 1000,
+                "currentPosition": totalRecordingTime * 1000, // Send cumulative time in milliseconds
                 "currentMetering": currentMetering,
             ] as [String : Any];
 
@@ -103,6 +121,12 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 return reject("RNAudioPlayerRecorder", "Recorder is not recording", nil)
             }
 
+            // Store the current time when pausing
+            if self.audioRecorder.isRecording {
+                // We don't add to previousSegmentsDuration here because we're not creating a new segment
+                // We'll continue recording to the same segment when resumed
+            }
+            
             self.audioRecorder.pause()
             resolve("Recorder paused!")
         }
@@ -118,12 +142,14 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 return reject("RNAudioPlayerRecorder", "Recorder is nil", nil)
             }
 
+            // When manually resuming, we continue with the same segment
+            // No need to update previousSegmentsDuration as we're continuing the same segment
             self.audioRecorder.record()
 
             if (self.recordTimer == nil) {
                 self.startRecorderTimer()
             }
-            resolve("Recorder paused!")
+            resolve("Recorder resumed!")
         }
     }
 
@@ -159,13 +185,51 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
         switch interruptionType {
         case AVAudioSession.InterruptionType.began.rawValue:
+            // When interruption begins, save the current segment
+            if audioRecorder != nil && audioRecorder.isRecording {
+                // Add current segment's duration to the cumulative time before stopping
+                previousSegmentsDuration += audioRecorder.currentTime
+                
+                audioRecorder.stop()
+                if let currentURL = currentSegmentURL, FileManager.default.fileExists(atPath: currentURL.path) {
+                    audioSegmentURLs.append(currentURL)
+                    print("Added segment at interruption: \(currentURL.lastPathComponent)")
+                }
+            }
             pauseRecorder { _ in } rejecter: { _, _, _ in }
             break
         case AVAudioSession.InterruptionType.ended.rawValue:
-            resumeRecorder { _ in } rejecter: { _, _, _ in }
+            // On interruption end, create a new segment file and start recording to it
+            guard let option = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
+            if option == AVAudioSession.InterruptionOptions.shouldResume.rawValue {
+                // Only automatically resume if the system indicates we should
+                startNewSegment()
+                resumeRecorder { _ in } rejecter: { _, _, _ in }
+                print("Started new segment after interruption: \(self.currentSegmentURL?.lastPathComponent ?? "nil")")
+            }
             break
         default:
             break
+        }
+    }
+    
+    // Start a new recording segment with the same settings as the original
+    func startNewSegment() {
+        // Create a new segment file URL
+        currentSegmentURL = generateSegmentURL()
+        
+        // If we have existing recorder settings, use them for the new segment
+        if audioRecorder != nil {
+            let settings = audioRecorder.settings
+            do {
+                audioRecorder = try AVAudioRecorder(url: currentSegmentURL!, settings: settings)
+                audioRecorder.prepareToRecord()
+                audioRecorder.delegate = self
+                audioRecorder.isMeteringEnabled = _meteringEnabled
+                print("Created new segment recorder with cumulative time: \(previousSegmentsDuration) seconds")
+            } catch {
+                print("Failed to create new segment recorder: \(error)")
+            }
         }
     }
 
@@ -176,6 +240,16 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
        rejecter reject: @escaping RCTPromiseRejectBlock) -> Void {
 
         _meteringEnabled = meteringEnabled;
+        
+        // Reset segment array when starting a new recording
+        audioSegmentURLs = []
+        currentSegmentURL = generateSegmentURL()
+        
+        // Reset cumulative time tracking for a new recording
+        previousSegmentsDuration = 0
+        cumulativeRecordingTime = 0
+        
+        print("Starting recording with first segment: \(currentSegmentURL?.lastPathComponent ?? "nil")")
 
         let encoding = audioSets["AVFormatIDKeyIOS"] as? String
         let mode = audioSets["AVModeIOS"] as? String
@@ -198,6 +272,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             return reject("RNAudioPlayerRecorder", "Audio format not available", nil)
         }
 
+        // Set the final output URL (this will be used when merging segments)
         if (path == "DEFAULT") {
             let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
             let fileExt = fileExtension(forAudioFormat: avFormat)
@@ -251,11 +326,11 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 AVLinearPCMIsBigEndianKey: avLPCMIsBigEndian ?? true,
                 AVLinearPCMIsFloatKey: avLPCMIsFloatKey ?? false,
                 AVLinearPCMIsNonInterleaved: avLPCMIsNonInterleaved ?? false,
-                 AVEncoderBitRateKey: bitRate!
+                AVEncoderBitRateKey: bitRate!
             ] as [String : Any]
 
             do {
-                audioRecorder = try AVAudioRecorder(url: audioFileURL!, settings: settings)
+                audioRecorder = try AVAudioRecorder(url: currentSegmentURL!, settings: settings)
 
                 if (audioRecorder != nil) {
                     audioRecorder.prepareToRecord()
@@ -270,20 +345,22 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
                     startRecorderTimer()
 
+                    // Return the final URL that will be produced after merging
                     resolve(audioFileURL?.absoluteString)
                     return
                 }
 
                 reject("RNAudioPlayerRecorder", "Error occured during initiating recorder", nil)
             } catch {
-                reject("RNAudioPlayerRecorder", "Error occured during recording", nil)
+                print("Error starting recorder: \(error)")
+                reject("RNAudioPlayerRecorder", "Error occured during recording: \(error.localizedDescription)", nil)
             }
         }
 
         audioSession = AVAudioSession.sharedInstance()
 
         do {
-            try audioSession.setCategory(.playAndRecord, mode: avMode, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth])
+            try audioSession.setCategory(.playAndRecord, mode: avMode, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth, AVAudioSession.CategoryOptions.mixWithOthers])
             try audioSession.setActive(true)
 
             audioSession.requestRecordPermission { granted in
@@ -316,9 +393,216 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 return
             }
 
+            // Add final segment duration to total before stopping
+            self.previousSegmentsDuration += self.audioRecorder.currentTime
+            self.cumulativeRecordingTime = self.previousSegmentsDuration
+            
+            // Stop the current recording
             self.audioRecorder.stop()
-
-            resolve(self.audioFileURL?.absoluteString)
+            
+            // Add the last segment to our array if it exists
+            if let currentURL = self.currentSegmentURL, FileManager.default.fileExists(atPath: currentURL.path) {
+                self.audioSegmentURLs.append(currentURL)
+                print("Added final segment: \(currentURL.lastPathComponent)")
+            }
+            
+            // Filter out zero-length files that might have been created during interruptions
+            self.audioSegmentURLs = self.audioSegmentURLs.filter { url in
+                guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+                      let fileSize = attrs[.size] as? UInt64 else {
+                    return false
+                }
+                return fileSize > 0
+            }
+            
+            print("Total segments to process: \(self.audioSegmentURLs.count)")
+            
+            // If we have no valid segments, return an error
+            if self.audioSegmentURLs.isEmpty {
+                reject("RNAudioPlayerRecorder", "No valid audio was recorded", nil)
+                return
+            }
+            
+            // If we only have one segment, just use that file
+            if self.audioSegmentURLs.count == 1, let singleSegment = self.audioSegmentURLs.first {
+                do {
+                    // Make sure the destination directory exists
+                    try FileManager.default.createDirectory(at: self.audioFileURL!.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
+                    
+                    // Remove any existing file at the destination
+                    if FileManager.default.fileExists(atPath: self.audioFileURL!.path) {
+                        try FileManager.default.removeItem(at: self.audioFileURL!)
+                    }
+                    
+                    // Copy the segment to the final destination
+                    try FileManager.default.copyItem(at: singleSegment, to: self.audioFileURL!)
+                    print("Copied single segment to final destination")
+                    
+                    // Clean up segment file
+                    try FileManager.default.removeItem(at: singleSegment)
+                    
+                    // Reset segment tracking
+                    self.audioSegmentURLs = []
+                    self.currentSegmentURL = nil
+                    
+                    resolve(self.audioFileURL?.absoluteString)
+                } catch {
+                    print("Error finalizing single segment recording: \(error)")
+                    reject("RNAudioPlayerRecorder", "Failed to finalize recording: \(error.localizedDescription)", nil)
+                    
+                    // Clean up segment
+                    try? FileManager.default.removeItem(at: singleSegment)
+                    self.audioSegmentURLs = []
+                    self.currentSegmentURL = nil
+                }
+            } 
+            // If we have multiple segments, we need to stitch them together
+            else if self.audioSegmentURLs.count > 1 {
+                // Make sure the destination directory exists
+                do {
+                    try FileManager.default.createDirectory(at: self.audioFileURL!.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
+                    
+                    // Remove any existing file at the destination
+                    if FileManager.default.fileExists(atPath: self.audioFileURL!.path) {
+                        try FileManager.default.removeItem(at: self.audioFileURL!)
+                    }
+                } catch {
+                    print("Error preparing output directory: \(error)")
+                }
+                
+                self.mergeAudioSegments(completion: { success, error in
+                    // Clean up temp files regardless of success or failure
+                    for url in self.audioSegmentURLs {
+                        try? FileManager.default.removeItem(at: url)
+                    }
+                    
+                    // Reset segment tracking
+                    self.audioSegmentURLs = []
+                    self.currentSegmentURL = nil
+                    
+                    if success {
+                        print("Successfully merged \(self.audioSegmentURLs.count) segments")
+                        resolve(self.audioFileURL?.absoluteString)
+                    } else {
+                        print("Failed to merge audio segments: \(error?.localizedDescription ?? "Unknown error")")
+                        reject("RNAudioPlayerRecorder", "Failed to merge audio segments: \(error?.localizedDescription ?? "Unknown error")", nil)
+                    }
+                })
+            } else {
+                // No segments recorded (should not happen due to earlier check)
+                reject("RNAudioPlayerRecorder", "No audio was recorded", nil)
+            }
+        }
+    }
+    
+    // Merge multiple audio segments into a single file
+    func mergeAudioSegments(completion: @escaping (Bool, Error?) -> Void) {
+        // Create a composition of all audio segments
+        let composition = AVMutableComposition()
+        
+        // Create audio track
+        guard let compositionTrack = composition.addMutableTrack(
+            withMediaType: .audio,
+            preferredTrackID: kCMPersistentTrackID_Invalid)
+        else {
+            completion(false, NSError(domain: "RNAudioRecorderPlayer", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create composition track"]))
+            return
+        }
+        
+        // Add each segment to the composition
+        var insertTime = CMTime.zero
+        var segmentsAdded = 0
+        
+        for segmentURL in audioSegmentURLs {
+            let asset = AVURLAsset(url: segmentURL)
+            
+            // Wait for the asset to load its duration
+            let semaphore = DispatchSemaphore(value: 0)
+            var assetDuration: CMTime = .zero
+            var loadError: Error?
+            
+            asset.loadValuesAsynchronously(forKeys: ["duration"]) {
+                var error: NSError? = nil
+                let status = asset.statusOfValue(forKey: "duration", error: &error)
+                
+                switch status {
+                case .loaded:
+                    assetDuration = asset.duration
+                case .failed, .cancelled, .unknown:
+                    loadError = error
+                default:
+                    break
+                }
+                
+                semaphore.signal()
+            }
+            
+            _ = semaphore.wait(timeout: .now() + 5.0)
+            
+            if let error = loadError {
+                print("Error loading asset duration: \(error)")
+                completion(false, error)
+                return
+            }
+            
+            // If the asset is empty (0 duration), skip it
+            if assetDuration == .zero || CMTimeGetSeconds(assetDuration) < 0.1 {
+                print("Skipping zero-length segment: \(segmentURL.lastPathComponent)")
+                continue
+            }
+            
+            do {
+                if let assetTrack = asset.tracks(withMediaType: .audio).first {
+                    try compositionTrack.insertTimeRange(
+                        CMTimeRange(start: .zero, duration: assetDuration),
+                        of: assetTrack,
+                        at: insertTime
+                    )
+                    
+                    insertTime = CMTimeAdd(insertTime, assetDuration)
+                    segmentsAdded += 1
+                    print("Added segment to composition: \(segmentURL.lastPathComponent), duration: \(CMTimeGetSeconds(assetDuration))")
+                } else {
+                    print("No audio track found in segment: \(segmentURL.lastPathComponent)")
+                }
+            } catch {
+                print("Error inserting segment into composition: \(error)")
+                completion(false, error)
+                return
+            }
+        }
+        
+        // If no segments were added, return an error
+        if segmentsAdded == 0 {
+            completion(false, NSError(domain: "RNAudioRecorderPlayer", code: -1, userInfo: [NSLocalizedDescriptionKey: "No valid audio segments to merge"]))
+            return
+        }
+        
+        // Export the composition to the final file
+        guard let exporter = AVAssetExportSession(
+            asset: composition,
+            presetName: AVAssetExportPresetAppleM4A)
+        else {
+            completion(false, NSError(domain: "RNAudioRecorderPlayer", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create export session"]))
+            return
+        }
+        
+        exporter.outputURL = audioFileURL
+        exporter.outputFileType = .m4a
+        print("Starting export to: \(audioFileURL?.lastPathComponent ?? "nil")")
+        
+        exporter.exportAsynchronously {
+            switch exporter.status {
+            case .completed:
+                print("Export completed successfully")
+                completion(true, nil)
+            case .failed, .cancelled:
+                print("Export failed with error: \(exporter.error?.localizedDescription ?? "Unknown")")
+                completion(false, exporter.error)
+            default:
+                print("Export ended with status: \(exporter.status.rawValue)")
+                completion(false, NSError(domain: "RNAudioRecorderPlayer", code: -1, userInfo: [NSLocalizedDescriptionKey: "Export failed with status: \(exporter.status.rawValue)"]))
+            }
         }
     }
 
