@@ -20,6 +20,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     // Track cumulative recording time across segments
     var cumulativeRecordingTime: TimeInterval = 0
     var previousSegmentsDuration: TimeInterval = 0
+    var isResumingFromInterruption: Bool = false
 
     // Recorder
     var audioRecorder: AVAudioRecorder!
@@ -142,14 +143,22 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 return reject("RNAudioPlayerRecorder", "Recorder is nil", nil)
             }
 
-            // When manually resuming, we continue with the same segment
-            // No need to update previousSegmentsDuration as we're continuing the same segment
-            self.audioRecorder.record()
+            do {
+                // Always try to reactivate the audio session before resuming
+                try self.audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                
+                // When manually resuming, we continue with the same segment
+                // No need to update previousSegmentsDuration as we're continuing the same segment
+                self.audioRecorder.record()
 
-            if (self.recordTimer == nil) {
-                self.startRecorderTimer()
+                if (self.recordTimer == nil) {
+                    self.startRecorderTimer()
+                }
+                resolve("Recorder resumed!")
+            } catch {
+                print("Failed to resume recorder: \(error)")
+                reject("RNAudioPlayerRecorder", "Failed to resume recorder: \(error.localizedDescription)", nil)
             }
-            resolve("Recorder resumed!")
         }
     }
 
@@ -180,35 +189,99 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     func handleAudioSessionInterruption(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
             let interruptionType = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt else {
+            print("Audio Session Interruption: No userInfo or interruptionType")
             return
         }
 
         switch interruptionType {
         case AVAudioSession.InterruptionType.began.rawValue:
+            print("Audio Session Interruption: BEGAN")
+            
             // When interruption begins, save the current segment
             if audioRecorder != nil && audioRecorder.isRecording {
+                print("Audio Session Interruption: Saving recording state before interruption")
+                
                 // Add current segment's duration to the cumulative time before stopping
                 previousSegmentsDuration += audioRecorder.currentTime
                 
+                // Stop recording on current segment
                 audioRecorder.stop()
+                
+                // Save the current segment
                 if let currentURL = currentSegmentURL, FileManager.default.fileExists(atPath: currentURL.path) {
-                    audioSegmentURLs.append(currentURL)
-                    print("Added segment at interruption: \(currentURL.lastPathComponent)")
+                    do {
+                        // Check if the file has valid content before adding it
+                        let attr = try FileManager.default.attributesOfItem(atPath: currentURL.path)
+                        let fileSize = attr[FileAttributeKey.size] as! UInt64
+                        
+                        if fileSize > 0 {
+                            audioSegmentURLs.append(currentURL)
+                            print("Added segment at interruption: \(currentURL.lastPathComponent), size: \(fileSize) bytes")
+                        } else {
+                            print("Skipping empty segment file: \(currentURL.lastPathComponent)")
+                            try FileManager.default.removeItem(at: currentURL)
+                        }
+                    } catch {
+                        print("Error checking segment file: \(error)")
+                    }
                 }
             }
+            
             pauseRecorder { _ in } rejecter: { _, _, _ in }
             break
+            
         case AVAudioSession.InterruptionType.ended.rawValue:
-            // On interruption end, create a new segment file and start recording to it
-            guard let option = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
+            print("Audio Session Interruption: ENDED")
+            guard let option = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { 
+                print("Audio Session Interruption: No option provided")
+                return 
+            }
+            
             if option == AVAudioSession.InterruptionOptions.shouldResume.rawValue {
-                // Only automatically resume if the system indicates we should
-                startNewSegment()
-                resumeRecorder { _ in } rejecter: { _, _, _ in }
-                print("Started new segment after interruption: \(self.currentSegmentURL?.lastPathComponent ?? "nil")")
+                print("Audio Session Interruption: System suggests we should resume")
+                
+                // Mark that we're in the process of resuming from interruption
+                isResumingFromInterruption = true
+                
+                // Delay resumption slightly to allow system to stabilize
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    guard let self = self else { return }
+                    
+                    do {
+                        // Re-activate audio session explicitly
+                        print("Audio Session Interruption: Reactivating audio session")
+                        try self.audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                        
+                        // Check if other audio is playing before proceeding
+                        if self.audioSession.isOtherAudioPlaying {
+                            print("Audio Session Interruption: Other audio is playing, can't resume safely")
+                            self.isResumingFromInterruption = false
+                            return
+                        }
+                        
+                        print("Audio Session Interruption: Starting new segment")
+                        self.startNewSegment()
+                        
+                        print("Audio Session Interruption: Resuming recorder")
+                        self.resumeRecorder { _ in
+                            print("Audio Session Interruption: Resume succeeded")
+                            self.isResumingFromInterruption = false
+                        } rejecter: { code, message, error in
+                            print("Audio Session Interruption: Resume failed - \(message ?? "unknown error")")
+                            self.isResumingFromInterruption = false
+                        }
+                    } catch {
+                        print("Audio Session Interruption: Failed to reactivate audio session - \(error)")
+                        self.isResumingFromInterruption = false
+                    }
+                }
+            } else {
+                print("Audio Session Interruption: System does not suggest resuming")
             }
             break
+            
         default:
+            print("Audio Session Interruption: Unknown interruption type: \(interruptionType)")
             break
         }
     }
@@ -222,14 +295,21 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         if audioRecorder != nil {
             let settings = audioRecorder.settings
             do {
-                audioRecorder = try AVAudioRecorder(url: currentSegmentURL!, settings: settings)
-                audioRecorder.prepareToRecord()
-                audioRecorder.delegate = self
-                audioRecorder.isMeteringEnabled = _meteringEnabled
-                print("Created new segment recorder with cumulative time: \(previousSegmentsDuration) seconds")
+                // No need to check if session is active, just check if other audio is playing
+                if !audioSession.isOtherAudioPlaying {
+                    audioRecorder = try AVAudioRecorder(url: currentSegmentURL!, settings: settings)
+                    audioRecorder.prepareToRecord()
+                    audioRecorder.delegate = self
+                    audioRecorder.isMeteringEnabled = _meteringEnabled
+                    print("Created new segment recorder with cumulative time: \(previousSegmentsDuration) seconds, URL: \(currentSegmentURL!.lastPathComponent)")
+                } else {
+                    print("Cannot start new segment: other audio is playing")
+                }
             } catch {
                 print("Failed to create new segment recorder: \(error)")
             }
+        } else {
+            print("Cannot start new segment: no existing recorder settings")
         }
     }
 
@@ -248,6 +328,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         // Reset cumulative time tracking for a new recording
         previousSegmentsDuration = 0
         cumulativeRecordingTime = 0
+        isResumingFromInterruption = false
         
         print("Starting recording with first segment: \(currentSegmentURL?.lastPathComponent ?? "nil")")
 
@@ -339,10 +420,12 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                     let isRecordStarted = audioRecorder.record()
 
                     if !isRecordStarted {
+                        print("Failed to start recording")
                         reject("RNAudioPlayerRecorder", "Error occured during initiating recorder", nil)
                         return
                     }
 
+                    print("Recording started successfully")
                     startRecorderTimer()
 
                     // Return the final URL that will be produced after merging
@@ -350,6 +433,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                     return
                 }
 
+                print("Recorder is nil after initialization")
                 reject("RNAudioPlayerRecorder", "Error occured during initiating recorder", nil)
             } catch {
                 print("Error starting recorder: \(error)")
@@ -360,19 +444,23 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         audioSession = AVAudioSession.sharedInstance()
 
         do {
+            print("Configuring audio session for recording")
             try audioSession.setCategory(.playAndRecord, mode: avMode, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth, AVAudioSession.CategoryOptions.mixWithOthers])
             try audioSession.setActive(true)
 
             audioSession.requestRecordPermission { granted in
                 DispatchQueue.main.async {
                     if granted {
+                        print("Record permission granted, starting recording")
                         startRecording()
                     } else {
+                        print("Record permission not granted")
                         reject("RNAudioPlayerRecorder", "Record permission not granted", nil)
                     }
                 }
             }
         } catch {
+            print("Failed to configure audio session: \(error)")
             reject("RNAudioPlayerRecorder", "Failed to record", nil)
         }
     }
