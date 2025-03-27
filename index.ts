@@ -150,7 +150,7 @@ export type RecordBackType = {
 };
 
 export type RecordingStateType = {
-  state: 'recording' | 'paused' | 'stopped';
+  state: 'recording' | 'paused' | 'interrupted' | 'stopped';
 };
 
 export type PlayBackType = {
