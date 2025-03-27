@@ -165,10 +165,10 @@ class AudioRecorderPlayer {
   private _isPlaying: boolean;
   private _hasPaused: boolean;
   private _hasPausedRecord: boolean;
-  private _recorderSubscription: EmitterSubscription;
-  private _recordingStateSubscription: EmitterSubscription;
-  private _playerSubscription: EmitterSubscription;
-  private _playerCallback: (event: PlayBackType) => void;
+  private _recorderSubscription: EmitterSubscription | null;
+  private _recordingStateSubscription: EmitterSubscription | null;
+  private _playerSubscription: EmitterSubscription | null;
+  private _playerCallback: ((event: PlayBackType) => void) | null;
 
   mmss = (secs: number): string => {
     let minutes = Math.floor(secs / 60);
@@ -408,6 +408,8 @@ class AudioRecorderPlayer {
 
       return RNAudioRecorderPlayer.startPlayer(uri, httpHeaders);
     }
+
+    return 'Already playing';
   };
 
   /**
@@ -439,6 +441,8 @@ class AudioRecorderPlayer {
 
       return RNAudioRecorderPlayer.pausePlayer();
     }
+    
+    return 'Already paused';
   };
 
   /**
