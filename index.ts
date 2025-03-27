@@ -149,6 +149,10 @@ export type RecordBackType = {
   currentMetering?: number;
 };
 
+export type RecordingStateType = {
+  state: 'recording' | 'paused' | 'stopped';
+};
+
 export type PlayBackType = {
   isMuted?: boolean;
   currentPosition: number;
@@ -162,6 +166,7 @@ class AudioRecorderPlayer {
   private _hasPaused: boolean;
   private _hasPausedRecord: boolean;
   private _recorderSubscription: EmitterSubscription;
+  private _recordingStateSubscription: EmitterSubscription;
   private _playerSubscription: EmitterSubscription;
   private _playerCallback: (event: PlayBackType) => void;
 
@@ -214,6 +219,39 @@ class AudioRecorderPlayer {
     if (this._recorderSubscription) {
       this._recorderSubscription.remove();
       this._recorderSubscription = null;
+    }
+  };
+
+  /**
+   * Set listener from native module for recording state.
+   * @returns {callBack((e: RecordBackType): void)}
+   */
+  addRecordingStateListener = (
+    callback: (recordingMeta: RecordingStateType) => void,
+  ): void => {
+    if (Platform.OS === 'android') {
+      this._recordingStateSubscription = DeviceEventEmitter.addListener(
+        'rn-recording-state',
+        callback,
+      );
+    } else {
+      const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
+
+      this._recordingStateSubscription = myModuleEvt.addListener(
+        'rn-recording-state',
+        callback,
+      );
+    }
+  };
+
+  /**
+   * Remove listener for recording state.
+   * @returns {void}
+   */
+  removeRecordingStateListener = (): void => {
+    if (this._recordingStateSubscription) {
+      this._recordingStateSubscription.remove();
+      this._recordingStateSubscription = null;
     }
   };
 

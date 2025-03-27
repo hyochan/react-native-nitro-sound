@@ -7,6 +7,7 @@
 
 import Foundation
 import AVFoundation
+import QuartzCore
 
 @objc(RNAudioRecorderPlayer)
 class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
@@ -18,6 +19,10 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     var audioSession: AVAudioSession!
     var recordTimer: Timer?
     var _meteringEnabled: Bool = false
+    // Duration of current recording up until it was last resumed
+    var accumulatedRecordingDuration: Double = 0
+    // Used to keep track of the total recording duration, accounting for pausing and resuming
+    var lastResumeTime: Double?
 
     // Player
     var pausedPlayTime: CMTime?
@@ -40,7 +45,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     }
 
     override func supportedEvents() -> [String]! {
-        return ["rn-playback", "rn-recordback"]
+        return ["rn-playback", "rn-recordback", "rn-recording-state"]
     }
 
     func setAudioFileURL(path: String) {
@@ -69,7 +74,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
             let status = [
                 "isRecording": audioRecorder.isRecording,
-                "currentPosition": audioRecorder.currentTime * 1000,
+                "currentPosition": getCurrentRecordingDuration() * 1000,
                 "currentMetering": currentMetering,
             ] as [String : Any];
 
@@ -98,14 +103,14 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         recordTimer?.invalidate()
         recordTimer = nil;
 
-        DispatchQueue.main.async {
-            if (self.audioRecorder == nil) {
-                return reject("RNAudioPlayerRecorder", "Recorder is not recording", nil)
-            }
-
-            self.audioRecorder.pause()
-            resolve("Recorder paused!")
+        if (self.audioRecorder == nil) {
+            return reject("RNAudioPlayerRecorder", "Recorder is not recording", nil)
         }
+
+        self.audioRecorder.pause()
+        self.recordingDidPause()
+        sendEvent(withName: "rn-recording-state", body: ["state": "paused"])
+        resolve("Recorder paused!")
     }
 
     @objc(resumeRecorder:rejecter:)
@@ -113,18 +118,22 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
-        DispatchQueue.main.async {
-            if (self.audioRecorder == nil) {
-                return reject("RNAudioPlayerRecorder", "Recorder is nil", nil)
-            }
-
-            self.audioRecorder.record()
-
-            if (self.recordTimer == nil) {
-                self.startRecorderTimer()
-            }
-            resolve("Recorder paused!")
+        if (self.audioRecorder == nil) {
+            return reject("RNAudioPlayerRecorder", "Recorder is nil", nil)
         }
+
+        let isRecordResumed = audioRecorder.record()
+        if !isRecordResumed {
+            reject("RNAudioPlayerRecorder", "Error occured while resuming recorder", nil)
+            return
+        }
+
+        self.recordingDidResume()
+        if (self.recordTimer == nil) {
+            self.startRecorderTimer()
+        }
+        sendEvent(withName: "rn-recording-state", body: ["state": "recording"])
+        resolve("Recorder resumed!")
     }
 
     @objc
@@ -168,8 +177,6 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             break
         }
     }
-
-    /**********               Player               **********/
 
     @objc(startRecorder:audioSets:meteringEnabled:resolve:reject:)
     func startRecorder(path: String,  audioSets: [String: Any], meteringEnabled: Bool, resolve: @escaping RCTPromiseResolveBlock,
@@ -267,9 +274,10 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                         reject("RNAudioPlayerRecorder", "Error occured during initiating recorder", nil)
                         return
                     }
-
+                    
+                    self.recordingDidStart()
                     startRecorderTimer()
-
+                    sendEvent(withName: "rn-recording-state", body: ["state": "recording"])
                     resolve(audioFileURL?.absoluteString)
                     return
                 }
@@ -317,7 +325,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             }
 
             self.audioRecorder.stop()
-
+            self.recordingDidFinish()
+            self.sendEvent(withName: "rn-recording-state", body: ["state": "stopped"])
             resolve(self.audioFileURL?.absoluteString)
         }
     }
@@ -329,6 +338,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     }
 
     /**********               Player               **********/
+
     func addPeriodicTimeObserver() {
         let timeScale = CMTimeScale(NSEC_PER_SEC)
         let time = CMTime(seconds: subscriptionDuration, preferredTimescale: timeScale)
@@ -565,5 +575,35 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             // file extension
             return "audio"
         }
+    }
+
+    /**********    Recorder Helpers (tracking recording duration)    **********/
+
+    private func recordingDidStart() {
+        self.accumulatedRecordingDuration = 0
+        self.lastResumeTime = CACurrentMediaTime()
+    }
+
+    private func recordingDidPause() {
+        guard let lastResumeTime else { return }
+        
+        self.accumulatedRecordingDuration += CACurrentMediaTime() - lastResumeTime
+        self.lastResumeTime = nil
+    }
+
+    private func recordingDidResume() {
+        self.lastResumeTime = CACurrentMediaTime()
+    }
+
+    private func recordingDidFinish() {
+        self.accumulatedRecordingDuration = 0
+        self.lastResumeTime = nil
+    }
+
+    /// Calculates the current total duration of the recording
+    private func getCurrentRecordingDuration() -> Double {
+        guard let lastResumeTime else { return accumulatedRecordingDuration }
+        
+        return accumulatedRecordingDuration + (CACurrentMediaTime() - lastResumeTime)
     }
 }
