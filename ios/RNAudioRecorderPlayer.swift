@@ -11,6 +11,7 @@ import QuartzCore
 
 enum RecorderError: LocalizedError {
     case notRecording
+    case alreadyRecording
     case failedToResumeRecording
     case recordingFormatNotAvailable
     case failedToLocateRecordingFile
@@ -23,6 +24,8 @@ enum RecorderError: LocalizedError {
         switch self {
         case .notRecording:
             return "Recorder is not recording"
+        case .alreadyRecording:
+            return "Recorder is already recording"
         case .failedToResumeRecording:
             return "Failed to resume recording"
         case .recordingFormatNotAvailable:
@@ -228,12 +231,12 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     }
 
     private func startNewRecording(path: String, audioSets: [String: Any], meteringEnabled: Bool, completion: @escaping (Result<URL, RecorderError>) -> Void) {
+        guard currentAudioRecorder == nil else { return completion(.failure(.alreadyRecording)) }
+
         _meteringEnabled = meteringEnabled
         guard
             let avFormat: AudioFormatID = avFormat(fromString: audioSets["AVFormatIDKeyIOS"] as? String ?? "alac")
-        else {
-            return completion(.failure(.recordingFormatNotAvailable))
-        }
+        else { return completion(.failure(.recordingFormatNotAvailable)) }
 
         let settings = [
             AVSampleRateKey: audioSets["AVSampleRateKeyIOS"] as? Int ?? 44100,
