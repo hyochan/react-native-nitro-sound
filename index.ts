@@ -149,6 +149,10 @@ export type RecordBackType = {
   currentMetering?: number;
 };
 
+export type RecordingStateType = {
+  state: 'recording' | 'paused' | 'interrupted' | 'stopped';
+};
+
 export type PlayBackType = {
   isMuted?: boolean;
   currentPosition: number;
@@ -161,9 +165,10 @@ class AudioRecorderPlayer {
   private _isPlaying: boolean;
   private _hasPaused: boolean;
   private _hasPausedRecord: boolean;
-  private _recorderSubscription: EmitterSubscription;
-  private _playerSubscription: EmitterSubscription;
-  private _playerCallback: (event: PlayBackType) => void;
+  private _recorderSubscription: EmitterSubscription | null;
+  private _recordingStateSubscription: EmitterSubscription | null;
+  private _playerSubscription: EmitterSubscription | null;
+  private _playerCallback: ((event: PlayBackType) => void) | null;
 
   mmss = (secs: number): string => {
     let minutes = Math.floor(secs / 60);
@@ -214,6 +219,39 @@ class AudioRecorderPlayer {
     if (this._recorderSubscription) {
       this._recorderSubscription.remove();
       this._recorderSubscription = null;
+    }
+  };
+
+  /**
+   * Set listener from native module for recording state.
+   * @returns {callBack((e: RecordBackType): void)}
+   */
+  addRecordingStateListener = (
+    callback: (recordingMeta: RecordingStateType) => void,
+  ): void => {
+    if (Platform.OS === 'android') {
+      this._recordingStateSubscription = DeviceEventEmitter.addListener(
+        'rn-recording-state',
+        callback,
+      );
+    } else {
+      const myModuleEvt = new NativeEventEmitter(RNAudioRecorderPlayer);
+
+      this._recordingStateSubscription = myModuleEvt.addListener(
+        'rn-recording-state',
+        callback,
+      );
+    }
+  };
+
+  /**
+   * Remove listener for recording state.
+   * @returns {void}
+   */
+  removeRecordingStateListener = (): void => {
+    if (this._recordingStateSubscription) {
+      this._recordingStateSubscription.remove();
+      this._recordingStateSubscription = null;
     }
   };
 
@@ -370,6 +408,8 @@ class AudioRecorderPlayer {
 
       return RNAudioRecorderPlayer.startPlayer(uri, httpHeaders);
     }
+
+    return 'Already playing';
   };
 
   /**
@@ -401,6 +441,8 @@ class AudioRecorderPlayer {
 
       return RNAudioRecorderPlayer.pausePlayer();
     }
+    
+    return 'Already paused';
   };
 
   /**
