@@ -108,7 +108,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 self.sendEvent(withName: "rn-recording-state", body: ["state": "recording"])
                 resolve(url.absoluteString)
             case .failure(let error):
-                reject("RNAudioPlayerRecorder", error.localizedDescription, nil)
+                reject("RNAudioPlayerRecorder", error.localizedDescription, error)
             }
         }
     }
@@ -120,7 +120,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             sendEvent(withName: "rn-recording-state", body: ["state": "paused"])
             resolve("Recorder paused!")
         } catch {
-            reject("RNAudioPlayerRecorder", error.localizedDescription, nil)
+            reject("RNAudioPlayerRecorder", error.localizedDescription, error)
         }
     }
 
@@ -131,7 +131,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             sendEvent(withName: "rn-recording-state", body: ["state": "recording"])
             resolve("Recorder resumed!")
         } catch {
-            reject("RNAudioPlayerRecorder", error.localizedDescription, nil)
+            reject("RNAudioPlayerRecorder", error.localizedDescription, error)
         }
     }
 
@@ -143,7 +143,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 self.sendEvent(withName: "rn-recording-state", body: ["state": "stopped"])
                 resolve(url.absoluteString)
             case .failure(let error):
-                reject("RNAudioPlayerRecorder", error.localizedDescription, nil)
+                reject("RNAudioPlayerRecorder", error.localizedDescription, error)
             }
         }
     }
@@ -304,7 +304,13 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             currentAudioRecorder.stop()
             self.recordingDidFinish()
             self.currentAudioRecorder = nil
-            completion(.success(audioFileURL))
+            // Deactivate audio session when finished recording
+            do {
+                try self.audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+                completion(.success(audioFileURL))
+            } catch {
+                completion(.failure(.audioSessionError(error)))
+            }
         }
     }
 
@@ -347,15 +353,12 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
-        audioSession = AVAudioSession.sharedInstance()
-
         do {
             try audioSession.setCategory(.playAndRecord, mode: .default, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth])
             try audioSession.setActive(true)
         } catch {
             reject("RNAudioPlayerRecorder", "Failed to play", nil)
         }
-
         updateAudioFileURL(path: path)
         audioPlayerAsset = AVURLAsset(url: audioFileURL!, options:["AVURLAssetHTTPHeaderFieldsKey": httpHeaders])
         audioPlayerItem = AVPlayerItem(asset: audioPlayerAsset!)
