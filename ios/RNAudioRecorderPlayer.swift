@@ -32,6 +32,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     var audioSession: AVAudioSession!
     var recordTimer: Timer?
     var _meteringEnabled: Bool = false
+    
+    // Completion handler for recording finish
+    var recordingFinishCompletion: ((Bool) -> Void)?
 
     // Player
     var pausedPlayTime: CMTime?
@@ -40,6 +43,10 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     var audioPlayer: AVPlayer!
     var timeObserverToken: Any?
 
+    // Interruption handling state
+    var interruptionResumeTimer: Timer? = nil
+    var lastInterruptionTime: Date? = nil
+
     override init() {
         super.init()
         NotificationCenter.default.addObserver(self, selector: #selector(handleAudioSessionInterruption(_:)), name: AVAudioSession.interruptionNotification, object: AVAudioSession.sharedInstance())
@@ -47,6 +54,12 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
     deinit {
         NotificationCenter.default.removeObserver(self)
+        // Clear any pending completion handlers to avoid retain cycles or memory leaks
+        recordingFinishCompletion = nil
+        
+        // Clean up interruption timer
+        interruptionResumeTimer?.invalidate()
+        interruptionResumeTimer = nil
     }
 
     override static func requiresMainQueueSetup() -> Bool {
@@ -140,6 +153,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 self.isRecordingActive = false
             }
             
+            // Clear any existing completion handler as pause doesn't trigger the finish recording delegate
+            self.recordingFinishCompletion = nil
+            
             self.audioRecorder.pause()
             resolve("Recorder paused!")
         }
@@ -204,8 +220,14 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             return
         }
 
+        // Cancel any pending interruption resume timer
+        interruptionResumeTimer?.invalidate()
+        interruptionResumeTimer = nil
+
         switch interruptionType {
         case AVAudioSession.InterruptionType.began.rawValue:
+            // Record interruption time for rate limiting
+            lastInterruptionTime = Date()
             
             // When interruption begins, save the current segment and update independent timing
             if audioRecorder != nil && audioRecorder.isRecording {
@@ -220,25 +242,31 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 // Add current segment's duration to the cumulative time before stopping
                 previousSegmentsDuration += audioRecorder.currentTime
                 
-                // Stop recording on current segment
-                audioRecorder.stop()
-                
-                // Save the current segment
-                if let currentURL = currentSegmentURL, FileManager.default.fileExists(atPath: currentURL.path) {
-                    do {
-                        // Check if the file has valid content before adding it
-                        let attr = try FileManager.default.attributesOfItem(atPath: currentURL.path)
-                        let fileSize = attr[FileAttributeKey.size] as! UInt64
-                        
-                        if fileSize > 0 {
-                            audioSegmentURLs.append(currentURL)
-                        } else {
-                            try FileManager.default.removeItem(at: currentURL)
+                // Set up a completion handler for the stop operation
+                recordingFinishCompletion = { [weak self] success in
+                    guard let self = self else { return }
+                    
+                    // Save the current segment if recording was successful
+                    if success, let currentURL = self.currentSegmentURL, FileManager.default.fileExists(atPath: currentURL.path) {
+                        do {
+                            // Check if the file has valid content before adding it
+                            let attr = try FileManager.default.attributesOfItem(atPath: currentURL.path)
+                            let fileSize = attr[FileAttributeKey.size] as! UInt64
+                            
+                            if fileSize > 0 {
+                                self.audioSegmentURLs.append(currentURL)
+                            } else {
+                                try FileManager.default.removeItem(at: currentURL)
+                            }
+                        } catch {
+                            print("Error checking segment file: \(error)")
                         }
-                    } catch {
-                        print("Error checking segment file: \(error)")
                     }
                 }
+                
+                // Stop recording on current segment
+                audioRecorder.stop()
+                // The completion handler will be called by audioRecorderDidFinishRecording
             }
             
             pauseRecorder { _ in } rejecter: { _, _, _ in }
@@ -249,12 +277,19 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 return 
             }
             
-            if option == AVAudioSession.InterruptionOptions.shouldResume.rawValue {
+            // Only attempt resume if we have the shouldResume flag and aren't already resuming
+            if option == AVAudioSession.InterruptionOptions.shouldResume.rawValue && !isResumingFromInterruption {
+                // Rate limit resumption attempts - don't try more than once every 2 seconds
+                if let lastTime = lastInterruptionTime, Date().timeIntervalSince(lastTime) < 2.0 {
+                    print("Ignoring rapid interruption sequence")
+                    return
+                }
+                
                 // Mark that we're in the process of resuming from interruption
                 isResumingFromInterruption = true
                 
-                // Delay resumption slightly to allow system to stabilize
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                // Use a timer with a slightly longer delay (1.0 second) for better stability
+                interruptionResumeTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
                     guard let self = self else { return }
                     
                     do {
@@ -263,6 +298,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                         
                         // Check if other audio is playing before proceeding
                         if self.audioSession.isOtherAudioPlaying {
+                            print("Cannot resume recording: other audio is playing")
                             self.isResumingFromInterruption = false
                             return
                         }
@@ -292,6 +328,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     
     // Start a new recording segment with the same settings as the original
     func startNewSegment() {
+        // Make sure any previous completion handler is cleared before starting a new segment
+        recordingFinishCompletion = nil
+        
         // Create a new segment file URL
         currentSegmentURL = generateSegmentURL()
         
@@ -475,8 +514,18 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             recordTimer!.invalidate()
             recordTimer = nil
         }
+        
+        // Clean up any interruption timer
+        interruptionResumeTimer?.invalidate()
+        interruptionResumeTimer = nil
+        isResumingFromInterruption = false
 
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                reject("RNAudioPlayerRecorder", "Recording context was deallocated", nil)
+                return
+            }
+            
             if (self.audioRecorder == nil) {
                 reject("RNAudioPlayerRecorder", "Failed to stop recorder. It is already nil.", nil)
                 return
@@ -493,135 +542,148 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             self.previousSegmentsDuration += self.audioRecorder.currentTime
             self.cumulativeRecordingTime = self.previousSegmentsDuration
             
-            // Stop the current recording
-            self.audioRecorder.stop()
-            
-            // Add the last segment to our array if it exists
-            if let currentURL = self.currentSegmentURL, FileManager.default.fileExists(atPath: currentURL.path) {
-                self.audioSegmentURLs.append(currentURL)
-            }
-            
-            // Filter out zero-length files that might have been created during interruptions
-            self.audioSegmentURLs = self.audioSegmentURLs.filter { url in
-                guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
-                      let fileSize = attrs[.size] as? UInt64 else {
-                    return false
+            // Set up completion handler before stopping the recorder
+            self.recordingFinishCompletion = { [weak self] success in
+                guard let self = self else {
+                    reject("RNAudioPlayerRecorder", "Recording context was deallocated during finalization", nil)
+                    return
                 }
-                return fileSize > 0
-            }
-            
-            // If we have no valid segments, return an error
-            if self.audioSegmentURLs.isEmpty {
-                reject("RNAudioPlayerRecorder", "No valid audio was recorded", nil)
-                return
-            }
-            
-            // If returnSegments is true, skip merging and return comma-separated paths
-            if returnSegments {
-                // Move segments to permanent storage locations and collect their paths
-                let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-                var finalPaths: [String] = []
                 
-                for (index, segmentURL) in self.audioSegmentURLs.enumerated() {
+                if !success {
+                    reject("RNAudioPlayerRecorder", "Recording failed to complete successfully", nil)
+                    return
+                }
+                
+                // Add the last segment to our array if it exists
+                if let currentURL = self.currentSegmentURL, FileManager.default.fileExists(atPath: currentURL.path) {
+                    self.audioSegmentURLs.append(currentURL)
+                }
+                
+                // Filter out zero-length files that might have been created during interruptions
+                self.audioSegmentURLs = self.audioSegmentURLs.filter { url in
+                    guard let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+                          let fileSize = attrs[.size] as? UInt64 else {
+                        return false
+                    }
+                    return fileSize > 0
+                }
+                
+                // If we have no valid segments, return an error
+                if self.audioSegmentURLs.isEmpty {
+                    reject("RNAudioPlayerRecorder", "No valid audio was recorded", nil)
+                    return
+                }
+                
+                // If returnSegments is true, skip merging and return comma-separated paths
+                if returnSegments {
+                    // Move segments to permanent storage locations and collect their paths
+                    let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+                    var finalPaths: [String] = []
+                    
+                    for (index, segmentURL) in self.audioSegmentURLs.enumerated() {
+                        do {
+                            // Create a permanent filename for this segment based on original output filename
+                            let originalFileName = self.audioFileURL!.deletingPathExtension().lastPathComponent
+                            let fileExtension = self.audioFileURL!.pathExtension
+                            let permanentFileName = "\(originalFileName)_segment\(index+1).\(fileExtension)"
+                            let permanentURL = cachesDirectory.appendingPathComponent(permanentFileName)
+                            
+                            // Remove any existing file at the destination
+                            if FileManager.default.fileExists(atPath: permanentURL.path) {
+                                try FileManager.default.removeItem(at: permanentURL)
+                            }
+                            
+                            // Move segment to permanent location (much faster than copy for large files)
+                            try FileManager.default.moveItem(at: segmentURL, to: permanentURL)
+                            
+                            // Add to final paths array
+                            finalPaths.append(permanentURL.absoluteString)
+                        } catch {
+                            // Still add the original segment path if we couldn't move it
+                            finalPaths.append(segmentURL.absoluteString)
+                        }
+                    }
+                    
+                    // Reset segment tracking arrays
+                    self.audioSegmentURLs = []
+                    self.currentSegmentURL = nil
+                    
+                    // Return comma-separated list of paths
+                    let pathsString = finalPaths.joined(separator: ",")
+                    resolve(pathsString)
+                    return
+                }
+                
+                // Original merging logic for backward compatibility
+                // If we only have one segment, just use that file
+                if self.audioSegmentURLs.count == 1, let singleSegment = self.audioSegmentURLs.first {
                     do {
-                        // Create a permanent filename for this segment based on original output filename
-                        let originalFileName = self.audioFileURL!.deletingPathExtension().lastPathComponent
-                        let fileExtension = self.audioFileURL!.pathExtension
-                        let permanentFileName = "\(originalFileName)_segment\(index+1).\(fileExtension)"
-                        let permanentURL = cachesDirectory.appendingPathComponent(permanentFileName)
+                        // Make sure the destination directory exists
+                        try FileManager.default.createDirectory(at: self.audioFileURL!.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
                         
                         // Remove any existing file at the destination
-                        if FileManager.default.fileExists(atPath: permanentURL.path) {
-                            try FileManager.default.removeItem(at: permanentURL)
+                        if FileManager.default.fileExists(atPath: self.audioFileURL!.path) {
+                            try FileManager.default.removeItem(at: self.audioFileURL!)
                         }
                         
-                        // Move segment to permanent location (much faster than copy for large files)
-                        try FileManager.default.moveItem(at: segmentURL, to: permanentURL)
+                        // Copy the segment to the final destination
+                        try FileManager.default.copyItem(at: singleSegment, to: self.audioFileURL!)
                         
-                        // Add to final paths array
-                        finalPaths.append(permanentURL.absoluteString)
+                        // Clean up segment file
+                        try FileManager.default.removeItem(at: singleSegment)
+                        
+                        // Reset segment tracking
+                        self.audioSegmentURLs = []
+                        self.currentSegmentURL = nil
+                        resolve(self.audioFileURL?.absoluteString)
                     } catch {
-                        // Still add the original segment path if we couldn't move it
-                        finalPaths.append(segmentURL.absoluteString)
+                        reject("RNAudioPlayerRecorder", "Failed to finalize recording: \(error.localizedDescription)", nil)
+                        
+                        // Clean up segment
+                        try? FileManager.default.removeItem(at: singleSegment)
+                        self.audioSegmentURLs = []
+                        self.currentSegmentURL = nil
                     }
+                } 
+                // If we have multiple segments, we need to stitch them together
+                else if self.audioSegmentURLs.count > 1 {
+                    // Make sure the destination directory exists
+                    do {
+                        try FileManager.default.createDirectory(at: self.audioFileURL!.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
+                        
+                        // Remove any existing file at the destination
+                        if FileManager.default.fileExists(atPath: self.audioFileURL!.path) {
+                            try FileManager.default.removeItem(at: self.audioFileURL!)
+                        }
+                    } catch {
+                        print("Error preparing output directory: \(error)")
+                    }
+                    
+                    self.mergeAudioSegments(completion: { success, error in
+                        // Clean up temp files regardless of success or failure
+                        for url in self.audioSegmentURLs {
+                            try? FileManager.default.removeItem(at: url)
+                        }
+                        
+                        // Reset segment tracking
+                        self.audioSegmentURLs = []
+                        self.currentSegmentURL = nil
+                        if success {
+                            resolve(self.audioFileURL?.absoluteString)
+                        } else {
+                            reject("RNAudioPlayerRecorder", "Failed to merge audio segments: \(error?.localizedDescription ?? "Unknown error")", nil)
+                        }
+                    })
+                } else {
+                    // No segments recorded (should not happen due to earlier check)
+                    reject("RNAudioPlayerRecorder", "No audio was recorded", nil)
                 }
-                
-                // Reset segment tracking arrays
-                self.audioSegmentURLs = []
-                self.currentSegmentURL = nil
-                
-                // Return comma-separated list of paths
-                let pathsString = finalPaths.joined(separator: ",")
-                resolve(pathsString)
-                return
             }
             
-            // Original merging logic for backward compatibility
-            // If we only have one segment, just use that file
-            if self.audioSegmentURLs.count == 1, let singleSegment = self.audioSegmentURLs.first {
-                do {
-                    // Make sure the destination directory exists
-                    try FileManager.default.createDirectory(at: self.audioFileURL!.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
-                    
-                    // Remove any existing file at the destination
-                    if FileManager.default.fileExists(atPath: self.audioFileURL!.path) {
-                        try FileManager.default.removeItem(at: self.audioFileURL!)
-                    }
-                    
-                    // Copy the segment to the final destination
-                    try FileManager.default.copyItem(at: singleSegment, to: self.audioFileURL!)
-                    
-                    // Clean up segment file
-                    try FileManager.default.removeItem(at: singleSegment)
-                    
-                    // Reset segment tracking
-                    self.audioSegmentURLs = []
-                    self.currentSegmentURL = nil
-                    
-                    resolve(self.audioFileURL?.absoluteString)
-                } catch {
-                    reject("RNAudioPlayerRecorder", "Failed to finalize recording: \(error.localizedDescription)", nil)
-                    
-                    // Clean up segment
-                    try? FileManager.default.removeItem(at: singleSegment)
-                    self.audioSegmentURLs = []
-                    self.currentSegmentURL = nil
-                }
-            } 
-            // If we have multiple segments, we need to stitch them together
-            else if self.audioSegmentURLs.count > 1 {
-                // Make sure the destination directory exists
-                do {
-                    try FileManager.default.createDirectory(at: self.audioFileURL!.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
-                    
-                    // Remove any existing file at the destination
-                    if FileManager.default.fileExists(atPath: self.audioFileURL!.path) {
-                        try FileManager.default.removeItem(at: self.audioFileURL!)
-                    }
-                } catch {
-                    print("Error preparing output directory: \(error)")
-                }
-                
-                self.mergeAudioSegments(completion: { success, error in
-                    // Clean up temp files regardless of success or failure
-                    for url in self.audioSegmentURLs {
-                        try? FileManager.default.removeItem(at: url)
-                    }
-                    
-                    // Reset segment tracking
-                    self.audioSegmentURLs = []
-                    self.currentSegmentURL = nil
-                    
-                    if success {
-                        resolve(self.audioFileURL?.absoluteString)
-                    } else {
-                        reject("RNAudioPlayerRecorder", "Failed to merge audio segments: \(error?.localizedDescription ?? "Unknown error")", nil)
-                    }
-                })
-            } else {
-                // No segments recorded (should not happen due to earlier check)
-                reject("RNAudioPlayerRecorder", "No audio was recorded", nil)
-            }
+            // Now that the completion handler is set up, stop the recording
+            self.audioRecorder.stop()
+            // Note: We don't do any file operations here. They will happen in the completion handler
+            // when audioRecorderDidFinishRecording is called.
         }
     }
     
@@ -731,6 +793,24 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         if !flag {
             print("Failed to stop recorder")
+        }
+        
+        // Call completion handler if set
+        if let completion = recordingFinishCompletion {
+            // Store the completion handler locally before clearing the property
+            let localCompletion = completion
+            // Reset the completion handler before calling it to avoid retain cycles
+            recordingFinishCompletion = nil
+            
+            // Execute on main thread since UI updates might happen in the completion
+            DispatchQueue.main.async {
+                localCompletion(flag)
+            }
+        } else {
+            // If there's no completion handler but recording failed, log it and send event
+            if !flag {
+                print("Recording failed with no completion handler set")
+            }
         }
     }
 
