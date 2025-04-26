@@ -85,8 +85,19 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     // Generate a unique URL for a new segment
     func generateSegmentURL() -> URL {
         let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        let uuid = UUID().uuidString
-        return cachesDirectory.appendingPathComponent("segment_\(uuid).m4a")
+        
+        // Create a consistent naming scheme based on the audio file URL and current segment index
+        if let audioFileURL = self.audioFileURL {
+            let originalFileName = audioFileURL.deletingPathExtension().lastPathComponent
+            let fileExtension = audioFileURL.pathExtension
+            let segmentIndex = self.audioSegmentURLs.count + 1
+            let segmentFileName = "\(originalFileName)_segment\(segmentIndex).\(fileExtension)"
+            return cachesDirectory.appendingPathComponent(segmentFileName)
+        } else {
+            // Fallback to UUID-based naming if audioFileURL is not set yet
+            let uuid = UUID().uuidString
+            return cachesDirectory.appendingPathComponent("segment_\(uuid).m4a")
+        }
     }
 
     /**********               Recorder               **********/
@@ -576,32 +587,11 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 
                 // If returnSegments is true, skip merging and return comma-separated paths
                 if returnSegments {
-                    // Move segments to permanent storage locations and collect their paths
-                    let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+                    // Since segments now have their final names already, just collect their paths
                     var finalPaths: [String] = []
                     
-                    for (index, segmentURL) in self.audioSegmentURLs.enumerated() {
-                        do {
-                            // Create a permanent filename for this segment based on original output filename
-                            let originalFileName = self.audioFileURL!.deletingPathExtension().lastPathComponent
-                            let fileExtension = self.audioFileURL!.pathExtension
-                            let permanentFileName = "\(originalFileName)_segment\(index+1).\(fileExtension)"
-                            let permanentURL = cachesDirectory.appendingPathComponent(permanentFileName)
-                            
-                            // Remove any existing file at the destination
-                            if FileManager.default.fileExists(atPath: permanentURL.path) {
-                                try FileManager.default.removeItem(at: permanentURL)
-                            }
-                            
-                            // Move segment to permanent location (much faster than copy for large files)
-                            try FileManager.default.moveItem(at: segmentURL, to: permanentURL)
-                            
-                            // Add to final paths array
-                            finalPaths.append(permanentURL.absoluteString)
-                        } catch {
-                            // Still add the original segment path if we couldn't move it
-                            finalPaths.append(segmentURL.absoluteString)
-                        }
+                    for segmentURL in self.audioSegmentURLs {
+                        finalPaths.append(segmentURL.absoluteString)
                     }
                     
                     // Reset segment tracking arrays
