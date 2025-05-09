@@ -223,7 +223,14 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         subscriptionDuration = duration
     }
 
-    // handle interrupt events
+    // Add a helper method to check if a segment URL is already in the array
+    func isSegmentAlreadyAdded(_ url: URL) -> Bool {
+        return audioSegmentURLs.contains { existingURL in
+            return existingURL.path == url.path
+        }
+    }
+    
+    // Then modify the segment addition in handleAudioSessionInterruption
     @objc 
     func handleAudioSessionInterruption(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
@@ -264,9 +271,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                             let attr = try FileManager.default.attributesOfItem(atPath: currentURL.path)
                             let fileSize = attr[FileAttributeKey.size] as! UInt64
                             
-                            if fileSize > 0 {
+                            if fileSize > 0 && !self.isSegmentAlreadyAdded(currentURL) {
                                 self.audioSegmentURLs.append(currentURL)
-                            } else {
+                            } else if fileSize == 0 {
                                 try FileManager.default.removeItem(at: currentURL)
                             }
                         } catch {
@@ -521,15 +528,18 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
+        // First, cancel any potential timers or interruption handlers to prevent race conditions
         if (recordTimer != nil) {
             recordTimer!.invalidate()
             recordTimer = nil
         }
         
+        // Immediately mark that we are not resuming from an interruption
+        isResumingFromInterruption = false
+        
         // Clean up any interruption timer
         interruptionResumeTimer?.invalidate()
         interruptionResumeTimer = nil
-        isResumingFromInterruption = false
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else {
@@ -537,8 +547,27 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 return
             }
             
+            // Check if recorder is already nil - if so, we're likely in a double-stop situation
             if (self.audioRecorder == nil) {
-                reject("RNAudioPlayerRecorder", "Failed to stop recorder. It is already nil.", nil)
+                // Special handling for case where this is called during an interruption
+                if !self.audioSegmentURLs.isEmpty && returnSegments {
+                    // We have segments from previous recording that was interrupted
+                    var finalPaths: [String] = []
+                    for segmentURL in self.audioSegmentURLs {
+                        finalPaths.append(segmentURL.absoluteString)
+                    }
+                    
+                    // Reset segment tracking arrays
+                    self.audioSegmentURLs = []
+                    self.currentSegmentURL = nil
+                    
+                    // Return comma-separated list of paths
+                    let pathsString = finalPaths.joined(separator: ",")
+                    resolve(pathsString)
+                    return
+                }
+                
+                reject("RNAudioPlayerRecorder", "Recorder is already stopped or in an invalid state", nil)
                 return
             }
 
@@ -553,6 +582,12 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             self.previousSegmentsDuration += self.audioRecorder.currentTime
             self.cumulativeRecordingTime = self.previousSegmentsDuration
             
+            // Save reference to audioRecorder before potentially nullifying it
+            let recorderToStop = self.audioRecorder
+            
+            // Clear any previous finish completion handler
+            self.recordingFinishCompletion = nil
+            
             // Set up completion handler before stopping the recorder
             self.recordingFinishCompletion = { [weak self] success in
                 guard let self = self else {
@@ -565,9 +600,21 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                     return
                 }
                 
-                // Add the last segment to our array if it exists
+                // Add the last segment to our array if it exists and has content
                 if let currentURL = self.currentSegmentURL, FileManager.default.fileExists(atPath: currentURL.path) {
-                    self.audioSegmentURLs.append(currentURL)
+                    do {
+                        let attrs = try FileManager.default.attributesOfItem(atPath: currentURL.path)
+                        if let fileSize = attrs[.size] as? UInt64, fileSize > 0 {
+                            // Only add if not already in the array
+                            if !self.isSegmentAlreadyAdded(currentURL) {
+                                self.audioSegmentURLs.append(currentURL)
+                            }
+                        } else {
+                            try? FileManager.default.removeItem(at: currentURL)
+                        }
+                    } catch {
+                        print("Error checking file size: \(error)")
+                    }
                 }
                 
                 // Filter out zero-length files that might have been created during interruptions
@@ -578,6 +625,14 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                     }
                     return fileSize > 0
                 }
+                
+                // Ensure no duplicates in the array as a final safety check
+                let uniqueURLs = self.audioSegmentURLs.enumerated().filter { idx, url in
+                    let firstIdx = self.audioSegmentURLs.firstIndex { $0.path == url.path }
+                    return firstIdx == idx
+                }.map { $0.element }
+                
+                self.audioSegmentURLs = uniqueURLs
                 
                 // If we have no valid segments, return an error
                 if self.audioSegmentURLs.isEmpty {
@@ -671,9 +726,26 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             }
             
             // Now that the completion handler is set up, stop the recording
-            self.audioRecorder.stop()
-            // Note: We don't do any file operations here. They will happen in the completion handler
-            // when audioRecorderDidFinishRecording is called.
+            if let recorder = recorderToStop {
+                recorder.stop()
+            }
+            
+            // Set audioRecorder to nil to mark as stopped, regardless of completion
+            self.audioRecorder = nil
+            
+            // Set a safety timeout in case the completion handler doesn't fire
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                guard let self = self, self.recordingFinishCompletion != nil else {
+                    // If we no longer have a completion handler, it was already called
+                    return
+                }
+                
+                // Manually trigger the completion as a fallback
+                print("Safety timeout triggered for recording completion")
+                let completion = self.recordingFinishCompletion
+                self.recordingFinishCompletion = nil
+                completion?(true)
+            }
         }
     }
     

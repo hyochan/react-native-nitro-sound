@@ -157,13 +157,13 @@ export type PlayBackType = {
 };
 
 class AudioRecorderPlayer {
-  private _isRecording: boolean;
-  private _isPlaying: boolean;
-  private _hasPaused: boolean;
-  private _hasPausedRecord: boolean;
-  private _recorderSubscription: EmitterSubscription;
-  private _playerSubscription: EmitterSubscription;
-  private _playerCallback: (event: PlayBackType) => void;
+  private _isRecording: boolean = false;
+  private _isPlaying: boolean = false;
+  private _hasPaused: boolean = false;
+  private _hasPausedRecord: boolean = false;
+  private _recorderSubscription: EmitterSubscription | null = null;
+  private _playerSubscription: EmitterSubscription | null = null;
+  private _playerCallback: ((event: PlayBackType) => void) | null = null;
 
   mmss = (secs: number): string => {
     let minutes = Math.floor(secs / 60);
@@ -379,6 +379,8 @@ class AudioRecorderPlayer {
 
       return RNAudioRecorderPlayer.startPlayer(uri, httpHeaders);
     }
+
+    return 'Already playing';
   };
 
   /**
@@ -410,6 +412,8 @@ class AudioRecorderPlayer {
 
       return RNAudioRecorderPlayer.pausePlayer();
     }
+
+    return 'Already paused playing';
   };
 
   /**
