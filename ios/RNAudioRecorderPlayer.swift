@@ -29,6 +29,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     override init() {
         super.init()
         NotificationCenter.default.addObserver(self, selector: #selector(handleAudioSessionInterruption(_:)), name: AVAudioSession.interruptionNotification, object: AVAudioSession.sharedInstance())
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAppWillTerminate), name: UIApplication.willTerminateNotification, object: nil)
     }
 
     deinit {
@@ -564,6 +565,20 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             // Generic file extension for types that don't have a natural
             // file extension
             return "audio"
+        }
+    }
+
+    @objc
+    func handleAppWillTerminate() {
+        autoSaveRecordingIfNeeded()
+    }
+
+    private func autoSaveRecordingIfNeeded() {
+        if let recorder = self.audioRecorder, recorder.isRecording {
+            recorder.stop()
+            recordTimer?.invalidate()
+            recordTimer = nil
+            // Optionally send an event or handle post-save logic here
         }
     }
 }
