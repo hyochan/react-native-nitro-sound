@@ -18,7 +18,7 @@ import java.io.IOException
 import java.util.*
 import kotlin.math.log10
 
-class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), PermissionListener {
+class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), PermissionListener, LifecycleEventListener {
     private var audioFileURL = ""
     private var subsDurationMillis = 500
     private var _meteringEnabled = false
@@ -411,6 +411,35 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         }
 
         return false
+    }
+
+    init {
+        reactContext.addLifecycleEventListener(this)
+    }
+    
+    override fun onHostDestroy() {
+        autoSaveRecordingIfNeeded()
+    }
+
+    override fun onHostPause() {}
+
+    override fun onHostResume() {}
+
+    private fun autoSaveRecordingIfNeeded() {
+        if (mediaRecorder != null) {
+            try {
+                mediaRecorder!!.stop()
+                mediaRecorder!!.release()
+                mediaRecorder = null
+                Log.d(tag, "Recording auto-saved on app pause/destroy.")
+            } catch (e: Exception) {
+                Log.e(tag, "Error auto-saving recording: ${e.message}")
+            }
+        }
+    }
+
+    protected fun finalize() {
+        reactContext.removeLifecycleEventListener(this)
     }
 
     companion object {
