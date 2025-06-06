@@ -157,13 +157,13 @@ export type PlayBackType = {
 };
 
 class AudioRecorderPlayer {
-  private _isRecording: boolean;
-  private _isPlaying: boolean;
-  private _hasPaused: boolean;
-  private _hasPausedRecord: boolean;
-  private _recorderSubscription: EmitterSubscription;
-  private _playerSubscription: EmitterSubscription;
-  private _playerCallback: (event: PlayBackType) => void;
+  private _isRecording: boolean = false;
+  private _isPlaying: boolean = false;
+  private _hasPaused: boolean = false;
+  private _hasPausedRecord: boolean = false;
+  private _recorderSubscription: EmitterSubscription | null = null;
+  private _playerSubscription: EmitterSubscription | null = null;
+  private _playerCallback: ((event: PlayBackType) => void) | null = null;
 
   mmss = (secs: number): string => {
     let minutes = Math.floor(secs / 60);
@@ -293,14 +293,23 @@ class AudioRecorderPlayer {
 
   /**
    * stop recording.
+   * @param {boolean} returnSegments - If true, return comma-separated list of segment file paths (iOS only)
    * @returns {Promise<string>}
    */
-  stopRecorder = async (): Promise<string> => {
+  stopRecorder = async (returnSegments?: boolean): Promise<string> => {
     if (this._isRecording) {
       this._isRecording = false;
       this._hasPausedRecord = false;
 
-      return RNAudioRecorderPlayer.stopRecorder();
+      if (Platform.OS === 'android') {
+        return RNAudioRecorderPlayer.stopRecorder();
+      }
+
+      if (returnSegments !== undefined) {
+        return RNAudioRecorderPlayer.stopRecorder(returnSegments);
+      } else {
+        return RNAudioRecorderPlayer.stopRecorderWithNoOptions();
+      }
     }
 
     return 'Already stopped';
@@ -370,6 +379,8 @@ class AudioRecorderPlayer {
 
       return RNAudioRecorderPlayer.startPlayer(uri, httpHeaders);
     }
+
+    return 'Already playing';
   };
 
   /**
@@ -401,6 +412,8 @@ class AudioRecorderPlayer {
 
       return RNAudioRecorderPlayer.pausePlayer();
     }
+
+    return 'Already paused playing';
   };
 
   /**
