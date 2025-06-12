@@ -150,7 +150,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     }
 
     // handle interrupt events
-    @objc 
+    @objc
     func handleAudioSessionInterruption(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
             let interruptionType = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt else {
@@ -282,21 +282,20 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
         audioSession = AVAudioSession.sharedInstance()
 
-        do {
-            try audioSession.setCategory(.playAndRecord, mode: avMode, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth])
-            try audioSession.setActive(true)
-
-            audioSession.requestRecordPermission { granted in
-                DispatchQueue.main.async {
-                    if granted {
-                        startRecording()
-                    } else {
-                        reject("RNAudioPlayerRecorder", "Record permission not granted", nil)
-                    }
+        audioSession.requestRecordPermission { granted in
+            DispatchQueue.main.async {
+                if granted {
+                    do {
+                        try self.audioSession.setCategory(.playAndRecord, mode: avMode, options: [.defaultToSpeaker, .allowBluetooth])
+                        try self.audioSession.setActive(true)
+                      } catch let error {
+                        reject("RNAudioPlayerRecorder", "Failed to activate audio session", error)
+                      }
+                    startRecording()
+                } else {
+                    reject("RNAudioPlayerRecorder", "Record permission not granted", nil)
                 }
             }
-        } catch {
-            reject("RNAudioPlayerRecorder", "Failed to record", nil)
         }
     }
 
@@ -385,7 +384,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         audioPlayer.play()
         resolve(audioFileURL?.absoluteString)
     }
-    
+
     @objc
     public func playerDidFinishPlaying(notification: Notification) {
         if let playerItem = notification.object as? AVPlayerItem {
