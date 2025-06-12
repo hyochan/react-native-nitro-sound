@@ -288,10 +288,10 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                     do {
                         try self.audioSession.setCategory(.playAndRecord, mode: avMode, options: [.defaultToSpeaker, .allowBluetooth])
                         try self.audioSession.setActive(true)
+                        startRecording()
                       } catch let error {
                         reject("RNAudioPlayerRecorder", "Failed to activate audio session", error)
                       }
-                    startRecording()
                 } else {
                     reject("RNAudioPlayerRecorder", "Record permission not granted", nil)
                 }
