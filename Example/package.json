@@ -5,13 +5,13 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
-    "react": "18.2.0",
-    "react-native": "0.74.0-rc.9",
+    "react": "18.1.0",
+    "react-native": "0.70.3",
     "react-native-audio-recorder-player": "file:..",
     "rn-fetch-blob": "^0.12.0"
   },
@@ -31,6 +31,17 @@
     "prettier": "2.8.8",
     "react-test-renderer": "18.2.0",
     "typescript": "5.0.4"
+  },
+  "jest": {
+    "preset": "react-native",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   },
   "engines": {
     "node": ">=18"
