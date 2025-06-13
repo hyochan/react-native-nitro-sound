@@ -48,7 +48,7 @@ RCT_EXPORT_METHOD(startRecorder:(NSString *)path
                   meteringEnabled:(BOOL)meteringEnabled
                   audioSets:(NSDictionary *)audioSets
                   resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject) 
+                  reject:(RCTPromiseRejectBlock)reject)
 {
     [impl startRecorder:path meteringEnabled:meteringEnabled audioSets:audioSets resolve:resolve reject:reject];
 }

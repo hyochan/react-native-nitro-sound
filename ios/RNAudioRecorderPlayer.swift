@@ -8,8 +8,8 @@
 import Foundation
 import AVFoundation
 
-@objc(RNAudioRecorderPlayer)
-public class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
+@objc(RNAudioRecorderPlayerImpl)
+public class RNAudioRecorderPlayer: NSObject, AVAudioRecorderDelegate {
     var subscriptionDuration: Double = 0.5
     var audioFileURL: URL?
 
@@ -43,7 +43,7 @@ public class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         NotificationCenter.default.removeObserver(self)
     }
 
-    @objc public func supportedEvents() -> [String]! {
+    @objc public override func supportedEvents() -> [String]! {
         return ["rn-playback", "rn-recordback"]
     }
 

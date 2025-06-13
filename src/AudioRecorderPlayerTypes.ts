@@ -54,7 +54,7 @@ export enum AVEncodingOption {
   wav = 'wav',
 }
 
-type AVEncodingType =
+export type AVEncodingType =
   | AVEncodingOption.lpcm
   | AVEncodingOption.ima4
   | AVEncodingOption.aac
