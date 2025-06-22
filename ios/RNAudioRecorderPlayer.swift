@@ -86,18 +86,10 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     func generateSegmentURL() -> URL {
         let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
         
-        // Create a consistent naming scheme based on the audio file URL and current segment index
-        if let audioFileURL = self.audioFileURL {
-            let originalFileName = audioFileURL.deletingPathExtension().lastPathComponent
-            let fileExtension = audioFileURL.pathExtension
-            let segmentIndex = self.audioSegmentURLs.count + 1
-            let segmentFileName = "\(originalFileName)_segment\(segmentIndex).\(fileExtension)"
-            return cachesDirectory.appendingPathComponent(segmentFileName)
-        } else {
-            // Fallback to UUID-based naming if audioFileURL is not set yet
-            let uuid = UUID().uuidString
-            return cachesDirectory.appendingPathComponent("segment_\(uuid).m4a")
-        }
+        // Always use UUID-based naming to prevent stale segment issues
+        // This ensures fresh unique filenames for each segment, avoiding conflicts
+        let uuid = UUID().uuidString
+        return cachesDirectory.appendingPathComponent("segment_\(uuid).m4a")
     }
 
     /**********               Recorder               **********/
@@ -381,7 +373,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
         _meteringEnabled = meteringEnabled;
         
-        // Reset segment array when starting a new recording
+        // Reset segment array when starting a new recording to prevent stale data
         audioSegmentURLs = []
         currentSegmentURL = generateSegmentURL()
         
@@ -549,23 +541,13 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             
             // Check if recorder is already nil - if so, we're likely in a double-stop situation
             if (self.audioRecorder == nil) {
-                // Special handling for case where this is called during an interruption
-                if !self.audioSegmentURLs.isEmpty && returnSegments {
-                    // We have segments from previous recording that was interrupted
-                    var finalPaths: [String] = []
-                    for segmentURL in self.audioSegmentURLs {
-                        finalPaths.append(segmentURL.absoluteString)
-                    }
-                    
-                    // Reset segment tracking arrays
-                    self.audioSegmentURLs = []
-                    self.currentSegmentURL = nil
-                    
-                    // Return comma-separated list of paths
-                    let pathsString = finalPaths.joined(separator: ",")
-                    resolve(pathsString)
-                    return
-                }
+                // For checkpoint mode: Don't return stale segments from previous sessions
+                // This prevents returning empty/stale 28-byte files from old recording sessions
+                print("⚠️ stopRecorder called with nil audioRecorder - rejecting to prevent stale segment return")
+                
+                // Clean up any stale segment tracking to prevent future issues
+                self.audioSegmentURLs = []
+                self.currentSegmentURL = nil
                 
                 reject("RNAudioPlayerRecorder", "Recorder is already stopped or in an invalid state", nil)
                 return
