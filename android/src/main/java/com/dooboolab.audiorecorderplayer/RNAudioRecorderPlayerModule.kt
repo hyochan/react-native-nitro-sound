@@ -66,12 +66,24 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
         else
             MediaRecorder.OutputFormat.MPEG_4
 
-        audioFileURL = if (((path == "DEFAULT"))) "${reactContext.cacheDir}/sound.${defaultFileExtensions.get(outputFormat)}" else path
+        // Generate unique file path to prevent corruption during checkpoint restarts
+        audioFileURL = if (((path == "DEFAULT"))) {
+            val uuid = UUID.randomUUID().toString()
+            "${reactContext.cacheDir}/recording_${uuid}.${defaultFileExtensions.get(outputFormat)}"
+        } else path
+        
+        Log.d(tag, "Starting recorder with file: $audioFileURL")
+        
         _meteringEnabled = meteringEnabled
 
         if (mediaRecorder != null) {
-            promise.reject("InvalidState", "startRecorder has already been called.")
-            return
+            Log.w(tag, "MediaRecorder already exists, releasing before creating new one")
+            try {
+                mediaRecorder!!.release()
+                mediaRecorder = null
+            } catch (e: Exception) {
+                Log.w(tag, "Error releasing existing MediaRecorder: ${e.message}")
+            }
         }
 
         var newMediaRecorder: MediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -180,7 +192,18 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
     }
 
     @ReactMethod
+    fun stopRecorder(returnSegments: Boolean, promise: Promise) {
+        // For Android, we ignore returnSegments parameter since we don't use segments like iOS
+        // Just delegate to the main implementation
+        stopRecorderInternal(promise)
+    }
+    
+    @ReactMethod
     fun stopRecorder(promise: Promise) {
+        stopRecorderInternal(promise)
+    }
+    
+    private fun stopRecorderInternal(promise: Promise) {
         if (recordHandler != null) {
             recorderRunnable?.let { recordHandler!!.removeCallbacks(it) }
         }
@@ -194,9 +217,32 @@ class RNAudioRecorderPlayerModule(private val reactContext: ReactApplicationCont
             mediaRecorder!!.stop()
             mediaRecorder!!.release()
             mediaRecorder = null
+            
+            // Validate the recorded file before returning
+            val audioFile = java.io.File(audioFileURL.removePrefix("file://"))
+            if (!audioFile.exists()) {
+                promise.reject("stopRecord", "Recording file was not created")
+                return
+            }
+            
+            if (audioFile.length() < 1000) { // Files smaller than 1KB are likely corrupted
+                Log.w(tag, "Recording file is unusually small (${audioFile.length()} bytes), may be corrupted")
+                audioFile.delete() // Clean up potentially corrupted file
+                promise.reject("stopRecord", "Recording file appears to be corrupted (too small)")
+                return
+            }
+            
+            Log.d(tag, "Recording completed successfully: ${audioFile.length()} bytes")
             promise.resolve("file:///$audioFileURL")
         } catch (stopException: RuntimeException) {
             stopException.message?.let { Log.d(tag,"" + it) }
+            // Clean up recorder even if stop failed
+            try {
+                mediaRecorder?.release()
+                mediaRecorder = null
+            } catch (e: Exception) {
+                Log.w(tag, "Error releasing MediaRecorder after stop failure: ${e.message}")
+            }
             promise.reject("stopRecord", stopException.message)
         }
     }
