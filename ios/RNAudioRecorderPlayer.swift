@@ -256,7 +256,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             try audioSession.setCategory(.playAndRecord, mode: avMode, options: [.defaultToSpeaker, .allowBluetooth])
             try audioSession.setActive(true)
         } catch {
-            completion(.failure(.audioSessionError(error)))
+            return completion(.failure(.audioSessionError(error)))
         }
         audioSession.requestRecordPermission { granted in
             DispatchQueue.main.async {
