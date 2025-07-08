@@ -13,11 +13,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
     - name: Install modules
-      run: yarn
+      run: bun install
 
     - name: Check linting
-      run: yarn lint
+      run: bun run lint
 
     - name: Build typescript & flow
-      run: yarn build
+      run: bun run build

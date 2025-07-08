@@ -10,7 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && flowgen index.d.ts -o index.js.flow && cd plugin && bun install && bun run build",
     "lint": "eslint -c .eslintrc.js 'index.ts'",
-    "prepare": "npm run build"
+    "prepare": "bun run build"
   },
   "repository": {
     "type": "git",
