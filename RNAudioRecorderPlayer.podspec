@@ -17,5 +17,11 @@ Pod::Spec.new do |s|
   s.source_files = "ios/**/*.{h,c,cc,cpp,m,mm,swift}"
 
   s.dependency 'React-Core'
+
+  # Define the Nitro module
+  s.pod_target_xcconfig = {
+    'DEFINES_MODULE' => 'YES',
+    'SWIFT_EMIT_LOC_STRINGS' => 'YES'
+  }
 end
 

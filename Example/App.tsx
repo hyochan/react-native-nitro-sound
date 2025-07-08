@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  PermissionsAndroid,
 } from 'react-native';
 import {StatusBar} from 'expo-status-bar';
 import AudioRecorderPlayer, {
@@ -20,12 +21,11 @@ import AudioRecorderPlayer, {
   RecordBackType,
 } from 'react-native-audio-recorder-player';
 import * as MediaLibrary from 'expo-media-library';
-import * as FileSystem from 'expo-file-system';
 
 const screenWidth = Dimensions.get('screen').width;
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
-audioRecorderPlayer.setSubscriptionDuration(0.1);
+audioRecorderPlayer.setSubscriptionDuration(0.025); // 25ms for smoother updates like KMP
 
 export default function App() {
   const [recordTime, setRecordTime] = useState('00:00:00');
@@ -37,7 +37,34 @@ export default function App() {
   const [meteringLevel, setMeteringLevel] = useState(0);
 
   const onStartRecord = async () => {
-    // Request permissions
+    // Request permissions for Android
+    if (Platform.OS === 'android') {
+      try {
+        // For Android 10+ (API 29+), we only need RECORD_AUDIO permission
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: 'Audio Recording Permission',
+            message: 'This app needs access to your microphone to record audio.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
+
+        console.log('Record audio permission:', granted);
+
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('Audio recording permission denied');
+          return;
+        }
+      } catch (err) {
+        console.warn(err);
+        return;
+      }
+    }
+
+    // Request permissions for iOS
     const {status} = await MediaLibrary.requestPermissionsAsync();
     if (status !== 'granted') {
       console.log('Permission to access media library denied');
@@ -53,24 +80,22 @@ export default function App() {
       OutputFormatAndroid: OutputFormatAndroidType.AAC_ADTS,
     };
 
-    const path = Platform.select({
-      ios: 'audio.m4a',
-      android: `${FileSystem.cacheDirectory}audio.mp3`,
-    });
-
-    const uri = await audioRecorderPlayer.startRecorder(path, audioSet, true); // Enable metering
+    // Let the library handle the path, or use undefined to use default path
+    const uri = await audioRecorderPlayer.startRecorder(undefined, audioSet, true); // Enable metering
     setRecordedUri(uri);
 
     audioRecorderPlayer.addRecordBackListener((e: RecordBackType) => {
       setRecordTime(audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)));
-      // Update metering level (convert from dB to 0-1 range)
+      // Metering value is already normalized (0-1 range) on Android
       const meteringValue = e.currentMetering || 0;
-      const normalizedValue = Math.max(
-        0,
-        Math.min(1, (meteringValue + 60) / 60),
-      );
+      
+      // On iOS, metering is in dB (negative values), on Android it's normalized (0-1)
+      const normalizedValue = Platform.OS === 'ios' 
+        ? Math.max(0, Math.min(1, (meteringValue + 60) / 60))
+        : meteringValue;
+      
       setMeteringLevel(normalizedValue);
-      console.log('Metering:', meteringValue, 'Normalized:', normalizedValue);
+      console.log(`Platform: ${Platform.OS}, Raw metering: ${meteringValue}, Normalized: ${normalizedValue}`);
     });
 
     console.log(`Recording started at: ${uri}`);
@@ -104,6 +129,7 @@ export default function App() {
       console.log(`Started playing: ${msg}`, `volume: ${volume}`);
 
       audioRecorderPlayer.addPlayBackListener((e: PlayBackType) => {
+        console.log(`Playback - Position: ${e.currentPosition}, Duration: ${e.duration}`);
         setCurrentPositionSec(e.currentPosition);
         setCurrentDurationSec(e.duration);
         setPlayTime(audioRecorderPlayer.mmssss(Math.floor(e.currentPosition)));
@@ -129,14 +155,16 @@ export default function App() {
   };
 
   const onSeek = (position: number) => {
-    const newPosition = Math.round(position * currentDurationSec);
-    audioRecorderPlayer.seekToPlayer(newPosition);
+    if (currentDurationSec > 0) {
+      const newPosition = Math.round(position * currentDurationSec);
+      audioRecorderPlayer.seekToPlayer(newPosition);
+    }
   };
 
-  let playWidth =
-    (currentPositionSec / currentDurationSec) * (screenWidth - 56);
-  if (!playWidth) {
-    playWidth = 0;
+  let playWidth = 0;
+  if (currentDurationSec > 0 && currentPositionSec >= 0) {
+    const progress = Math.min(currentPositionSec / currentDurationSec, 1.0);
+    playWidth = progress * (screenWidth - 56);
   }
 
   return (
@@ -182,9 +210,12 @@ export default function App() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Playback</Text>
+          <Text style={styles.txtRecordCounter}>
+            {playTime} / {duration}
+          </Text>
 
           <TouchableOpacity
-            style={styles.viewBarWrapper}
+            style={styles.meterContainer}
             onPress={(e: any) => {
               const touchX = e.nativeEvent.locationX;
               const ratio = touchX / (screenWidth - 56);
@@ -194,10 +225,6 @@ export default function App() {
               <View style={[styles.viewBarPlay, {width: playWidth}]} />
             </View>
           </TouchableOpacity>
-
-          <Text style={styles.txtCounter}>
-            {playTime} / {duration}
-          </Text>
 
           <View style={styles.btnRow}>
             <TouchableOpacity style={styles.btn} onPress={onStartPlay}>
@@ -283,16 +310,12 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'monospace',
     letterSpacing: 3,
   },
-  viewBarWrapper: {
-    marginTop: 20,
-    marginHorizontal: 28,
-    alignSelf: 'stretch',
-  },
   viewBar: {
     backgroundColor: '#555',
     height: 6,
     alignSelf: 'stretch',
     borderRadius: 3,
+    overflow: 'hidden',
   },
   viewBarPlay: {
     backgroundColor: '#3498DB',
@@ -308,13 +331,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#E74C3C',
     height: 6,
     borderRadius: 3,
-  },
-  txtCounter: {
-    marginTop: 12,
-    marginBottom: 20,
-    color: '#BDC3C7',
-    fontSize: 16,
-    fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'monospace',
   },
   infoSection: {
     paddingHorizontal: 20,

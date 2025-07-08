@@ -1,0 +1,27 @@
+{
+  "cxxNamespace": ["AudioRecorderPlayer"],
+  "specs": [
+    {
+      "file": "src/nitro/specs/AudioRecorderPlayer.nitro.ts"
+    }
+  ],
+  "ios": {
+    "iosModuleName": "NitroAudioRecorderPlayer"
+  },
+  "android": {
+    "androidNamespace": ["com", "audiorecorderplayer"],
+    "androidCxxLibName": "NitroAudioRecorderPlayer"
+  },
+  "autolinking": {
+    "ios": {
+      "NitroAudioRecorderPlayer": {
+        "NitroAudioRecorderPlayer": "ios"
+      }
+    },
+    "android": {
+      "NitroAudioRecorderPlayer": {
+        "NitroAudioRecorderPlayer": "android/src/main/cpp"
+      }
+    }
+  }
+}

@@ -33,12 +33,32 @@ android {
     namespace "com.dooboolab.audiorecorderplayer"
   }
   compileSdkVersion safeExtGet('compileSdkVersion', 31)
+  
+  sourceSets {
+    main {
+      java.srcDirs += [
+        "${project.projectDir}/../nitrogen/generated/android/kotlin"
+      ]
+    }
+  }
 
   defaultConfig {
     minSdkVersion safeExtGet('minSdkVersion', 24)
     targetSdkVersion safeExtGet('targetSdkVersion', 31)
     versionCode 1
     versionName "1.0"
+    
+    externalNativeBuild {
+      cmake {
+        arguments '-DANDROID_STL=c++_shared'
+      }
+    }
+  }
+  
+  externalNativeBuild {
+    cmake {
+      path "CMakeLists.txt"
+    }
   }
 
   compileOptions {
@@ -58,6 +78,7 @@ repositories {
 dependencies {
   implementation 'com.facebook.react:react-native:+'
   implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${safeExtGet('kotlinVersion', project.ext.kotlinVersion)}"
+  implementation 'com.margelo.nitro:react-native-nitro-modules:+'
 
   def supportLibVersion = safeExtGet('supportLibVersion', safeExtGet('supportVersion', null))
   def androidXVersion = safeExtGet('androidXVersion', null)

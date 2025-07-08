@@ -14,7 +14,16 @@
       "Bash(bun run:*)",
       "Bash(pkill:*)",
       "Bash(./android/gradlew clean:*)",
-      "Bash(yarn build)"
+      "Bash(yarn build)",
+      "Bash(bun add:*)",
+      "Bash(export:*)",
+      "Bash(nitro-codegen)",
+      "Bash(nitro-codegen:*)",
+      "Bash(pod install:*)",
+      "Bash(npx expo prebuild:*)",
+      "Bash(npx expo run:*)",
+      "Bash(git checkout:*)",
+      "Bash(./gradlew:*)"
     ],
     "deny": []
   }

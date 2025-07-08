@@ -1,4 +1,5 @@
 Example/
+ExampleExpo/
 .idea/
 gen/
 node_modules/
@@ -10,3 +11,11 @@ greenkeeper.json
 issue_template.md
 LogoType Primary.png
 tsconfig.json
+.vscode/
+plugin/
+nitrogen/
+nitro.json
+.nitrogenignore
+NITRO_MIGRATION.md
+bun.lock
+yarn.lock
