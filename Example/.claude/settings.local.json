@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(bun pm cache:*)",
+      "Bash(rm:*)",
+      "Bash(bun install:*)",
+      "Bash(npx expo prebuild:*)",
+      "Bash(pod install:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx expo run:*)",
+      "Bash(npx expo:*)",
+      "Bash(npx react-native start:*)",
+      "Bash(kill:*)",
+      "Bash(readlink:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)"
+    ],
+    "deny": []
+  }
+}

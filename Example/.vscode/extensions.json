@@ -1,9 +1,0 @@
-{
-  "recommendations": [
-    "esbenp.prettier-vscode",
-    "dbaeumer.vscode-eslint",
-    "wix.vscode-import-cost",
-    "amatiasq.sort-imports",
-    "silvenon.mdx"
-  ]
-}
