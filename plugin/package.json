@@ -5,8 +5,9 @@
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "prepare": "npm run build"
+    "sync-version": "node scripts/sync-version.js",
+    "build": "bun run sync-version && tsc",
+    "prepare": "bun run build"
   },
   "keywords": [
     "expo",
@@ -21,9 +22,11 @@
   "peerDependencies": {
     "expo": ">=47.0.0"
   },
+  "dependencies": {
+    "expo": ">=47.0.0"
+  },
   "devDependencies": {
     "@types/node": "^18.0.0",
-    "expo": "^51.0.0",
     "typescript": "^5.0.0"
   },
   "files": [

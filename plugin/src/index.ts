@@ -6,13 +6,18 @@ import {
   withInfoPlist,
 } from 'expo/config-plugins';
 
-import * as pkg from '../../package.json';
+import {version} from './version';
+
+const pkg = {
+  name: 'react-native-audio-recorder-player',
+  version,
+};
 
 // Global flag to prevent duplicate logs
 let hasLoggedPluginExecution = false;
 
-const withAudioRecorderPlayerAndroid: ConfigPlugin = (config) => {
-  config = withAndroidManifest(config, (config) => {
+const withAudioRecorderPlayerAndroid: ConfigPlugin = (config: any) => {
+  config = withAndroidManifest(config, (config: any) => {
     const manifest = config.modResults;
     if (!manifest.manifest['uses-permission']) {
       manifest.manifest['uses-permission'] = [];
@@ -31,7 +36,7 @@ const withAudioRecorderPlayerAndroid: ConfigPlugin = (config) => {
 
     requiredPermissions.forEach((permission) => {
       const alreadyExists = permissions.some(
-        (p) => p.$['android:name'] === permission,
+        (p: any) => p.$['android:name'] === permission,
       );
       if (!alreadyExists) {
         permissions.push({$: {'android:name': permission}});
@@ -55,8 +60,8 @@ const withAudioRecorderPlayerAndroid: ConfigPlugin = (config) => {
   return config;
 };
 
-const withAudioRecorderPlayerIOS: ConfigPlugin = (config) => {
-  config = withInfoPlist(config, (config) => {
+const withAudioRecorderPlayerIOS: ConfigPlugin = (config: any) => {
+  config = withInfoPlist(config, (config: any) => {
     const infoPlist = config.modResults;
 
     // Add microphone usage description
@@ -87,11 +92,11 @@ const withAudioRecorderPlayer: ConfigPlugin<
   {
     microphonePermissionText?: string;
   } | void
-> = (config, props) => {
+> = (config: any, props?: any) => {
   try {
     // Apply iOS microphone permission text if provided
     if (props?.microphonePermissionText) {
-      config = withInfoPlist(config, (config) => {
+      config = withInfoPlist(config, (config: any) => {
         config.modResults.NSMicrophoneUsageDescription =
           props.microphonePermissionText;
         return config;
@@ -123,4 +128,3 @@ export default createRunOncePlugin(
   pkg.name,
   pkg.version,
 );
-

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(bunx create-expo-app:*)",
+      "Bash(cp:*)",
+      "Bash(rm:*)",
+      "Bash(bun install:*)",
+      "Bash(bunx expo prebuild:*)",
+      "Bash(bunx expo:*)",
+      "Bash(ls:*)",
+      "Bash(chmod:*)",
+      "Bash(yarn install)",
+      "Bash(bun run:*)",
+      "Bash(pkill:*)",
+      "Bash(./android/gradlew clean:*)"
+    ],
+    "deny": []
+  }
+}
