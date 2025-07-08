@@ -3,13 +3,14 @@
   "version": "3.6.14",
   "description": "React Native Audio Recorder and Player.",
   "homepage": "https://github.com/hyochan/react-native-audio-recorder-player",
-  "main": "index.ts",
+  "main": "index.js",
   "types": "index.d.ts",
   "postinstall": "hyochan-welcome postinstall",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && flowgen index.d.ts -o index.js.flow",
-    "lint": "eslint -c .eslintrc.js 'index.ts'"
+    "build": "tsc && flowgen index.d.ts -o index.js.flow && cd plugin && npm run build",
+    "lint": "eslint -c .eslintrc.js 'index.ts'",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",

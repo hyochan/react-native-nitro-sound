@@ -95,6 +95,49 @@ npx pod-install
 
 `$ react-native link react-native-audio-recorder-player`
 
+### Expo
+
+This library supports Expo via a config plugin. No manual setup is required when using Expo managed workflow.
+
+#### Installation
+
+```sh
+expo install react-native-audio-recorder-player
+```
+
+#### Configuration in app.json / app.config.js
+
+```json
+{
+  "expo": {
+    "plugins": [
+      "react-native-audio-recorder-player"
+    ]
+  }
+}
+```
+
+Or with custom iOS microphone permission text:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "react-native-audio-recorder-player",
+        {
+          "microphonePermissionText": "This app needs access to your microphone to record audio."
+        }
+      ]
+    ]
+  }
+}
+```
+
+The plugin automatically configures:
+- **iOS**: `NSMicrophoneUsageDescription` in Info.plist
+- **Android**: `RECORD_AUDIO`, `WRITE_EXTERNAL_STORAGE`, and `READ_EXTERNAL_STORAGE` permissions in AndroidManifest.xml
+
 ### Manual installation
 
 #### iOS
