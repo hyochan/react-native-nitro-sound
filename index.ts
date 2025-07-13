@@ -1,23 +1,20 @@
-// Re-export everything from Nitro implementation
-export {AudioRecorderPlayerNitro as default} from './src/nitro/AudioRecorderPlayerNitro';
-export {AudioRecorderPlayerNitro} from './src/nitro/AudioRecorderPlayerNitro';
+// Re-export the default instance and types from the main implementation
+export { default } from './src/index';
+export * from './src/index';
 
-// Re-export types and enums for backward compatibility
-export {
-  AudioSourceAndroidType,
-  OutputFormatAndroidType,
-  AudioEncoderAndroidType,
-  AVEncodingOption,
-  AVModeIOSOption,
-  AVEncoderAudioQualityIOSType,
-  AVLinearPCMBitDepthKeyIOSType,
-} from './src/types';
-
+// Re-export types from the nitro module
 export type {
   AudioSet,
   RecordBackType,
   PlayBackType,
-} from './src/nitro/specs/AudioRecorderPlayer.nitro';
+} from './src/AudioRecorderPlayer.nitro';
 
-// For backward compatibility, export as AudioRecorderPlayer
-export {AudioRecorderPlayerNitro as AudioRecorderPlayer} from './src/nitro/AudioRecorderPlayerNitro';
+export {
+  AudioSourceAndroidType,
+  OutputFormatAndroidType,
+  AudioEncoderAndroidType,
+  type AVEncodingOption,
+  type AVModeIOSOption,
+  AVEncoderAudioQualityIOSType,
+  AVLinearPCMBitDepthKeyIOSType,
+} from './src/AudioRecorderPlayer.nitro';

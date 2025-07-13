@@ -1,19 +1,29 @@
 {
   "compilerOptions": {
-    "lib": ["es2017"],
-    "jsx": "react-native",
-    "noResolve": false,
-    "noImplicitAny": false,
-    "removeComments": false,
-    "sourceMap": false,
-    "module": "es2015",
-    "moduleResolution": "node",
-    "target": "es5",
+    "rootDir": ".",
+    "paths": {
+      "react-native-audio-recorder-player": ["./src/index"]
+    },
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "lib": ["ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitUseStrict": false,
+    "noStrictGenericChecks": false,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "declaration": true
-  },
-  "compileOnSave": true,
-  "exclude": ["node_modules"],
-  "include": ["./index.ts"]
+    "strict": true,
+    "target": "ESNext",
+    "verbatimModuleSyntax": true
+  }
 }

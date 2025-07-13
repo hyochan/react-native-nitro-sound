@@ -1,12 +1,12 @@
 import {
-  ConfigPlugin,
+  type ConfigPlugin,
   createRunOncePlugin,
   WarningAggregator,
   withAndroidManifest,
   withInfoPlist,
 } from 'expo/config-plugins';
 
-import {version} from './version';
+import { version } from './version';
 
 const pkg = {
   name: 'react-native-audio-recorder-player',
@@ -36,21 +36,21 @@ const withAudioRecorderPlayerAndroid: ConfigPlugin = (config: any) => {
 
     requiredPermissions.forEach((permission) => {
       const alreadyExists = permissions.some(
-        (p: any) => p.$['android:name'] === permission,
+        (p: any) => p.$['android:name'] === permission
       );
       if (!alreadyExists) {
-        permissions.push({$: {'android:name': permission}});
+        permissions.push({ $: { 'android:name': permission } });
         addedPermissions.push(permission);
       }
     });
 
     if (addedPermissions.length > 0 && !hasLoggedPluginExecution) {
       console.log(
-        `✅ react-native-audio-recorder-player: Added Android permissions to AndroidManifest.xml:\n   ${addedPermissions.join('\n   ')}`,
+        `✅ react-native-audio-recorder-player: Added Android permissions to AndroidManifest.xml:\n   ${addedPermissions.join('\n   ')}`
       );
     } else if (!hasLoggedPluginExecution) {
       console.log(
-        'ℹ️  react-native-audio-recorder-player: All required Android permissions already exist in AndroidManifest.xml',
+        'ℹ️  react-native-audio-recorder-player: All required Android permissions already exist in AndroidManifest.xml'
       );
     }
 
@@ -71,13 +71,13 @@ const withAudioRecorderPlayerIOS: ConfigPlugin = (config: any) => {
 
       if (!hasLoggedPluginExecution) {
         console.log(
-          '✅ react-native-audio-recorder-player: Added NSMicrophoneUsageDescription to Info.plist',
+          '✅ react-native-audio-recorder-player: Added NSMicrophoneUsageDescription to Info.plist'
         );
       }
     } else {
       if (!hasLoggedPluginExecution) {
         console.log(
-          'ℹ️  react-native-audio-recorder-player: NSMicrophoneUsageDescription already exists in Info.plist',
+          'ℹ️  react-native-audio-recorder-player: NSMicrophoneUsageDescription already exists in Info.plist'
         );
       }
     }
@@ -116,7 +116,7 @@ const withAudioRecorderPlayer: ConfigPlugin<
   } catch (error) {
     WarningAggregator.addWarningAndroid(
       'react-native-audio-recorder-player',
-      `react-native-audio-recorder-player plugin encountered an error: ${error}`,
+      `react-native-audio-recorder-player plugin encountered an error: ${error}`
     );
     console.error('react-native-audio-recorder-player plugin error:', error);
     return config;
@@ -126,5 +126,5 @@ const withAudioRecorderPlayer: ConfigPlugin<
 export default createRunOncePlugin(
   withAudioRecorderPlayer,
   pkg.name,
-  pkg.version,
+  pkg.version
 );

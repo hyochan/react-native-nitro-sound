@@ -1,21 +1,16 @@
-const {getDefaultConfig} = require('expo/metro-config');
 const path = require('path');
+const { getDefaultConfig } = require('@react-native/metro-config');
+const { withMetroConfig } = require('react-native-monorepo-config');
 
-const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, '../');
+const root = path.resolve(__dirname, '..');
 
-const config = getDefaultConfig(projectRoot);
-
-// Watch all files within the monorepo
-config.watchFolders = [workspaceRoot];
-
-// Let Metro know where to resolve packages and in what order
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
-  path.resolve(workspaceRoot, 'node_modules'),
-];
-
-// Force Metro to resolve (sub)dependencies only from the project folder
-config.resolver.disableHierarchicalLookup = true;
-
-module.exports = config;
+/**
+ * Metro configuration
+ * https://facebook.github.io/metro/docs/configuration
+ *
+ * @type {import('metro-config').MetroConfig}
+ */
+module.exports = withMetroConfig(getDefaultConfig(__dirname), {
+  root,
+  dirname: __dirname,
+});

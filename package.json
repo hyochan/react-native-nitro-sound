@@ -1,55 +1,169 @@
 {
   "name": "react-native-audio-recorder-player",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "React Native Audio Recorder and Player.",
   "homepage": "https://github.com/hyochan/react-native-audio-recorder-player",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./lib/module/index.js",
+  "types": "./lib/typescript/src/index.d.ts",
   "exports": {
     ".": {
-      "default": "./index.js",
-      "nitro": "./index.nitro.js"
-    }
+      "source": "./src/index.tsx",
+      "types": "./lib/typescript/src/index.d.ts",
+      "default": "./lib/module/index.js"
+    },
+    "./package.json": "./package.json"
   },
-  "postinstall": "hyochan-welcome postinstall",
+  "files": [
+    "src",
+    "lib",
+    "android",
+    "ios",
+    "cpp",
+    "nitrogen",
+    "nitro.json",
+    "*.podspec",
+    "react-native.config.js",
+    "!ios/build",
+    "!android/build",
+    "!android/gradle",
+    "!android/gradlew",
+    "!android/gradlew.bat",
+    "!android/local.properties",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__",
+    "!**/.*"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && flowgen index.d.ts -o index.js.flow && cd plugin && bun install && bun run build && cd .. && bun x nitro-codegen",
-    "lint": "eslint -c .eslintrc.js 'index.ts'",
-    "prepare": "bun run build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hyochan/react-native-audio-recorder-player"
+    "example": "yarn workspace react-native-audio-recorder-player-example",
+    "test": "jest",
+    "typecheck": "tsc",
+    "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
+    "prepare": "bob build",
+    "nitrogen": "nitro-codegen",
+    "release": "release-it --only-version"
   },
   "keywords": [
     "react-native",
-    "audio",
-    "sound",
-    "record",
-    "recorder",
-    "player"
+    "ios",
+    "android"
   ],
-  "author": "hyochan",
-  "license": "MIT",
-  "peerDependencies": {
-    "react": "*",
-    "react-native": "*"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hyochan/react-native-audio-recorder-player.git"
   },
-  "dependencies": {
-    "hyochan-welcome": "^1.0.0"
+  "author": "hyochan <hyo@hyo.dev> (https://github.com/hyochan)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hyochan/react-native-audio-recorder-player/issues"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "eslint": "^8.57.0",
-    "eslint-config-expo": "^7.1.2",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.1.3",
-    "flow-bin": "^0.196.3",
-    "flowgen": "^1.21.0",
-    "jest": "^29.3.1",
-    "prettier": "^3.3.0",
-    "react-native": "^0.74.2",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/compat": "^1.2.7",
+    "@eslint/eslintrc": "^3.3.0",
+    "@eslint/js": "^9.22.0",
+    "@evilmartians/lefthook": "^1.5.0",
+    "@react-native/babel-preset": "0.79.2",
+    "@react-native/eslint-config": "^0.78.0",
+    "@release-it/conventional-changelog": "^9.0.2",
+    "@types/jest": "^29.5.5",
+    "@types/react": "^19.0.0",
+    "commitlint": "^19.6.1",
+    "del-cli": "^5.1.0",
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "expo": "^53.0.19",
+    "jest": "^29.7.0",
+    "nitro-codegen": "^0.26.3",
+    "prettier": "^3.0.3",
+    "react": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-builder-bob": "^0.40.12",
     "react-native-nitro-modules": "^0.26.3",
-    "typescript": "^4.9.4"
+    "release-it": "^17.10.0",
+    "turbo": "^1.10.7",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-nitro-modules": "^0.26.3"
+  },
+  "workspaces": [
+    "example"
+  ],
+  "packageManager": "yarn@3.6.1",
+  "jest": {
+    "preset": "react-native",
+    "modulePathIgnorePatterns": [
+      "<rootDir>/example/node_modules",
+      "<rootDir>/lib/"
+    ]
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "release-it": {
+    "git": {
+      "commitMessage": "chore: release ${version}",
+      "tagName": "v${version}"
+    },
+    "npm": {
+      "publish": true
+    },
+    "github": {
+      "release": true
+    },
+    "plugins": {
+      "@release-it/conventional-changelog": {
+        "preset": {
+          "name": "angular"
+        }
+      }
+    }
+  },
+  "prettier": {
+    "quoteProps": "consistent",
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "es5",
+    "useTabs": false
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      [
+        "custom",
+        {
+          "script": "nitrogen",
+          "clean": "nitrogen/"
+        }
+      ],
+      [
+        "module",
+        {
+          "esm": true
+        }
+      ],
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
+    ]
+  },
+  "create-react-native-library": {
+    "languages": "kotlin-swift",
+    "type": "nitro-module",
+    "version": "0.51.1"
   }
 }

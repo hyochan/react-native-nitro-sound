@@ -1,98 +1,130 @@
-
 buildscript {
-    ext.getExtOrDefault = {name ->
-        return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.ext.get(name)
-    }
-    
-    ext {
-        gradleVersion = '4.1.0'
-        kotlinVersion = '1.6.0'
-    }
+  ext.getExtOrDefault = {name ->
+    return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['AudioRecorderPlayer_' + name]
+  }
 
-    repositories {
-        google()
-        mavenCentral()
-    }
+  repositories {
+    google()
+    mavenCentral()
+  }
 
-    dependencies {
-        classpath "com.android.tools.build:gradle:4.2.2"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${getExtOrDefault('kotlinVersion')}"
-    }
+  dependencies {
+    classpath "com.android.tools.build:gradle:8.7.2"
+    // noinspection DifferentKotlinGradleVersion
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${getExtOrDefault('kotlinVersion')}"
+  }
 }
 
-def safeExtGet(prop, fallback) {
-    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+def reactNativeArchitectures() {
+  def value = rootProject.getProperties().get("reactNativeArchitectures")
+  return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+apply from: '../nitrogen/generated/android/audiorecorderplayer+autolinking.gradle'
+
+apply plugin: "com.facebook.react"
+
+def getExtOrIntegerDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["AudioRecorderPlayer_" + name]).toInteger()
+}
 
 android {
-  def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
-  if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
-    namespace "com.dooboolab.audiorecorderplayer"
-  }
-  compileSdkVersion safeExtGet('compileSdkVersion', 31)
-  
-  sourceSets {
-    main {
-      java.srcDirs += [
-        "${project.projectDir}/../nitrogen/generated/android/kotlin"
-      ]
-    }
-  }
+  namespace "com.margelo.nitro.audiorecorderplayer"
+
+  compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
-    minSdkVersion safeExtGet('minSdkVersion', 24)
-    targetSdkVersion safeExtGet('targetSdkVersion', 31)
-    versionCode 1
-    versionName "1.0"
-    
+    minSdkVersion getExtOrIntegerDefault("minSdkVersion")
+    targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
+
     externalNativeBuild {
       cmake {
-        arguments '-DANDROID_STL=c++_shared'
+        cppFlags "-frtti -fexceptions -Wall -fstack-protector-all"
+        arguments "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+        abiFilters (*reactNativeArchitectures())
+
+        buildTypes {
+          debug {
+            cppFlags "-O1 -g"
+          }
+          release {
+            cppFlags "-O2"
+          }
+        }
       }
     }
   }
-  
+
   externalNativeBuild {
     cmake {
       path "CMakeLists.txt"
     }
   }
 
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_17
-    targetCompatibility JavaVersion.VERSION_17
+  packagingOptions {
+    excludes = [
+            "META-INF",
+            "META-INF/**",
+            "**/libc++_shared.so",
+            "**/libfbjni.so",
+            "**/libjsi.so",
+            "**/libfolly_json.so",
+            "**/libfolly_runtime.so",
+            "**/libglog.so",
+            "**/libhermes.so",
+            "**/libhermes-executor-debug.so",
+            "**/libhermes_executor.so",
+            "**/libreactnative.so",
+            "**/libreactnativejni.so",
+            "**/libturbomodulejsijni.so",
+            "**/libreact_nativemodule_core.so",
+            "**/libjscexecutor.so"
+    ]
+  }
+
+  buildFeatures {
+    buildConfig true
+    prefab true
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+    }
   }
 
   lintOptions {
-    abortOnError false
+    disable "GradleCompatible"
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+
+  sourceSets {
+    main {
+      java.srcDirs += [
+        "generated/java",
+        "generated/jni"
+      ]
+    }
   }
 }
 
 repositories {
-    mavenCentral()
+  mavenCentral()
+  google()
 }
+
+def kotlin_version = getExtOrDefault("kotlinVersion")
 
 dependencies {
-  implementation 'com.facebook.react:react-native:+'
-  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${safeExtGet('kotlinVersion', project.ext.kotlinVersion)}"
-  implementation 'com.margelo.nitro:react-native-nitro-modules:+'
-
-  def supportLibVersion = safeExtGet('supportLibVersion', safeExtGet('supportVersion', null))
-  def androidXVersion = safeExtGet('androidXVersion', null)
-  if (supportLibVersion && androidXVersion == null) {
-    implementation "com.android.support:support-annotations:$supportLibVersion"
-    implementation "com.android.support:customtabs:$supportLibVersion"
-  } else {
-    def defaultAndroidXVersion = "1.2.0"
-    if (androidXVersion == null) {
-      androidXVersion = defaultAndroidXVersion
-    }
-    def androidXAnnotation = safeExtGet('androidXAnnotation', androidXVersion)
-    def androidXBrowser = safeExtGet('androidXBrowser', androidXVersion)
-    implementation "androidx.annotation:annotation:$androidXAnnotation"
-    implementation "androidx.browser:browser:$androidXBrowser"
-  }
+  implementation "com.facebook.react:react-android"
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+  implementation project(":react-native-nitro-modules")
 }
+

@@ -21,15 +21,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - uses: oven-sh/setup-bun@v2
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        bun-version: latest
+        node-version: 18
+        cache: yarn
     
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-
-    - run: bun install
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
     
     - name: Update version if specified
       if: ${{ github.event.inputs.version != '' }}
@@ -37,7 +36,11 @@ jobs:
         npm version ${{ github.event.inputs.version }} --no-git-tag-version
         echo "Updated package.json to version ${{ github.event.inputs.version }}"
     
-    - run: bun run build
+    - name: Generate NitroModule bindings
+      run: yarn nitro-codegen
+    
+    - name: Build package
+      run: yarn prepare
 
     - name: Configure npm for publishing
       run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
