@@ -35,7 +35,10 @@
       "Bash(npm init:*)",
       "Bash(npm install:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(bundle update:*)",
+      "Bash(bundle install:*)",
+      "Bash(gem install:*)"
     ],
     "deny": []
   }
