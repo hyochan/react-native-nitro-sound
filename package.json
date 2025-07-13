@@ -83,7 +83,7 @@
     "prettier": "^3.0.3",
     "react": "19.0.0",
     "react-native": "0.79.2",
-    "react-native-builder-bob": "^0.40.12",
+    "react-native-builder-bob": "0.38.4",
     "react-native-nitro-modules": "^0.26.3",
     "release-it": "^17.10.0",
     "turbo": "^1.10.7",
