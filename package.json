@@ -9,7 +9,9 @@
     ".": {
       "source": "./src/index.tsx",
       "types": "./lib/typescript/src/index.d.ts",
-      "default": "./lib/module/index.js"
+      "default": "./lib/module/index.js",
+      "react-native": "./src/index.tsx",
+      "browser": "./lib/module/index.web.js"
     },
     "./package.json": "./package.json"
   },
@@ -42,7 +44,12 @@
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "bob build",
     "nitrogen": "nitro-codegen",
-    "release": "release-it --only-version"
+    "release": "release-it --only-version",
+    "web": "yarn workspace react-native-audio-recorder-player-example web",
+    "build:web": "yarn workspace react-native-audio-recorder-player-example build:web",
+    "android": "yarn workspace react-native-audio-recorder-player-example android",
+    "ios": "yarn workspace react-native-audio-recorder-player-example ios",
+    "start": "yarn workspace react-native-audio-recorder-player-example start"
   },
   "keywords": [
     "react-native",
