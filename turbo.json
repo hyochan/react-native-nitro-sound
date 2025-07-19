@@ -31,6 +31,19 @@
         "!example/ios/Pods"
       ],
       "outputs": []
+    },
+    "build:web": {
+      "inputs": [
+        "package.json",
+        "src/*.ts",
+        "src/*.tsx",
+        "example/package.json",
+        "example/src",
+        "example/webpack.config.js",
+        "example/babel.config.js",
+        "example/public"
+      ],
+      "outputs": ["example/dist"]
     }
   }
 }

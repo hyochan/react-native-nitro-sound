@@ -37,6 +37,11 @@ yarn example ios
 
 # For Android:
 yarn example android
+
+# For Web:
+yarn example web        # Starts development server at http://localhost:8080
+# Or build for production:
+yarn example build:web
 ```
 
 **Important Notes:**
@@ -44,6 +49,29 @@ yarn example android
 - The `yarn nitrogen` command generates necessary Nitro module bindings
 - For iOS, use `yarn example ios:pod` instead of manually navigating to the ios directory
 - All example commands can be run from the root directory using yarn workspaces
+
+### Platform-Specific Requirements
+
+#### iOS Development
+- macOS with Xcode 14.0 or later
+- iOS 13.0+ deployment target
+- CocoaPods installed (`gem install cocoapods`)
+- Run on simulator: `yarn example ios`
+- Run on device: Open `example/ios/AudioRecorderPlayerExample.xcworkspace` in Xcode
+
+#### Android Development
+- Android Studio
+- Android SDK with minimum API level 24
+- Java 17
+- Run on emulator: `yarn example android`
+- Run on device: Enable USB debugging and connect your device
+
+#### Web Development
+- Modern web browser (Chrome, Firefox, Safari)
+- No additional setup required
+- Development server: `yarn example web`
+- Production build outputs to `example/dist/`
+- Supports hot module replacement for faster development
 
 ### Coding Guidelines
 Please follow the Coding conventions as much as possible when contributing your code.
