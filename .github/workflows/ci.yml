@@ -149,8 +149,15 @@ jobs:
 
       - name: Build example for iOS
         run: |
-          cd example
-          yarn build:ios
+          cd example/ios
+          xcodebuild \
+            -workspace AudioRecorderPlayerExample.xcworkspace \
+            -scheme AudioRecorderPlayerExample \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            build \
+            CODE_SIGNING_ALLOWED=NO
 
   build-web:
     runs-on: ubuntu-latest
