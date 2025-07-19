@@ -18,6 +18,7 @@ import AudioRecorderPlayer, {
   AVEncoderAudioQualityIOSType,
   type RecordBackType,
   type PlayBackType,
+  type PlaybackEndType,
 } from '../../src';
 
 const App = () => {
@@ -46,6 +47,7 @@ const App = () => {
       try {
         AudioRecorderPlayer.removePlayBackListener();
         AudioRecorderPlayer.removeRecordBackListener();
+        AudioRecorderPlayer.removePlaybackEndListener();
       } catch (error) {
         console.log('Error removing listeners:', error);
       }
@@ -197,6 +199,11 @@ const App = () => {
       setIsRecording(true);
       setIsRecordLoading(false);
 
+      // Set faster update interval for web
+      if (Platform.OS === 'web') {
+        AudioRecorderPlayer.setSubscriptionDuration(0.01); // 10ms updates
+      }
+
       AudioRecorderPlayer.addRecordBackListener((e: RecordBackType) => {
         console.log('🎤 Recording callback:', e);
         setRecordSecs(Math.floor(e.currentPosition));
@@ -273,6 +280,22 @@ const App = () => {
     try {
       // Set up listener BEFORE starting playback
       console.log('Setting up playback listener...');
+
+      // Set faster update interval for web
+      if (Platform.OS === 'web') {
+        AudioRecorderPlayer.setSubscriptionDuration(0.01); // 10ms updates
+      }
+
+      // Add playback end listener
+      AudioRecorderPlayer.addPlaybackEndListener((e: PlaybackEndType) => {
+        console.log('📱 Playback ended:', e);
+        setIsPlaying(false);
+        setIsLoading(false);
+        // Ensure progress bar shows 100%
+        setCurrentPosition(e.duration);
+        setTotalDuration(e.duration);
+      });
+
       AudioRecorderPlayer.addPlayBackListener((e: PlayBackType) => {
         console.log('📱 Playback callback received:', {
           position: e.currentPosition,
@@ -310,7 +333,10 @@ const App = () => {
       });
 
       console.log('Starting player...');
-      const msg = await AudioRecorderPlayer.startPlayer(recordingPath);
+      // For web, if we get 'recording_in_progress', don't pass any path
+      const pathToPlay =
+        recordingPath === 'recording_in_progress' ? undefined : recordingPath;
+      const msg = await AudioRecorderPlayer.startPlayer(pathToPlay);
       console.log('Started playing:', msg);
 
       // Hide loading and show playing after player starts
