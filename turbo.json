@@ -18,6 +18,7 @@
       "outputs": []
     },
     "build:ios": {
+      "cache": false,
       "env": ["RCT_NEW_ARCH_ENABLED"],
       "inputs": [
         "package.json",

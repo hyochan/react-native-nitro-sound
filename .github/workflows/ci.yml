@@ -124,30 +124,15 @@ jobs:
       - name: Generate nitrogen code
         run: yarn nitrogen
 
-      - name: Cache turborepo for iOS
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.TURBO_CACHE_DIR }}
-          key: ${{ runner.os }}-turborepo-ios-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-turborepo-ios-
-
-      - name: Check turborepo cache for iOS
-        run: |
-          TURBO_CACHE_STATUS=$(node -p "($(yarn turbo run build:ios --cache-dir="${{ env.TURBO_CACHE_DIR }}" --dry=json)).tasks.find(t => t.task === 'build:ios').cache.status")
-
-          if [[ $TURBO_CACHE_STATUS == "HIT" ]]; then
-            echo "turbo_cache_hit=1" >> $GITHUB_ENV
-          fi
+      - name: Build library first
+        run: yarn prepare
 
       - name: Use appropriate Xcode version
-        if: env.turbo_cache_hit != 1
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Cache CocoaPods
-        if: env.turbo_cache_hit != 1
         uses: actions/cache@v4
         with:
           path: example/ios/Pods
@@ -156,7 +141,6 @@ jobs:
             ${{ runner.os }}-pods-
 
       - name: Install cocoapods
-        if: env.turbo_cache_hit != 1
         run: |
           cd example
           gem install bundler -v 2.3.25
@@ -165,7 +149,8 @@ jobs:
 
       - name: Build example for iOS
         run: |
-          yarn turbo run build:ios --cache-dir="${{ env.TURBO_CACHE_DIR }}"
+          cd example
+          yarn build:ios
 
   build-web:
     runs-on: ubuntu-latest
@@ -199,4 +184,5 @@ jobs:
 
       - name: Build example for Web
         run: |
-          yarn turbo run build:web --cache-dir="${{ env.TURBO_CACHE_DIR }}"
+          cd example
+          yarn build:web
