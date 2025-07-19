@@ -153,11 +153,14 @@ jobs:
           xcodebuild \
             -workspace AudioRecorderPlayerExample.xcworkspace \
             -scheme AudioRecorderPlayerExample \
-            -configuration Release \
+            -configuration Debug \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 15' \
-            build \
-            CODE_SIGNING_ALLOWED=NO
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            build-for-testing \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            SWIFT_COMPILATION_MODE=wholemodule
 
   build-web:
     runs-on: ubuntu-latest
