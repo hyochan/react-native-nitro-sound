@@ -48,7 +48,8 @@
       "Bash(mv:*)",
       "Bash(git push:*)",
       "WebFetch(domain:github.com)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "WebFetch(domain:github.blog)"
     ],
     "deny": []
   }
