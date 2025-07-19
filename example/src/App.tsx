@@ -30,6 +30,7 @@ const App = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [recordingPath, setRecordingPath] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaybackPaused, setIsPlaybackPaused] = useState(false);
   const [actualRecordedDuration, setActualRecordedDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isRecordLoading, setIsRecordLoading] = useState(false);
@@ -290,6 +291,7 @@ const App = () => {
       AudioRecorderPlayer.addPlaybackEndListener((e: PlaybackEndType) => {
         console.log('📱 Playback ended:', e);
         setIsPlaying(false);
+        setIsPlaybackPaused(false);
         setIsLoading(false);
         // Ensure progress bar shows 100%
         setCurrentPosition(e.duration);
@@ -342,12 +344,14 @@ const App = () => {
       // Hide loading and show playing after player starts
       setIsLoading(false);
       setIsPlaying(true);
+      setIsPlaybackPaused(false);
 
       const volumeResult = await AudioRecorderPlayer.setVolume(1.0);
       console.log('Volume:', volumeResult);
     } catch (error) {
       console.error('Start play error:', error);
       setIsPlaying(false);
+      setIsPlaybackPaused(false);
       setIsLoading(false);
     }
   };
@@ -355,6 +359,7 @@ const App = () => {
   const onPausePlay = async () => {
     try {
       await AudioRecorderPlayer.pausePlayer();
+      setIsPlaybackPaused(true);
     } catch (error) {
       console.error('Pause play error:', error);
     }
@@ -363,6 +368,7 @@ const App = () => {
   const onResumePlay = async () => {
     try {
       await AudioRecorderPlayer.resumePlayer();
+      setIsPlaybackPaused(false);
     } catch (error) {
       console.error('Resume play error:', error);
     }
@@ -377,10 +383,12 @@ const App = () => {
       setCurrentPosition(0);
       setTotalDuration(0);
       setIsPlaying(false);
+      setIsPlaybackPaused(false);
       console.log('Playback stopped');
     } catch (error) {
       console.error('Stop play error:', error);
       setIsPlaying(false);
+      setIsPlaybackPaused(false);
     }
   };
 
@@ -631,10 +639,10 @@ const App = () => {
               style={[
                 styles.button,
                 styles.pauseButton,
-                !isPlaying && styles.disabledButton,
+                (!isPlaying || isPlaybackPaused) && styles.disabledButton,
               ]}
               onPress={onPausePlay}
-              disabled={!isPlaying}
+              disabled={!isPlaying || isPlaybackPaused}
             >
               <Text style={styles.buttonText}>Pause</Text>
             </TouchableOpacity>
@@ -642,10 +650,10 @@ const App = () => {
               style={[
                 styles.button,
                 styles.resumeButton,
-                isPlaying && styles.disabledButton,
+                !isPlaybackPaused && styles.disabledButton,
               ]}
               onPress={onResumePlay}
-              disabled={isPlaying}
+              disabled={!isPlaybackPaused}
             >
               <Text style={styles.buttonText}>Resume</Text>
             </TouchableOpacity>
