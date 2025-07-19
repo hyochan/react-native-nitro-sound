@@ -14,6 +14,7 @@ public class AudioRecorderPlayerImpl: HybridAudioRecorderPlayerSpec {
     
     private var recordBackListener: ((RecordBackType) -> Void)?
     private var playBackListener: ((PlayBackType) -> Void)?
+    private var playbackEndListener: ((PlaybackEndType) -> Void)?
     
     private var subscriptionDuration: TimeInterval = 0.06
     private var recordingSession: AVAudioSession?
@@ -436,6 +437,14 @@ public class AudioRecorderPlayerImpl: HybridAudioRecorderPlayerSpec {
         self.stopPlayTimer()
     }
     
+    public func addPlaybackEndListener(callback: @escaping (PlaybackEndType) -> Void) throws {
+        self.playbackEndListener = callback
+    }
+    
+    public func removePlaybackEndListener() throws {
+        self.playbackEndListener = nil
+    }
+    
     // MARK: - Utility Methods
     
     public func mmss(secs: Double) throws -> String {
@@ -619,6 +628,16 @@ public class AudioRecorderPlayerImpl: HybridAudioRecorderPlayerSpec {
                     )
                     print("🎵 Sending final callback before stopping")
                     listener(finalPlayBack)
+                    
+                    // Send playback end event
+                    if let endListener = self.playbackEndListener {
+                        let endEvent = PlaybackEndType(
+                            duration: player.duration * 1000,
+                            currentPosition: player.duration * 1000
+                        )
+                        print("🎵 Sending playback end event")
+                        endListener(endEvent)
+                    }
                 }
                 
                 self.stopPlayTimer()
@@ -642,6 +661,17 @@ public class AudioRecorderPlayerImpl: HybridAudioRecorderPlayerSpec {
             let threshold = 100.0 // 100ms threshold
             if duration > 0 && currentTime >= (duration - threshold) {
                 print("🎵 Play timer callback: playback finished by position")
+                
+                // Send playback end event
+                if let endListener = self.playbackEndListener {
+                    let endEvent = PlaybackEndType(
+                        duration: duration,
+                        currentPosition: duration
+                    )
+                    print("🎵 Sending playback end event (threshold)")
+                    endListener(endEvent)
+                }
+                
                 self.stopPlayTimer()
                 return
             }

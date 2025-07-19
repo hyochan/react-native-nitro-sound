@@ -4,6 +4,7 @@ import type {
   AudioSet,
   RecordBackType,
   PlayBackType,
+  PlaybackEndType,
 } from './AudioRecorderPlayer.nitro';
 
 export * from './AudioRecorderPlayer.nitro';
@@ -124,6 +125,16 @@ class AudioRecorderPlayerImpl {
 
   removePlayBackListener(): void {
     this.getHybridObject().removePlayBackListener();
+  }
+
+  addPlaybackEndListener(
+    callback: (playbackEndMeta: PlaybackEndType) => void
+  ): void {
+    this.getHybridObject().addPlaybackEndListener(callback);
+  }
+
+  removePlaybackEndListener(): void {
+    this.getHybridObject().removePlaybackEndListener();
   }
 
   // Utility methods

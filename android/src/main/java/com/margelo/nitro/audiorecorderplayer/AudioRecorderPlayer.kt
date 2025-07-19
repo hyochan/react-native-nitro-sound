@@ -29,6 +29,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
     
     private var recordBackListener: ((recordingMeta: RecordBackType) -> Unit)? = null
     private var playBackListener: ((playbackMeta: PlayBackType) -> Unit)? = null
+    private var playbackEndListener: ((playbackEndMeta: PlaybackEndType) -> Unit)? = null
     
     private var subscriptionDuration: Long = 60L
     private var recordStartTime: Long = 0L
@@ -315,9 +316,19 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     setOnCompletionListener {
                         handler.post {
                             stopPlayTimer()
+                            
+                            // Send final playback update
                             playBackListener?.invoke(
                                 PlayBackType(
                                     isMuted = false,
+                                    duration = duration.toDouble(),
+                                    currentPosition = duration.toDouble()
+                                )
+                            )
+                            
+                            // Send playback end event
+                            playbackEndListener?.invoke(
+                                PlaybackEndType(
                                     duration = duration.toDouble(),
                                     currentPosition = duration.toDouble()
                                 )
@@ -441,6 +452,14 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
     
     override fun removePlayBackListener() {
         playBackListener = null
+    }
+    
+    override fun addPlaybackEndListener(callback: (playbackEndMeta: PlaybackEndType) -> Unit) {
+        playbackEndListener = callback
+    }
+    
+    override fun removePlaybackEndListener() {
+        playbackEndListener = null
     }
     
     // Utility methods
