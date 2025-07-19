@@ -7,10 +7,12 @@
 [![CI](https://github.com/hyochan/react-native-audio-recorder-player/actions/workflows/ci.yml/badge.svg)](https://github.com/hyochan/react-native-audio-recorder-player/actions/workflows/ci.yml)
 [![publish-package](https://github.com/hyochan/react-native-audio-recorder-player/actions/workflows/publish-package.yml/badge.svg)](https://github.com/hyochan/react-native-audio-recorder-player/actions/workflows/publish-package.yml)
 ![License](http://img.shields.io/npm/l/react-native-audio-recorder-player.svg?style=flat-square)
-[![supports iOS](https://img.shields.io/badge/iOS-4630EB.svg?style=flat-square&logo=APPLE&labelColor=999999&logoColor=fff)](https://itunes.apple.com/app/apple-store/id982107779)
-[![supports Android](https://img.shields.io/badge/Android-4630EB.svg?style=flat-square&logo=ANDROID&labelColor=A4C639&logoColor=fff)](https://play.google.com/store/apps/details?id=host.exp.exponent&referrer=www)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 [![LICENSE](http://img.shields.io/npm/l/@react-native-seoul/masonry-list.svg?style=flat-square)](https://npmjs.org/package/@react-native-seoul/masonry-list)
+
+[![Platform - iOS](https://img.shields.io/badge/platform-iOS-blue.svg?style=flat-square&logo=apple&logoColor=white)](https://developer.apple.com/ios/)
+[![Platform - Android](https://img.shields.io/badge/platform-Android-green.svg?style=flat-square&logo=android&logoColor=white)](https://developer.android.com/)
+[![Platform - Web](https://img.shields.io/badge/platform-Web-orange.svg?style=flat-square&logo=googlechrome&logoColor=white)](https://reactnative.dev/docs/react-native-web)
 
 **🎉 Version 4.1.0 Released with NitroModule Support!**
 
@@ -18,7 +20,7 @@
 
 > 🔴 **Critical for v4.x**: Recording operations now run in background threads. **You MUST implement loading states** to handle the async delays, or your UI may appear unresponsive. See [Component Examples](#component-based-implementation) for proper implementation.
 
-This is a high-performance React Native module for audio recording and playback, now powered by [NitroModules](https://github.com/mrousavy/nitro) for direct native module access without bridge overhead. The library provides simple recorder and player functionalities for both Android and iOS platforms with full TypeScript support and type safety.
+This is a high-performance React Native module for audio recording and playback, now powered by [NitroModules](https://github.com/mrousavy/nitro) for direct native module access without bridge overhead. The library provides simple recorder and player functionalities for iOS, Android, and Web platforms with full TypeScript support and type safety.
 
 ## Preview
 
@@ -43,6 +45,7 @@ Version 4.0.0 introduces a complete rewrite using [NitroModules](https://github.
 - **Event Listeners**: Native callbacks with type-safe event payloads
 - **Cross-Platform Code Generation**: Automatic code generation for iOS (Swift) and Android (Kotlin)
 - **Background Processing**: Recording operations now run in background threads to prevent UI blocking, requiring loading state management
+- **Web Platform Support**: Full support for web browsers using Web Audio API and MediaRecorder API
 
 ### Requirements
 
@@ -82,6 +85,24 @@ After installing the packages, follow these steps:
 
 2. **Android Setup**:
    No additional steps required. The module uses autolinking.
+
+3. **Web Setup**:
+   For React Native Web, install the additional dependency:
+   ```sh
+   yarn add react-native-web
+   ```
+   
+   Then configure your webpack to include the web-specific implementation:
+   ```js
+   // webpack.config.js
+   module.exports = {
+     resolve: {
+       alias: {
+         'react-native': 'react-native-web'
+       }
+     }
+   };
+   ```
 
 > **Note**: The `nitro-codegen` command is already run during the library's build process. You don't need to run it in your application.
 
@@ -195,6 +216,8 @@ if (Platform.OS === 'android') {
 | removeRecordBackListener |                                                  |      `void`       | Remove recording progress listener                    |
 | addPlayBackListener      |               `Function` callback                |      `void`       | Add playback progress listener                        |
 | removePlayBackListener   |                                                  |      `void`       | Remove playback progress listener                     |
+| addPlaybackEndListener   |               `Function` callback                |      `void`       | Add playback completion listener                      |
+| removePlaybackEndListener|                                                  |      `void`       | Remove playback completion listener                   |
 
 ## Usage
 
@@ -253,6 +276,14 @@ const onStartPlay = async () => {
     setDuration(AudioRecorderPlayer.mmssss(Math.floor(e.duration)));
   });
 
+  // Set up playback end listener
+  AudioRecorderPlayer.addPlaybackEndListener((e: PlaybackEndType) => {
+    console.log('Playback completed:', e);
+    // Handle playback completion
+    setIsPlaying(false);
+    setCurrentPosition(0);
+  });
+
   const result = await AudioRecorderPlayer.startPlayer();
   console.log('Playback started:', result);
 };
@@ -264,6 +295,7 @@ const onPausePlay = async () => {
 const onStopPlay = async () => {
   AudioRecorderPlayer.stopPlayer();
   AudioRecorderPlayer.removePlayBackListener();
+  AudioRecorderPlayer.removePlaybackEndListener();
 };
 
 // Seeking
@@ -310,8 +342,29 @@ const uri = await AudioRecorderPlayer.startRecorder(
 
 - Default path for android uri is `{cacheDir}/sound.mp4`.
 - Default path for ios uri is `{cacheDir}/sound.m4a`.
+- Default path for web: Files are stored as Blob URLs in memory.
 
 > **Tip**: Store the file path returned by `startRecorder()` immediately for later use in playback or file management.
+
+## Web Platform Support
+
+### Features
+- Audio recording using MediaRecorder API
+- Audio playback using Web Audio API
+- Support for common audio formats (depends on browser)
+- Real-time playback progress updates
+- Volume and speed control
+
+### Limitations
+- Recording format is browser-dependent (typically webm/opus)
+- Some audio configuration options are not supported
+- File paths are Blob URLs instead of file system paths
+- Metering during recording is not currently supported
+
+### Browser Compatibility
+- Chrome/Edge: Full support
+- Firefox: Full support
+- Safari: Limited recording format support (may require polyfills)
 
 ## Component-Based Implementation
 
@@ -396,13 +449,15 @@ export const AudioPlayer = ({ audioPath }) => {
       AudioRecorderPlayer.addPlayBackListener((e) => {
         setPlayTime(AudioRecorderPlayer.mmssss(Math.floor(e.currentPosition)));
         setDuration(AudioRecorderPlayer.mmssss(Math.floor(e.duration)));
-        
-        // Auto-stop when playback completes
-        if (e.duration > 0 && e.currentPosition >= e.duration - 100) {
-          setIsPlaying(false);
-          AudioRecorderPlayer.removePlayBackListener();
-        }
       });
+      
+      // Use the proper playback end listener
+      AudioRecorderPlayer.addPlaybackEndListener((e) => {
+        console.log('Playback completed', e);
+        setIsPlaying(false);
+        setPlayTime('00:00:00');
+      });
+      
       setIsPlaying(true);
     } catch (error) {
       console.error('Failed to start playback:', error);
@@ -416,6 +471,7 @@ export const AudioPlayer = ({ audioPath }) => {
     try {
       await AudioRecorderPlayer.stopPlayer();
       AudioRecorderPlayer.removePlayBackListener();
+      AudioRecorderPlayer.removePlaybackEndListener();
       setIsPlaying(false);
       setPlayTime('00:00:00');
       setDuration('00:00:00');
