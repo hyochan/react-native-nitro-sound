@@ -124,6 +124,10 @@ export interface PlaybackEndType {
   currentPosition: number;
 }
 
+export type RecordBackListener = (recordingMeta: RecordBackType) => void;
+export type PlayBackListener = (playbackMeta: PlayBackType) => void;
+export type PlaybackEndListener = (playbackEndMeta: PlaybackEndType) => void;
+
 export interface AudioRecorderPlayer
   extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
   // Recording methods

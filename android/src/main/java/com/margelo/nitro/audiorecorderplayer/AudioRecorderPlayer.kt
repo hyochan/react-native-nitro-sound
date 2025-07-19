@@ -455,11 +455,15 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
     }
     
     override fun addPlaybackEndListener(callback: (playbackEndMeta: PlaybackEndType) -> Unit) {
-        playbackEndListener = callback
+        handler.post {
+            playbackEndListener = callback
+        }
     }
     
     override fun removePlaybackEndListener() {
-        playbackEndListener = null
+        handler.post {
+            playbackEndListener = null
+        }
     }
     
     // Utility methods
