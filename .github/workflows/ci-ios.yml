@@ -1,0 +1,57 @@
+name: CI - iOS
+on:
+  workflow_call:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ios-dependencies:
+    runs-on: macos-14
+    env:
+      XCODE_VERSION: 15.4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Generate nitrogen code
+        run: yarn nitrogen
+
+      - name: Fix Nitrogen-generated Swift code
+        run: ./scripts/fix-nitrogen-swift.sh
+
+      - name: Build library first
+        run: yarn prepare
+
+      - name: Use appropriate Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: example/ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Install cocoapods
+        run: |
+          cd example
+          gem install bundler -v 2.3.25
+          bundle install
+          bundle exec pod install --project-directory=ios
+
+      - name: Verify iOS dependencies
+        run: |
+          cd example/ios
+          echo "✅ iOS dependencies installed successfully"
+          echo "Pods directory contents:"
+          ls -la Pods/ | head -20
