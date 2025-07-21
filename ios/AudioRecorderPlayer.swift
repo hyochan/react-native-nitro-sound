@@ -500,6 +500,9 @@ public class AudioRecorderPlayerImpl: HybridAudioRecorderPlayerSpec {
         case .medium: return AVAudioQuality.medium.rawValue
         case .high: return AVAudioQuality.high.rawValue
         case .max: return AVAudioQuality.max.rawValue
+        default:
+            // Handle unexpected enum case by returning high quality as default
+            return AVAudioQuality.high.rawValue
         }
     }
     
@@ -519,6 +522,9 @@ public class AudioRecorderPlayerImpl: HybridAudioRecorderPlayerSpec {
         case .amr: return Int(kAudioFormatAMR)
         case .flac: return Int(kAudioFormatFLAC)
         case .mac3, .mac6: return Int(kAudioFormatMPEG4AAC) // Default for unsupported formats
+        default:
+            // Handle unexpected enum case by returning AAC as default
+            return Int(kAudioFormatMPEG4AAC)
         }
     }
     
