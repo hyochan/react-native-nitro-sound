@@ -19,27 +19,29 @@ import java.util.TimerTask
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.log10
 
 class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
     private var mediaRecorder: MediaRecorder? = null
     private var mediaPlayer: MediaPlayer? = null
-    
+
     private var recordTimer: Timer? = null
     private var playTimer: Timer? = null
-    
+
     private var recordBackListener: ((recordingMeta: RecordBackType) -> Unit)? = null
     private var playBackListener: ((playbackMeta: PlayBackType) -> Unit)? = null
     private var playbackEndListener: ((playbackEndMeta: PlaybackEndType) -> Unit)? = null
-    
+
     private var subscriptionDuration: Long = 60L
     private var recordStartTime: Long = 0L
     private var pausedRecordTime: Long = 0L
-    
+    private var meteringEnabled: Boolean = false
+
     private val handler = Handler(Looper.getMainLooper())
-    
+
     private val context: Context
         get() = NitroModules.applicationContext ?: throw IllegalStateException("Application context not available")
-    
+
     // Recording methods
     override fun startRecorder(
         uri: String?,
@@ -47,7 +49,10 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
         meteringEnabled: Boolean?
     ): Promise<String> {
         val promise = Promise<String>()
-        
+
+      // For audio metering
+      this.meteringEnabled = meteringEnabled ?: false
+
         // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -57,7 +62,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                 val fileName = "sound_${System.currentTimeMillis()}.mp4"
                 File(dir, fileName).absolutePath
             }
-            
+
             // Initialize MediaRecorder
             mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 MediaRecorder(context)
@@ -90,7 +95,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     null -> MediaRecorder.AudioSource.MIC
                 }
                 setAudioSource(audioSource)
-                
+
                 // Set output format
                 val outputFormat = when (audioSets?.OutputFormatAndroid) {
                     OutputFormatAndroidType.DEFAULT -> MediaRecorder.OutputFormat.DEFAULT
@@ -118,7 +123,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     null -> MediaRecorder.OutputFormat.MPEG_4
                 }
                 setOutputFormat(outputFormat)
-                
+
                 // Set audio encoder
                 val audioEncoder = when (audioSets?.AudioEncoderAndroid) {
                     AudioEncoderAndroidType.DEFAULT -> MediaRecorder.AudioEncoder.DEFAULT
@@ -143,47 +148,47 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     null -> MediaRecorder.AudioEncoder.AAC
                 }
                 setAudioEncoder(audioEncoder)
-                
+
                 // Set audio sampling rate
-                audioSets?.AudioSamplingRate?.let { 
+                audioSets?.AudioSamplingRate?.let {
                     setAudioSamplingRate(it.toInt())
                 }
-                
+
                 // Set audio channels
                 audioSets?.AudioChannels?.let {
                     setAudioChannels(it.toInt())
                 }
-                
+
                 // Set audio encoding bit rate
                 audioSets?.AudioEncodingBitRate?.let {
                     setAudioEncodingBitRate(it.toInt())
                 }
-                
+
                 // Set output file
                 setOutputFile(filePath)
-                
+
                 // Prepare and start
                 prepare()
                 start()
             }
-            
+
                 recordStartTime = System.currentTimeMillis()
                 pausedRecordTime = 0L
-                
+
                 // Start timer on main thread
                 handler.post {
                     startRecordTimer()
                 }
-                
+
                 promise.resolve(filePath)
             } catch (e: Exception) {
                 promise.reject(e)
             }
         }
-        
+
         return promise
     }
-    
+
     override fun pauseRecorder(): Promise<String> {
         return Promise.parallel {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -196,7 +201,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
             }
         }
     }
-    
+
     override fun resumeRecorder(): Promise<String> {
         return Promise.parallel {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -209,10 +214,10 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
             }
         }
     }
-    
+
     override fun stopRecorder(): Promise<String> {
         val promise = Promise<String>()
-        
+
         // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -221,11 +226,11 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     release()
                 }
                 mediaRecorder = null
-                
+
                 handler.post {
                     stopRecordTimer()
                 }
-                
+
                 promise.resolve("Recorder stopped")
             } catch (e: Exception) {
                 mediaRecorder?.release()
@@ -233,17 +238,17 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                 promise.reject(e)
             }
         }
-        
+
         return promise
     }
-    
+
     // Playback methods
     override fun startPlayer(
         uri: String?,
         httpHeaders: Map<String, String>?
     ): Promise<String> {
         val promise = Promise<String>()
-        
+
         // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -251,7 +256,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     promise.reject(Exception("URI is required"))
                     return@launch
                 }
-                
+
                 // Clean up any existing player first
                 mediaPlayer?.let { existingPlayer ->
                     try {
@@ -264,11 +269,11 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                         // Ignore cleanup errors
                     }
                 }
-                
+
                 handler.post {
                     stopPlayTimer()
                 }
-            
+
             mediaPlayer = MediaPlayer().apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     setAudioAttributes(
@@ -281,7 +286,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     @Suppress("DEPRECATION")
                     setAudioStreamType(AudioManager.STREAM_MUSIC)
                 }
-                
+
                 when {
                     uri.startsWith("http") -> {
                         // Handle network audio
@@ -297,26 +302,26 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                         setDataSource(uri)
                     }
                 }
-                
+
                     // Prepare on IO thread
                     prepare()
-                    
+
                     // Start playback on main thread
                     handler.post {
                         start()
                         startPlayTimer()
                         promise.resolve(uri)
                     }
-                    
+
                     setOnErrorListener { _, what, extra ->
                         promise.reject(Exception("MediaPlayer error: what=$what, extra=$extra"))
                         true
                     }
-                    
+
                     setOnCompletionListener {
                         handler.post {
                             stopPlayTimer()
-                            
+
                             // Send final playback update
                             playBackListener?.invoke(
                                 PlayBackType(
@@ -325,7 +330,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                                     currentPosition = duration.toDouble()
                                 )
                             )
-                            
+
                             // Send playback end event
                             playbackEndListener?.invoke(
                                 PlaybackEndType(
@@ -340,13 +345,13 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                 promise.reject(e)
             }
         }
-        
+
         return promise
     }
-    
+
     override fun stopPlayer(): Promise<String> {
         val promise = Promise<String>()
-        
+
         // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -359,11 +364,11 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     player.release()
                 }
                 mediaPlayer = null
-                
+
                 handler.post {
                     stopPlayTimer()
                 }
-                
+
                 promise.resolve("Player stopped")
             } catch (e: Exception) {
                 // Ensure cleanup even if error occurs
@@ -374,18 +379,18 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     // Ignore errors during cleanup
                 }
                 mediaPlayer = null
-                
+
                 handler.post {
                     stopPlayTimer()
                 }
-                
+
                 promise.reject(e)
             }
         }
-        
+
         return promise
     }
-    
+
     override fun pausePlayer(): Promise<String> {
         return Promise.parallel {
             mediaPlayer?.pause()
@@ -393,7 +398,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
             "Player paused"
         }
     }
-    
+
     override fun resumePlayer(): Promise<String> {
         return Promise.parallel {
             mediaPlayer?.start()
@@ -401,14 +406,14 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
             "Player resumed"
         }
     }
-    
+
     override fun seekToPlayer(time: Double): Promise<String> {
         return Promise.parallel {
             mediaPlayer?.seekTo(time.toInt())
             "Seeked to ${time}ms"
         }
     }
-    
+
     override fun setVolume(volume: Double): Promise<String> {
         return Promise.parallel {
             val volumeFloat = volume.toFloat()
@@ -416,7 +421,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
             "Volume set to $volume"
         }
     }
-    
+
     override fun setPlaybackSpeed(playbackSpeed: Double): Promise<String> {
         return Promise.parallel {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -431,41 +436,41 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
             }
         }
     }
-    
+
     // Subscription
     override fun setSubscriptionDuration(sec: Double) {
         subscriptionDuration = (sec * 1000).toLong()
     }
-    
+
     // Listeners
     override fun addRecordBackListener(callback: (recordingMeta: RecordBackType) -> Unit) {
         recordBackListener = callback
     }
-    
+
     override fun removeRecordBackListener() {
         recordBackListener = null
     }
-    
+
     override fun addPlayBackListener(callback: (playbackMeta: PlayBackType) -> Unit) {
         playBackListener = callback
     }
-    
+
     override fun removePlayBackListener() {
         playBackListener = null
     }
-    
+
     override fun addPlaybackEndListener(callback: (playbackEndMeta: PlaybackEndType) -> Unit) {
         handler.post {
             playbackEndListener = callback
         }
     }
-    
+
     override fun removePlaybackEndListener() {
         handler.post {
             playbackEndListener = null
         }
     }
-    
+
     // Utility methods
     override fun mmss(secs: Double): String {
         val totalSeconds = secs.toInt()
@@ -473,7 +478,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
         val seconds = totalSeconds % 60
         return String.format("%02d:%02d", minutes, seconds)
     }
-    
+
     override fun mmssss(milisecs: Double): String {
         val totalSeconds = (milisecs / 1000).toInt()
         val minutes = totalSeconds / 60
@@ -481,21 +486,45 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
         val milliseconds = ((milisecs % 1000) / 10).toInt()
         return String.format("%02d:%02d:%02d", minutes, seconds, milliseconds)
     }
-    
+
     // Private methods
+
+    // For audioMetering using mediaRecorder
+    private fun getSimpleMetering(): Double {
+      return try {
+        val maxAmplitude = mediaRecorder?.maxAmplitude ?: 0
+        if (maxAmplitude > 0) {
+          // Convert amplitude to decibels
+          // getMaxAmplitude() returns values from 0 to 32767
+          val normalizedAmplitude = maxAmplitude.toDouble() / 32767.0
+          val decibels = 20 * log10(normalizedAmplitude)
+          maxOf(-160.0, minOf(0.0, decibels))
+        } else {
+          -160.0
+        }
+      } catch (e: Exception) {
+        -160.0
+      }
+    }
+
     private fun startRecordTimer() {
         recordTimer?.cancel()
         recordTimer = Timer()
         recordTimer?.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 val currentTime = System.currentTimeMillis() - recordStartTime
-                
+                val meteringValue = if (meteringEnabled) {
+                  getSimpleMetering()
+                } else {
+                  0.0
+                }
+
                 handler.post {
                     recordBackListener?.invoke(
                         RecordBackType(
                             isRecording = true,
                             currentPosition = currentTime.toDouble(),
-                            currentMetering = 0.0, // Android doesn't support metering easily
+                            currentMetering = meteringValue, // Added metering value using mediaRecorder
                             recordSecs = currentTime.toDouble()
                         )
                     )
@@ -503,12 +532,12 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
             }
         }, 0, subscriptionDuration)
     }
-    
+
     private fun stopRecordTimer() {
         recordTimer?.cancel()
         recordTimer = null
     }
-    
+
     private fun startPlayTimer() {
         playTimer?.cancel()
         playTimer = Timer()
@@ -528,7 +557,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
             }
         }, 0, subscriptionDuration)
     }
-    
+
     private fun stopPlayTimer() {
         playTimer?.cancel()
         playTimer = null
