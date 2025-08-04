@@ -497,7 +497,8 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
           // Convert amplitude to decibels
           // getMaxAmplitude() returns values from 0 to 32767
           val normalizedAmplitude = maxAmplitude.toDouble() / 32767.0
-          val decibels = 20 * log10(normalizedAmplitude)
+          val epsilon = 1e-10
+          val decibels = 20 * log10(maxOf(normalizedAmplitude, epsilon))
           maxOf(-160.0, minOf(0.0, decibels))
         } else {
           -160.0
@@ -507,6 +508,10 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
       }
     }
 
+    private var lastMeteringUpdateTime = 0L
+    private var lastMeteringValue = -160.0
+    private val meteringUpdateInterval = 100L // Update every 100ms max
+
     private fun startRecordTimer() {
         recordTimer?.cancel()
         recordTimer = Timer()
@@ -514,7 +519,12 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
             override fun run() {
                 val currentTime = System.currentTimeMillis() - recordStartTime
                 val meteringValue = if (meteringEnabled) {
-                  getSimpleMetering()
+                  val now = System.currentTimeMillis()
+                  if (now - lastMeteringUpdateTime >= meteringUpdateInterval) {
+                    lastMeteringValue = getSimpleMetering()
+                    lastMeteringUpdateTime = now
+                  }
+                  lastMeteringValue
                 } else {
                   0.0
                 }
