@@ -42,6 +42,43 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
     private val context: Context
         get() = NitroModules.applicationContext ?: throw IllegalStateException("Application context not available")
 
+    // Named constants with documentation
+    companion object {
+      /**
+       * Minimum amplitude value to prevent log10(0) which would return negative infinity.
+       * This represents the noise floor for audio metering calculations.
+       */
+      private const val MIN_AMPLITUDE_EPSILON = 1e-10
+
+      /**
+       * Silence threshold in decibels. Values below this are considered silence.
+       * -160 dB is effectively digital silence.
+       */
+      private const val SILENCE_THRESHOLD_DB = -160.0
+
+      /**
+       * Maximum amplitude value from MediaRecorder.getMaxAmplitude().
+       * Used for normalizing amplitude values to 0.0-1.0 range.
+       */
+      private const val MAX_AMPLITUDE_VALUE = 32767.0
+
+      /**
+       * Minimum interval between metering calculations to optimize performance.
+       * Limits metering updates to 10Hz maximum (every 100ms).
+       */
+      private const val METERING_UPDATE_INTERVAL_MS = 100L
+
+      /**
+       * Maximum decibel level representing full scale amplitude (0 dB).
+       */
+      private const val MAX_DECIBEL_LEVEL = 0.0
+
+      /**
+       * Default metering value when metering is disabled.
+       */
+      private const val METERING_DISABLED_VALUE = 0.0
+    }
+
     // Recording methods
     override fun startRecorder(
         uri: String?,
@@ -227,6 +264,11 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                 }
                 mediaRecorder = null
 
+                // Reset metering state
+                meteringEnabled = false
+                lastMeteringUpdateTime = 0L
+                lastMeteringValue = SILENCE_THRESHOLD_DB
+
                 handler.post {
                     stopRecordTimer()
                 }
@@ -235,6 +277,12 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
             } catch (e: Exception) {
                 mediaRecorder?.release()
                 mediaRecorder = null
+
+                // Reset metering state even on error
+                meteringEnabled = false
+                lastMeteringUpdateTime = 0L
+                lastMeteringValue = SILENCE_THRESHOLD_DB
+
                 promise.reject(e)
             }
         }
@@ -487,8 +535,12 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
         return String.format("%02d:%02d:%02d", minutes, seconds, milliseconds)
     }
 
-    // Private methods
+    // Updated class properties to use constants
+    private var lastMeteringUpdateTime = 0L
+    private var lastMeteringValue = SILENCE_THRESHOLD_DB
+    private val meteringUpdateInterval = METERING_UPDATE_INTERVAL_MS
 
+    // Private methods
     // For audioMetering using mediaRecorder
     private fun getSimpleMetering(): Double {
       return try {
@@ -496,21 +548,25 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
         if (maxAmplitude > 0) {
           // Convert amplitude to decibels
           // getMaxAmplitude() returns values from 0 to 32767
-          val normalizedAmplitude = maxAmplitude.toDouble() / 32767.0
-          val epsilon = 1e-10
-          val decibels = 20 * log10(maxOf(normalizedAmplitude, epsilon))
-          maxOf(-160.0, minOf(0.0, decibels))
+          val normalizedAmplitude = maxAmplitude.toDouble() / MAX_AMPLITUDE_VALUE
+
+          // Use epsilon to prevent log10(0) which would return negative infinity
+          val safeAmplitude = maxOf(normalizedAmplitude, MIN_AMPLITUDE_EPSILON)
+          val decibels = 20 * log10(safeAmplitude)
+
+          // Clamp to reasonable dB range (silence threshold to 0 dB)
+          maxOf(SILENCE_THRESHOLD_DB, minOf(MAX_DECIBEL_LEVEL, decibels))
         } else {
-          -160.0
+          SILENCE_THRESHOLD_DB
         }
+      } catch (e: IllegalStateException) {
+        // MediaRecorder not in recording state
+        SILENCE_THRESHOLD_DB
       } catch (e: Exception) {
-        -160.0
+        // Handle any other exceptions
+        SILENCE_THRESHOLD_DB
       }
     }
-
-    private var lastMeteringUpdateTime = 0L
-    private var lastMeteringValue = -160.0
-    private val meteringUpdateInterval = 100L // Update every 100ms max
 
     private fun startRecordTimer() {
         recordTimer?.cancel()
@@ -526,7 +582,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                   }
                   lastMeteringValue
                 } else {
-                  0.0
+                  METERING_DISABLED_VALUE
                 }
 
                 handler.post {
