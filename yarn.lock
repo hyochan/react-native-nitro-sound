@@ -11868,18 +11868,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nitro-codegen@npm:^0.26.3":
-  version: 0.26.3
-  resolution: "nitro-codegen@npm:0.26.3"
+"nitro-codegen@npm:*":
+  version: 0.27.3
+  resolution: "nitro-codegen@npm:0.27.3"
   dependencies:
     chalk: ^5.3.0
-    react-native-nitro-modules: ^0.26.3
+    react-native-nitro-modules: ^0.27.3
     ts-morph: ^25.0.0
     yargs: ^17.7.2
-    zod: ^3.23.8
+    zod: ^4.0.5
   bin:
     nitro-codegen: lib/index.js
-  checksum: 8bac66cb1117446be5732261a42f1c4e90edbf509fe95a50a25f521dfd3c8f3cc39f351b33e5ea65e323eb150b41deb269e2421d2ed6e382c63fc4a6671fb23b
+  checksum: 3b135bfa69a4204c3c74b97df5ec01630b60e130dbfec7d8afad1b696304a46f66ce9a87ba867fa84653721eb59df6c018b13a7b55654223c1906e00278751cd
   languageName: node
   linkType: hard
 
@@ -13196,19 +13196,19 @@ __metadata:
     eslint-plugin-prettier: ^5.2.3
     expo: ^53.0.19
     jest: ^29.7.0
-    nitro-codegen: ^0.26.3
+    nitro-codegen: "*"
     prettier: ^3.0.3
     react: 19.0.0
     react-native: 0.79.2
     react-native-builder-bob: 0.38.4
-    react-native-nitro-modules: ^0.26.3
+    react-native-nitro-modules: "*"
     release-it: ^17.10.0
     turbo: ^1.10.7
     typescript: ^5.8.3
   peerDependencies:
     react: "*"
     react-native: "*"
-    react-native-nitro-modules: ^0.26.3
+    react-native-nitro-modules: "*"
   languageName: unknown
   linkType: soft
 
@@ -13293,6 +13293,16 @@ __metadata:
     escape-string-regexp: ^5.0.0
     fast-glob: ^3.3.3
   checksum: 6356c362c517c49e17d54ee764c3566ba71491fa0d755618ecf2ca548348668e84fe448c24066645983acbc2bd4c0ed47594f9b3ec9dcc0558c0fd9594d2391e
+  languageName: node
+  linkType: hard
+
+"react-native-nitro-modules@npm:*, react-native-nitro-modules@npm:^0.27.3":
+  version: 0.27.3
+  resolution: "react-native-nitro-modules@npm:0.27.3"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 0da869555da0eed0d226a9d751f9b3d863683782a36bad191c2df825f025f5f1d3d44498d296552bb255845a50c1c68e25f5965f78f2ead2d6c1842a7d0c606c
   languageName: node
   linkType: hard
 
@@ -16355,9 +16365,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.23.8":
-  version: 3.25.76
-  resolution: "zod@npm:3.25.76"
-  checksum: c9a403a62b329188a5f6bd24d5d935d2bba345f7ab8151d1baa1505b5da9f227fb139354b043711490c798e91f3df75991395e40142e6510a4b16409f302b849
+"zod@npm:^4.0.5":
+  version: 4.0.15
+  resolution: "zod@npm:4.0.15"
+  checksum: d52dc9df5ed7a066ac7c3193862a2aa2c48ee45476403a88ab1dbab8f701cec1c50d9309cf550e4531722737d0b2fad853c8e9a52a928c13a3cbb9ee3498daba
   languageName: node
   linkType: hard
