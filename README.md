@@ -16,11 +16,11 @@
 
 **Audio recording and playback library for React Native**
 
-> This library uses native modules architecture for optimal performance and compatibility with both old and new React Native architectures.
+> This library uses TurboModules architecture for optimal performance and seamless compatibility with React Native's New Architecture.
 
-> 🔴 **Critical for v4.x**: Recording operations now run in background threads. **You MUST implement loading states** to handle the async delays, or your UI may appear unresponsive. See [Component Examples](#component-based-implementation) for proper implementation.
+> 🔴 **Important**: Version 4.x attempted to use NitroModules but encountered stability issues. Starting from v5.0.0, this library uses TurboModules exclusively and requires React Native New Architecture. For older architectures, please use version 3.x.
 
-This is a high-performance React Native module for audio recording and playback, now powered by [NitroModules](https://github.com/mrousavy/nitro) for direct native module access without bridge overhead. The library provides simple recorder and player functionalities for iOS, Android, and Web platforms with full TypeScript support and type safety.
+This is a high-performance React Native module for audio recording and playback, built with TurboModules for optimal performance on React Native's New Architecture. The library provides simple recorder and player functionalities for iOS, Android, and Web platforms with full TypeScript support and type safety.
 
 ## Preview
 
@@ -29,23 +29,33 @@ This is a high-performance React Native module for audio recording and playback,
 ## Documentation & Resources
 
 - 📚 [Migration Guide](./docs/MIGRATION.md) - For migrating from older versions
-- 🔧 [NitroModules Documentation](https://github.com/mrousavy/nitro) - Learn about the underlying technology
+- 🎆 [Version 5.0.0 Migration Discussion](https://github.com/hyochan/react-native-audio-recorder-player/discussions/678) - TurboModule migration details
 - 📝 [Version 3 Release Note](https://medium.com/dooboolab/react-native-audio-player-and-recorder-v3-7697e25cd07)
 - 📰 [Original Blog Post](https://medium.com/@dooboolab/react-native-audio-recorder-and-player-4aa5f26a666)
 
-## What's New in 4.0.0 🚀
+## What's New in 5.0.0 🚀
 
-### NitroModule Migration
+### From NitroModules to TurboModules
 
-Version 4.0.0 introduces a complete rewrite using [NitroModules](https://github.com/mrousavy/nitro), offering:
+Version 4.x introduced NitroModules for performance improvements, but users experienced various stability issues. Version 5.0.0 migrates to TurboModules for better stability:
 
-- **Zero Bridge Overhead**: Direct native module access for maximum performance
-- **Full Type Safety**: TypeScript definitions generated from native specs
-- **Synchronous Methods**: Where appropriate, for better developer experience
-- **Event Listeners**: Native callbacks with type-safe event payloads
-- **Cross-Platform Code Generation**: Automatic code generation for iOS (Swift) and Android (Kotlin)
-- **Background Processing**: Recording operations now run in background threads to prevent UI blocking, requiring loading state management
-- **Web Platform Support**: Full support for web browsers using Web Audio API and MediaRecorder API
+#### Version History:
+
+- **v3.x**: Traditional React Native bridge
+- **v4.x**: NitroModules (encountered stability issues)
+- **v5.x**: TurboModules only (current, stable)
+
+#### Why TurboModules?
+
+- **Improved Stability**: Eliminated NitroModule-related issues including codegen confusion, peer-dependency conflicts, and build errors
+- **Native New Architecture Support**: Fully optimized for React Native's New Architecture
+- **Simplified Setup**: No more `nitro.json` or app-side codegen steps required
+- **Same API**: Maintains the same JavaScript API for seamless migration
+- **Better Performance**: Direct native module access with TurboModules
+- **Type Safety**: Full TypeScript support with auto-generated native types
+- **Web Platform Support**: Continued support for web browsers using Web Audio API and MediaRecorder API
+
+For more details about the migration from NitroModules to TurboModules, see the [discussion here](https://github.com/hyochan/react-native-audio-recorder-player/discussions/678).
 
 ### Requirements
 
@@ -60,18 +70,18 @@ If you're upgrading from version 3.x or earlier, please refer to our [Migration 
 
 ## Getting started
 
-> ⚠️ **Important**: Install version 4.1.0 or later to avoid Nitro integration issues from version 4.0.0.
+> ⚠️ **Important**: Version 5.0.0+ requires React Native New Architecture with TurboModules. For older architectures, use version 3.x (v4.x had NitroModule stability issues).
 
-1. **Install packages**:
+1. **Install package**:
 
    ```sh
-   yarn add react-native-audio-recorder-player react-native-nitro-modules
+   yarn add react-native-audio-recorder-player
    ```
 
    Or using npm:
 
    ```sh
-   npm install react-native-audio-recorder-player react-native-nitro-modules
+   npm install react-native-audio-recorder-player
    ```
 
 ## Post Installation
@@ -79,6 +89,7 @@ If you're upgrading from version 3.x or earlier, please refer to our [Migration 
 After installing the packages, follow these steps:
 
 1. **iOS Setup**:
+
    ```sh
    cd ios && pod install
    ```
@@ -88,23 +99,25 @@ After installing the packages, follow these steps:
 
 3. **Web Setup**:
    For React Native Web, install the additional dependency:
+
    ```sh
    yarn add react-native-web
    ```
-   
+
    Then configure your webpack to include the web-specific implementation:
+
    ```js
    // webpack.config.js
    module.exports = {
      resolve: {
        alias: {
-         'react-native': 'react-native-web'
-       }
-     }
+         'react-native': 'react-native-web',
+       },
+     },
    };
    ```
 
-> **Note**: The `nitro-codegen` command is already run during the library's build process. You don't need to run it in your application.
+> **Note**: The library automatically generates native code for TurboModules during the build process. No manual codegen steps are required.
 
 ## Platform-specific Configuration
 
@@ -136,6 +149,7 @@ On _Android_ you need to add permissions to `AndroidManifest.xml`:
 Also, android above `Marshmallow` needs runtime permission to record audio. Below are two approaches:
 
 **Minimal Approach (Recommended for Android 13+):**
+
 ```ts
 if (Platform.OS === 'android') {
   try {
@@ -149,7 +163,7 @@ if (Platform.OS === 'android') {
         buttonPositive: 'OK',
       }
     );
-    
+
     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
       console.log('Recording permission granted');
     } else {
@@ -164,6 +178,7 @@ if (Platform.OS === 'android') {
 ```
 
 **Full Permissions Approach (For older Android versions):**
+
 ```ts
 if (Platform.OS === 'android') {
   try {
@@ -195,29 +210,29 @@ if (Platform.OS === 'android') {
 
 ## Methods
 
-| Method                   |                      Param                       |      Return       | Description                                           |
-| :----------------------- | :----------------------------------------------: | :---------------: | :---------------------------------------------------- |
-| mmss                     |                 `number` seconds                 |     `string`      | Convert seconds to `minute:second` string             |
-| mmssss                   |                 `number` seconds                 |     `string`      | Convert seconds to `minute:second:millisecond` string |
-| setSubscriptionDuration  |                `number` duration                 |      `void`       | Set callback interval in ms (default 500ms)           |
-| startRecorder            |       `string?` uri, `AudioSet?` audioSet,       | `Promise<string>` | Start recording with optional path and audio settings |
-|                          |            `boolean?` meteringEnabled            |                   |                                                       |
-| pauseRecorder            |                                                  | `Promise<string>` | Pause recording                                       |
-| resumeRecorder           |                                                  | `Promise<string>` | Resume recording                                      |
-| stopRecorder             |                                                  | `Promise<string>` | Stop recording and return file path                   |
-| startPlayer              | `string?` uri, `Record<string, string>?` headers | `Promise<string>` | Start playback with optional URI and HTTP headers     |
-| stopPlayer               |                                                  | `Promise<string>` | Stop playback                                         |
-| pausePlayer              |                                                  | `Promise<string>` | Pause playback                                        |
-| resumePlayer             |                                                  | `Promise<string>` | Resume playback                                       |
-| seekToPlayer             |              `number` milliseconds               | `Promise<string>` | Seek to position in milliseconds                      |
-| setVolume                |                  `number` value                  | `Promise<string>` | Set volume (0.0 - 1.0)                                |
-| setPlaybackSpeed         |                  `number` speed                  | `Promise<string>` | Set playback speed (0.5 - 2.0)                        |
-| addRecordBackListener    |               `Function` callback                |      `void`       | Add recording progress listener                       |
-| removeRecordBackListener |                                                  |      `void`       | Remove recording progress listener                    |
-| addPlayBackListener      |               `Function` callback                |      `void`       | Add playback progress listener                        |
-| removePlayBackListener   |                                                  |      `void`       | Remove playback progress listener                     |
-| addPlaybackEndListener   |               `Function` callback                |      `void`       | Add playback completion listener                      |
-| removePlaybackEndListener|                                                  |      `void`       | Remove playback completion listener                   |
+| Method                    |                      Param                       |      Return       | Description                                           |
+| :------------------------ | :----------------------------------------------: | :---------------: | :---------------------------------------------------- |
+| mmss                      |                 `number` seconds                 |     `string`      | Convert seconds to `minute:second` string             |
+| mmssss                    |                 `number` seconds                 |     `string`      | Convert seconds to `minute:second:millisecond` string |
+| setSubscriptionDuration   |                `number` duration                 |      `void`       | Set callback interval in ms (default 500ms)           |
+| startRecorder             |       `string?` uri, `AudioSet?` audioSet,       | `Promise<string>` | Start recording with optional path and audio settings |
+|                           |            `boolean?` meteringEnabled            |                   |                                                       |
+| pauseRecorder             |                                                  | `Promise<string>` | Pause recording                                       |
+| resumeRecorder            |                                                  | `Promise<string>` | Resume recording                                      |
+| stopRecorder              |                                                  | `Promise<string>` | Stop recording and return file path                   |
+| startPlayer               | `string?` uri, `Record<string, string>?` headers | `Promise<string>` | Start playback with optional URI and HTTP headers     |
+| stopPlayer                |                                                  | `Promise<string>` | Stop playback                                         |
+| pausePlayer               |                                                  | `Promise<string>` | Pause playback                                        |
+| resumePlayer              |                                                  | `Promise<string>` | Resume playback                                       |
+| seekToPlayer              |              `number` milliseconds               | `Promise<string>` | Seek to position in milliseconds                      |
+| setVolume                 |                  `number` value                  | `Promise<string>` | Set volume (0.0 - 1.0)                                |
+| setPlaybackSpeed          |                  `number` speed                  | `Promise<string>` | Set playback speed (0.5 - 2.0)                        |
+| addRecordBackListener     |               `Function` callback                |      `void`       | Add recording progress listener                       |
+| removeRecordBackListener  |                                                  |      `void`       | Remove recording progress listener                    |
+| addPlayBackListener       |               `Function` callback                |      `void`       | Add playback progress listener                        |
+| removePlayBackListener    |                                                  |      `void`       | Remove playback progress listener                     |
+| addPlaybackEndListener    |               `Function` callback                |      `void`       | Add playback completion listener                      |
+| removePlaybackEndListener |                                                  |      `void`       | Remove playback completion listener                   |
 
 ## Usage
 
@@ -349,6 +364,7 @@ const uri = await AudioRecorderPlayer.startRecorder(
 ## Web Platform Support
 
 ### Features
+
 - Audio recording using MediaRecorder API
 - Audio playback using Web Audio API
 - Support for common audio formats (depends on browser)
@@ -356,12 +372,14 @@ const uri = await AudioRecorderPlayer.startRecorder(
 - Volume and speed control
 
 ### Limitations
+
 - Recording format is browser-dependent (typically webm/opus)
 - Some audio configuration options are not supported
 - File paths are Blob URLs instead of file system paths
 - Metering during recording is not currently supported
 
 ### Browser Compatibility
+
 - Chrome/Edge: Full support
 - Firefox: Full support
 - Safari: Limited recording format support (may require polyfills)
@@ -372,7 +390,7 @@ For better code organization, consider separating recording and playback into se
 
 ### Important: Loading States
 
-> **Note**: Starting from version 4.x, recording operations (start/stop) are processed in the background to prevent UI blocking. This means there's a slight delay between calling the method and the actual operation completing. **We strongly recommend implementing loading states** to provide better user experience.
+> **Note**: Recording operations (start/stop) are processed in the background to prevent UI blocking. This means there's a slight delay between calling the method and the actual operation completing. **We strongly recommend implementing loading states** to provide better user experience.
 
 ### AudioRecorder Component with Loading States
 
@@ -450,14 +468,14 @@ export const AudioPlayer = ({ audioPath }) => {
         setPlayTime(AudioRecorderPlayer.mmssss(Math.floor(e.currentPosition)));
         setDuration(AudioRecorderPlayer.mmssss(Math.floor(e.duration)));
       });
-      
+
       // Use the proper playback end listener
       AudioRecorderPlayer.addPlaybackEndListener((e) => {
         console.log('Playback completed', e);
         setIsPlaying(false);
         setPlayTime('00:00:00');
       });
-      
+
       setIsPlaying(true);
     } catch (error) {
       console.error('Failed to start playback:', error);
@@ -535,12 +553,14 @@ export const AudioPlayer = ({ audioPath }) => {
 If you encounter this error when trying to record on iOS:
 
 1. **Ensure microphone permissions are properly configured** in your `Info.plist`:
+
    ```xml
    <key>NSMicrophoneUsageDescription</key>
    <string>Your app needs microphone access to record audio</string>
    ```
 
 2. **Clean and rebuild your iOS project**:
+
    ```sh
    cd ios
    rm -rf build Pods
@@ -551,11 +571,11 @@ If you encounter this error when trying to record on iOS:
 
 3. **Make sure you're testing on a real device** if using the simulator doesn't work. Some audio features require real hardware.
 
-4. **Verify the Nitro modules are properly linked** by checking that the `[NitroModules] 🔥 AudioRecorderPlayer is boosted by nitro!` message appears during `pod install`.
+4. **Verify the TurboModules are properly linked** by checking the build logs for successful TurboModule registration.
 
 ### Common Issues
 
-- **"nitro-codegen" command not found**: This command is only needed when developing the library itself, not when using it in your app.
+- **TurboModule registration errors**: Ensure you're using React Native New Architecture. For older architectures, use version 4.x.
 - **Module not found errors**: Make sure to run `pod install` after installing the package.
 - **Android build issues**: Ensure your `minSdkVersion` is 24 or higher in `android/build.gradle`.
 
@@ -564,6 +584,7 @@ If you encounter this error when trying to record on iOS:
 If you're experiencing build issues or runtime errors after updating the library:
 
 #### iOS Clean Build
+
 ```sh
 cd ios
 rm -rf ~/Library/Caches/CocoaPods
@@ -575,10 +596,12 @@ cd ..
 ```
 
 Then in Xcode:
+
 1. Product → Clean Build Folder (⇧⌘K)
 2. Product → Build (⌘B)
 
 #### Android Clean Build
+
 ```sh
 cd android
 ./gradlew clean
@@ -587,6 +610,7 @@ cd ..
 ```
 
 Then rebuild:
+
 ```sh
 yarn android
 # or
@@ -594,7 +618,9 @@ npx react-native run-android
 ```
 
 #### Both Platforms
+
 You can also try resetting Metro cache:
+
 ```sh
 npx react-native start --reset-cache
 ```
