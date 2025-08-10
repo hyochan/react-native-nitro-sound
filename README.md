@@ -14,9 +14,9 @@
 [![Platform - Android](https://img.shields.io/badge/platform-Android-green.svg?style=flat-square&logo=android&logoColor=white)](https://developer.android.com/)
 [![Platform - Web](https://img.shields.io/badge/platform-Web-orange.svg?style=flat-square&logo=googlechrome&logoColor=white)](https://reactnative.dev/docs/react-native-web)
 
-**🎉 Version 4.1.0 Released with NitroModule Support!**
+**Audio recording and playback library for React Native**
 
-> ⚠️ **Important**: Version 4.0.0 had issues with Nitro integration. Please install version 4.1.0 or later.
+> This library uses native modules architecture for optimal performance and compatibility with both old and new React Native architectures.
 
 > 🔴 **Critical for v4.x**: Recording operations now run in background threads. **You MUST implement loading states** to handle the async delays, or your UI may appear unresponsive. See [Component Examples](#component-based-implementation) for proper implementation.
 
