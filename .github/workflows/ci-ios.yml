@@ -20,12 +20,6 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Generate nitrogen code
-        run: yarn nitrogen
-
-      - name: Fix Nitrogen-generated Swift code
-        run: ./scripts/fix-nitrogen-swift.sh
-
       - name: Build library first
         run: yarn prepare
 

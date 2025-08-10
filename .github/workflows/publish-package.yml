@@ -36,9 +36,6 @@ jobs:
         npm version ${{ github.event.inputs.version }} --no-git-tag-version
         echo "Updated package.json to version ${{ github.event.inputs.version }}"
     
-    - name: Generate NitroModule bindings
-      run: yarn nitro-codegen
-    
     - name: Build package
       run: yarn prepare
 
