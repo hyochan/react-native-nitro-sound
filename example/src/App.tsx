@@ -54,6 +54,26 @@ const App = () => {
   };
 
   useEffect(() => {
+    // Check TurboModule registration on mount
+    console.log('🚀 === TurboModule Registration Check ===');
+    console.log('📱 Platform:', Platform.OS);
+    console.log('🏗️ Fabric enabled:', true); // As we can see from your logs
+    console.log('📦 AudioRecorderPlayer module exists:', !!AudioRecorderPlayer);
+
+    if (AudioRecorderPlayer) {
+      console.log('✅ AudioRecorderPlayer module loaded successfully');
+      // Test a simple method to verify it's working
+      try {
+        const testTime = AudioRecorderPlayer.mmss(60);
+        console.log('✅ TurboModule method test successful. Result:', testTime);
+      } catch (e) {
+        console.log('❌ TurboModule method test failed:', e);
+      }
+    } else {
+      console.log('❌ AudioRecorderPlayer module not found');
+    }
+    console.log('🚀 === End TurboModule Check ===');
+
     return () => {
       // Clean up listeners when component unmounts
       try {

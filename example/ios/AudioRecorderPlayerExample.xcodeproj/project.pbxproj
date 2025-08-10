@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		2C15E4AB8BF5ABF2F0E133C7 /* libPods-AudioRecorderPlayerExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BAAFDF7F35110050E32F8A6 /* libPods-AudioRecorderPlayerExample.a */; };
+		299F309178DB87B2A34F72EB /* libPods-AudioRecorderPlayerExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F33B69A7CFB7D0E6CF02B7A0 /* libPods-AudioRecorderPlayerExample.a */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		778F02D98B50B55D771B9287 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
@@ -19,12 +19,12 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AudioRecorderPlayerExample/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AudioRecorderPlayerExample/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = AudioRecorderPlayerExample/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		2A7ECA5560CD64A6E2FE5AE2 /* Pods-AudioRecorderPlayerExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AudioRecorderPlayerExample.debug.xcconfig"; path = "Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample.debug.xcconfig"; sourceTree = "<group>"; };
+		3B923154B35D157BCFCC3810 /* Pods-AudioRecorderPlayerExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AudioRecorderPlayerExample.debug.xcconfig"; path = "Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample.debug.xcconfig"; sourceTree = "<group>"; };
+		6D4DA490367CEB6AF7A53DFD /* Pods-AudioRecorderPlayerExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AudioRecorderPlayerExample.release.xcconfig"; path = "Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample.release.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = AudioRecorderPlayerExample/AppDelegate.swift; sourceTree = "<group>"; };
-		7945DEF3B487E7C1AA8000B6 /* Pods-AudioRecorderPlayerExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AudioRecorderPlayerExample.release.xcconfig"; path = "Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample.release.xcconfig"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = AudioRecorderPlayerExample/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		8BAAFDF7F35110050E32F8A6 /* libPods-AudioRecorderPlayerExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AudioRecorderPlayerExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F33B69A7CFB7D0E6CF02B7A0 /* libPods-AudioRecorderPlayerExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AudioRecorderPlayerExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,7 +32,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2C15E4AB8BF5ABF2F0E133C7 /* libPods-AudioRecorderPlayerExample.a in Frameworks */,
+				299F309178DB87B2A34F72EB /* libPods-AudioRecorderPlayerExample.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -55,7 +55,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				8BAAFDF7F35110050E32F8A6 /* libPods-AudioRecorderPlayerExample.a */,
+				F33B69A7CFB7D0E6CF02B7A0 /* libPods-AudioRecorderPlayerExample.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -92,8 +92,8 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				2A7ECA5560CD64A6E2FE5AE2 /* Pods-AudioRecorderPlayerExample.debug.xcconfig */,
-				7945DEF3B487E7C1AA8000B6 /* Pods-AudioRecorderPlayerExample.release.xcconfig */,
+				3B923154B35D157BCFCC3810 /* Pods-AudioRecorderPlayerExample.debug.xcconfig */,
+				6D4DA490367CEB6AF7A53DFD /* Pods-AudioRecorderPlayerExample.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -105,13 +105,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AudioRecorderPlayerExample" */;
 			buildPhases = (
-				F80942BD2CF7A8DF015FB111 /* [CP] Check Pods Manifest.lock */,
+				0D4973EF0EA03C3665D35E92 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				447EEDC94AC340D9B05CDDD1 /* [CP] Copy Pods Resources */,
-				3DDC167949F8D305D23DD680 /* [CP] Embed Pods Frameworks */,
+				5C7CE854B55FA98024051765 /* [CP] Embed Pods Frameworks */,
+				5C7DD0391CB2C6814E162A76 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -183,41 +183,7 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		3DDC167949F8D305D23DD680 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		447EEDC94AC340D9B05CDDD1 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		F80942BD2CF7A8DF015FB111 /* [CP] Check Pods Manifest.lock */ = {
+		0D4973EF0EA03C3665D35E92 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -239,6 +205,40 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		5C7CE854B55FA98024051765 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		5C7DD0391CB2C6814E162A76 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AudioRecorderPlayerExample/Pods-AudioRecorderPlayerExample-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -255,7 +255,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2A7ECA5560CD64A6E2FE5AE2 /* Pods-AudioRecorderPlayerExample.debug.xcconfig */;
+			baseConfigurationReference = 3B923154B35D157BCFCC3810 /* Pods-AudioRecorderPlayerExample.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -283,7 +283,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7945DEF3B487E7C1AA8000B6 /* Pods-AudioRecorderPlayerExample.release.xcconfig */;
+			baseConfigurationReference = 6D4DA490367CEB6AF7A53DFD /* Pods-AudioRecorderPlayerExample.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

@@ -1,5 +1,5 @@
 PODS:
-  - AudioRecorderPlayer (4.2.2):
+  - AudioRecorderPlayer (5.0.0-rc.1):
     - RCT-Folly
     - RCTRequired
     - RCTTypeSafety
@@ -1943,7 +1943,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  AudioRecorderPlayer: f0232c22eeacc91db591051c636cb7279943fa9a
+  AudioRecorderPlayer: b01d2dea34a4fd6caf0a928681f389ed557115dd
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
