@@ -2,39 +2,88 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "iOS Simulator",
+      "name": "Run iOS",
+      "type": "node",
       "request": "launch",
-      "type": "node-terminal",
-      "command": "${workspaceFolder}/.vscode/run_ios.sh",
-      "cwd": "${workspaceFolder}/Example"
+      "cwd": "${workspaceFolder}/example",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["react-native", "run-ios"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
     },
     {
-      "name": "Android Emulator",
+      "name": "Run iOS (with yarn)",
+      "type": "node",
       "request": "launch",
-      "type": "node-terminal",
-      "command": "${workspaceFolder}/.vscode/run_android.sh",
-      "cwd": "${workspaceFolder}/Example"
+      "cwd": "${workspaceFolder}/example",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["ios"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "RCT_NO_LAUNCH_PACKAGER": "true"
+      }
     },
     {
-      "name": "Start Expo",
+      "name": "Run Android",
+      "type": "node",
       "request": "launch",
-      "type": "node-terminal",
-      "command": "npx expo start --clear",
-      "cwd": "${workspaceFolder}/Example"
+      "cwd": "${workspaceFolder}/example",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["android"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
     },
     {
-      "name": "iOS Device",
+      "name": "Start Metro",
+      "type": "node",
       "request": "launch",
-      "type": "node-terminal",
-      "command": "npx expo run:ios --device",
-      "cwd": "${workspaceFolder}/Example"
+      "cwd": "${workspaceFolder}/example",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["start", "--reset-cache"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
     },
     {
-      "name": "Android Device",
+      "name": "Install Pods (Direct)",
+      "type": "node",
       "request": "launch",
-      "type": "node-terminal",
-      "command": "npx expo run:android --device",
-      "cwd": "${workspaceFolder}/Example"
+      "cwd": "${workspaceFolder}/example/ios",
+      "runtimeExecutable": "pod",
+      "runtimeArgs": ["install"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Install Pods (Bundle)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/example/ios",
+      "runtimeExecutable": "bundle",
+      "runtimeArgs": ["exec", "pod", "install"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Clean & Rebuild iOS",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/example",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["ios:pod"],
+      "console": "integratedTerminal",
+      "preLaunchTask": "clean-ios",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Clean & Rebuild Android",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/example/android",
+      "runtimeExecutable": "./gradlew",
+      "runtimeArgs": ["clean", "assembleDebug"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
     }
   ]
 }

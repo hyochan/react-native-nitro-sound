@@ -15,15 +15,12 @@ buildscript {
   }
 }
 
-def reactNativeArchitectures() {
-  def value = rootProject.getProperties().get("reactNativeArchitectures")
-  return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
+def isNewArchitectureEnabled() {
+  return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
 }
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
-apply from: '../nitrogen/generated/android/audiorecorderplayer+autolinking.gradle'
-
 apply plugin: "com.facebook.react"
 
 def getExtOrIntegerDefault(name) {
@@ -31,62 +28,19 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
-  namespace "com.margelo.nitro.audiorecorderplayer"
+  namespace "com.audiorecorderplayer"
 
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
     minSdkVersion getExtOrIntegerDefault("minSdkVersion")
     targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
-
-    externalNativeBuild {
-      cmake {
-        cppFlags "-frtti -fexceptions -Wall -fstack-protector-all"
-        arguments "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
-        abiFilters (*reactNativeArchitectures())
-
-        buildTypes {
-          debug {
-            cppFlags "-O1 -g"
-          }
-          release {
-            cppFlags "-O2"
-          }
-        }
-      }
-    }
-  }
-
-  externalNativeBuild {
-    cmake {
-      path "CMakeLists.txt"
-    }
-  }
-
-  packagingOptions {
-    excludes = [
-            "META-INF",
-            "META-INF/**",
-            "**/libc++_shared.so",
-            "**/libfbjni.so",
-            "**/libjsi.so",
-            "**/libfolly_json.so",
-            "**/libfolly_runtime.so",
-            "**/libglog.so",
-            "**/libhermes.so",
-            "**/libhermes-executor-debug.so",
-            "**/libhermes_executor.so",
-            "**/libreactnative.so",
-            "**/libreactnativejni.so",
-            "**/libturbomodulejsijni.so",
-            "**/libreact_nativemodule_core.so",
-            "**/libjscexecutor.so"
-    ]
+    
+    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
   }
 
   buildFeatures {
     buildConfig true
-    prefab true
   }
 
   buildTypes {
@@ -106,10 +60,14 @@ android {
 
   sourceSets {
     main {
-      java.srcDirs += [
-        "generated/java",
-        "generated/jni"
-      ]
+      if (isNewArchitectureEnabled()) {
+        java.srcDirs += [
+          "src/newarch",
+          "build/generated/source/codegen/java"
+        ]
+      } else {
+        java.srcDirs += ["src/oldarch"]
+      }
     }
   }
 }
@@ -125,6 +83,12 @@ dependencies {
   implementation "com.facebook.react:react-android"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
-  implementation project(":react-native-nitro-modules")
 }
 
+if (isNewArchitectureEnabled()) {
+  react {
+    jsRootDir = file("../src/")
+    libraryName = "AudioRecorderPlayer"
+    codegenJavaPackageName = "com.audiorecorderplayer"
+  }
+}

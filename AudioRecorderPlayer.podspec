@@ -11,38 +11,34 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "15.1" }
+  s.platforms    = { :ios => "13.4" }
   s.source       = { :git => "https://github.com/hyochan/react-native-audio-recorder-player.git", :tag => "#{s.version}" }
 
-
-  s.source_files = [
-    "ios/**/*.{swift}",
-    "ios/**/*.{m,mm}",
-  ]
+  s.source_files = "ios/**/*.{h,m,mm}"
   
-  s.exclude_files = [
-    "ios/AudioRecorderPlayer-Bridging-Header.h",
-  ]
+  s.dependency "React-Core"
 
-  # Basic configuration - let Nitrogen handle the rest
-  s.pod_target_xcconfig = {
-    "SWIFT_VERSION" => "5.0",
-    "SWIFT_ACTIVE_COMPILATION_CONDITIONS" => "$(inherited)",
-    "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_MOBILE=1 FOLLY_USE_LIBCPP=1",
-  }
-  
-  s.compiler_flags = folly_compiler_flags
-
-  s.dependency 'React-Core'
-  s.dependency 'React-jsi'
-  s.dependency 'React-callinvoker'
-
-  load File.join(__dir__, 'nitrogen/generated/ios/AudioRecorderPlayer+autolinking.rb')
-  add_nitrogen_files(s)
+  # Don't install the dependencies when we run `pod install` in the old architecture.
+  if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
+    s.compiler_flags = folly_compiler_flags + " -DRCT_NEW_ARCH_ENABLED=1"
+    s.pod_target_xcconfig    = {
+        "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\"",
+        "OTHER_CPLUSPLUSFLAGS" => "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1",
+        "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
+    }
+    s.dependency "React-Codegen"
+    s.dependency "RCT-Folly"
+    s.dependency "RCTRequired"
+    s.dependency "RCTTypeSafety"
+    s.dependency "ReactCommon/turbomodule/core"
+  else
+    s.pod_target_xcconfig = {
+      'DEFINES_MODULE' => 'YES',
+      'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386'
+    }
+  end
 
   s.info_plist = {
     'NSMicrophoneUsageDescription' => 'This app needs access to microphone to record audio.'
   }
-
-  install_modules_dependencies(s)
 end

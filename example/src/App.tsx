@@ -15,6 +15,7 @@ import Slider from '@react-native-community/slider';
 import AudioRecorderPlayer, {
   AudioEncoderAndroidType,
   AudioSourceAndroidType,
+  OutputFormatAndroidType,
   AVEncoderAudioQualityIOSType,
   type RecordBackType,
   type PlayBackType,
@@ -29,9 +30,9 @@ const App = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingPath, setRecordingPath] = useState('');
+  const [recordedDuration, setRecordedDuration] = useState(0); // Store recorded duration
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlaybackPaused, setIsPlaybackPaused] = useState(false);
-  const [actualRecordedDuration, setActualRecordedDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isRecordLoading, setIsRecordLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Loading...');
@@ -41,6 +42,16 @@ const App = () => {
   const [currentPosition, setCurrentPosition] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
+
+  // Helper function to format milliseconds to MM:SS:CS (minutes:seconds:centiseconds)
+  const formatTime = (milliseconds: number): string => {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const centiseconds = Math.floor((milliseconds % 1000) / 10); // Convert to centiseconds (0-99)
+
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${centiseconds.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     return () => {
@@ -124,7 +135,6 @@ const App = () => {
     // Reset recording time when starting new recording
     setRecordSecs(0);
     setRecordTime('00:00:00');
-    setActualRecordedDuration(0);
     setIsRecordLoading(true);
     setLoadingMessage('Loading...');
 
@@ -171,13 +181,14 @@ const App = () => {
       console.log('AudioSourceAndroidType.MIC:', AudioSourceAndroidType.MIC);
       console.log(
         'AVEncoderAudioQualityIOSType.high:',
-        AVEncoderAudioQualityIOSType.high
+        AVEncoderAudioQualityIOSType.HIGH
       );
 
       audioSet = {
         AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
         AudioSourceAndroid: AudioSourceAndroidType.MIC,
-        AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
+        OutputFormatAndroid: OutputFormatAndroidType.MPEG_4,
+        AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.HIGH,
         AVNumberOfChannelsKeyIOS: 2,
         AVFormatIDKeyIOS: 'aac' as const,
       };
@@ -208,9 +219,7 @@ const App = () => {
       AudioRecorderPlayer.addRecordBackListener((e: RecordBackType) => {
         console.log('🎤 Recording callback:', e);
         setRecordSecs(Math.floor(e.currentPosition));
-        setRecordTime(
-          AudioRecorderPlayer.mmssss(Math.floor(e.currentPosition))
-        );
+        setRecordTime(formatTime(Math.floor(e.currentPosition)));
       });
     } catch (error) {
       console.error('🎤 Start record error:', error);
@@ -248,20 +257,52 @@ const App = () => {
     setIsStopLoading(true);
 
     try {
+      // Capture the current recording duration BEFORE stopping
+      const finalRecordTime = recordTime;
+
       const result = await AudioRecorderPlayer.stopRecorder();
       AudioRecorderPlayer.removeRecordBackListener();
-      // Save the actual recorded duration
-      setActualRecordedDuration(recordSecs);
-      // Update to final precise time
-      const finalTime = AudioRecorderPlayer.mmssss(recordSecs);
-      setRecordTime(finalTime);
-      // Don't reset time here - keep the recorded time visible
+
+      let filePath: string;
+      let actualDuration: number;
+
+      // Check if result is an object with duration or just a string
+      if (typeof result === 'object' && result !== null) {
+        filePath = result.filePath;
+        actualDuration = result.duration;
+      } else {
+        // Fallback for old implementation
+        filePath = result as string;
+        actualDuration = recordSecs;
+      }
+
+      // Use the actual file duration
+      setRecordedDuration(actualDuration);
+
+      // Update the display to show actual file duration
+      if (actualDuration > 0) {
+        setRecordTime(formatTime(actualDuration));
+        setRecordSecs(actualDuration);
+      }
+
+      // Keep the last recording time display (don't reset)
       setIsRecording(false);
       setIsPaused(false);
       setIsStopLoading(false);
-      console.log('Recording stopped:', result);
-      console.log('Final recorded duration:', finalTime);
-      console.log('Actual recorded milliseconds:', recordSecs);
+      setRecordingPath(filePath); // Save the recording path
+
+      console.log('=== Recording Stopped ===');
+      console.log('File path:', filePath);
+      console.log('Recording time before stop:', finalRecordTime);
+      console.log('RecordSecs before stop (ms):', recordSecs);
+      console.log('Actual file duration from native (ms):', actualDuration);
+      console.log(
+        'Actual file duration formatted:',
+        formatTime(actualDuration)
+      );
+      console.log('Result type:', typeof result);
+      console.log('Full result:', JSON.stringify(result, null, 2));
+      console.log('========================');
     } catch (error) {
       console.error('Stop record error:', error);
       setIsStopLoading(false);
@@ -274,7 +315,18 @@ const App = () => {
       return;
     }
 
-    console.log('Starting playback of:', recordingPath);
+    console.log('=== Starting Playback ===');
+    console.log('Recording path:', recordingPath);
+    console.log('Recorded duration to use:', recordedDuration);
+    console.log('Recorded duration formatted:', formatTime(recordedDuration));
+    console.log('========================');
+
+    // Reset play time when starting playback (like KMP project)
+    setPlayTime('00:00:00');
+    setDuration(formatTime(recordedDuration)); // Set to recorded duration right away
+    setCurrentPosition(0);
+    setTotalDuration(recordedDuration); // Use recorded duration
+
     setIsLoading(true);
     setLoadingMessage('Loading...');
 
@@ -293,41 +345,73 @@ const App = () => {
         setIsPlaying(false);
         setIsPlaybackPaused(false);
         setIsLoading(false);
-        // Ensure progress bar shows 100%
-        setCurrentPosition(e.duration);
-        setTotalDuration(e.duration);
+
+        // Ensure progress bar shows 100% using recorded duration
+        const finalDuration = recordedDuration || e.duration || 0;
+
+        // Set position to exactly match duration for 100% progress
+        setCurrentPosition(finalDuration);
+        setTotalDuration(finalDuration);
+
+        // Also update time displays to show completion
+        const finalTimeFormatted = formatTime(finalDuration);
+        setPlayTime(finalTimeFormatted);
+        setDuration(finalTimeFormatted);
       });
 
       AudioRecorderPlayer.addPlayBackListener((e: PlayBackType) => {
-        console.log('📱 Playback callback received:', {
-          position: e.currentPosition,
-          duration: e.duration,
-          isMuted: e.isMuted,
-        });
+        // Log only periodically to avoid spam
+        if (Math.floor(e.currentPosition) % 1000 < 100) {
+          console.log('📱 Playback:', {
+            position: formatTime(e.currentPosition),
+            fileDuration: formatTime(e.duration),
+            recordedDuration: formatTime(recordedDuration),
+          });
+        }
+
+        // Always use recorded duration for display consistency
+        const displayDuration =
+          recordedDuration > 0 ? recordedDuration : e.duration;
+
+        // Use actual file duration for playback end detection
+        const actualFileDuration = e.duration;
 
         // Update position and duration states for seeking
         if (!isSeeking) {
           setCurrentPosition(e.currentPosition);
         }
-        setTotalDuration(e.duration);
+        setTotalDuration(displayDuration);
 
-        setPlayTime(AudioRecorderPlayer.mmssss(Math.floor(e.currentPosition)));
-        setDuration(AudioRecorderPlayer.mmssss(Math.floor(e.duration)));
+        setPlayTime(formatTime(Math.floor(e.currentPosition)));
+        setDuration(formatTime(Math.floor(displayDuration)));
 
-        // Check if playback finished (use small threshold for accuracy)
+        // No need to update record time during playback anymore
+        // as we already have the actual file duration from stopRecorder
+
+        // Check if playback finished using actual file duration
         const threshold = 100; // 100ms threshold
-        if (e.duration > 0 && e.currentPosition >= e.duration - threshold) {
+        if (
+          actualFileDuration > 0 &&
+          e.currentPosition >= actualFileDuration - threshold
+        ) {
           console.log('📱 Playback finished, stopping...');
           console.log(
             '📱 - position:',
             e.currentPosition,
-            'duration:',
-            e.duration
+            'actual file duration:',
+            actualFileDuration,
+            'display duration:',
+            displayDuration
           );
 
-          // Update to exact duration when playback finishes
-          setPlayTime(AudioRecorderPlayer.mmssss(Math.floor(e.duration)));
-          setDuration(AudioRecorderPlayer.mmssss(Math.floor(e.duration)));
+          // Update to recorded duration when playback finishes for UI consistency
+          const finalDuration = formatTime(Math.floor(displayDuration));
+          setPlayTime(finalDuration);
+          setDuration(finalDuration);
+
+          // Ensure progress bar shows 100%
+          setCurrentPosition(displayDuration);
+          setTotalDuration(displayDuration);
 
           setIsPlaying(false);
           AudioRecorderPlayer.removePlayBackListener();
@@ -335,6 +419,7 @@ const App = () => {
       });
 
       console.log('Starting player...');
+      console.log('Expected duration from recording:', recordTime);
       // For web, if we get 'recording_in_progress', don't pass any path
       const pathToPlay =
         recordingPath === 'recording_in_progress' ? undefined : recordingPath;
@@ -442,11 +527,6 @@ const App = () => {
                   ? 'Recorded'
                   : 'Recording Time'}
             </Text>
-            {actualRecordedDuration > 0 && !isRecording && (
-              <Text style={styles.durationInfo}>
-                Duration: {AudioRecorderPlayer.mmssss(actualRecordedDuration)}
-              </Text>
-            )}
           </View>
 
           <View style={styles.buttonRow}>
@@ -551,7 +631,12 @@ const App = () => {
                   <View
                     style={[
                       styles.androidProgressFill,
-                      { width: `${(currentPosition / totalDuration) * 100}%` },
+                      {
+                        width:
+                          totalDuration > 0
+                            ? `${Math.min((currentPosition / totalDuration) * 100, 100)}%`
+                            : '0%',
+                      },
                     ]}
                   />
                 </View>
@@ -802,12 +887,6 @@ const styles = StyleSheet.create({
   pathText: {
     fontSize: 12,
     color: '#333',
-  },
-  durationInfo: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-    fontStyle: 'italic',
   },
   loadingContainer: {
     flexDirection: 'row',

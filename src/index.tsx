@@ -1,37 +1,37 @@
-import { NitroModules } from 'react-native-nitro-modules';
+import { NativeEventEmitter, NativeModules } from 'react-native';
+import NativeAudioRecorderPlayer from './NativeAudioRecorderPlayer';
 import type {
-  AudioRecorderPlayer as AudioRecorderPlayerType,
   AudioSet,
   RecordBackType,
   PlayBackType,
-  PlaybackEndType,
-} from './AudioRecorderPlayer.nitro';
+} from './NativeAudioRecorderPlayer';
 
-export * from './AudioRecorderPlayer.nitro';
+export type { AudioSet, RecordBackType, PlayBackType };
+export {
+  AudioEncoderAndroidType,
+  AudioSourceAndroidType,
+  OutputFormatAndroidType,
+  AVEncoderAudioQualityIOSType,
+} from './NativeAudioRecorderPlayer';
+
+export interface PlaybackEndType {
+  finished: boolean;
+  duration?: number;
+  currentPosition?: number;
+}
 
 class AudioRecorderPlayerImpl {
-  private hybridObject: AudioRecorderPlayerType | null = null;
+  private eventEmitter!: NativeEventEmitter;
+  private recordBackSubscription: any;
+  private playBackSubscription: any;
 
-  private getHybridObject(): AudioRecorderPlayerType {
-    if (!this.hybridObject) {
-      try {
-        console.log('🔧 Creating AudioRecorderPlayer HybridObject...');
-        this.hybridObject =
-          NitroModules.createHybridObject<AudioRecorderPlayerType>(
-            'AudioRecorderPlayer'
-          );
-        console.log(
-          '🔧 HybridObject created successfully:',
-          !!this.hybridObject
-        );
-      } catch (error) {
-        console.error('🔧 Failed to create HybridObject:', error);
-        throw new Error(
-          `Failed to create AudioRecorderPlayer HybridObject: ${error}`
-        );
-      }
+  constructor() {
+    // Create event emitter for both iOS and Android
+    if (NativeModules.AudioRecorderPlayer) {
+      this.eventEmitter = new NativeEventEmitter(
+        NativeModules.AudioRecorderPlayer
+      );
     }
-    return this.hybridObject;
   }
 
   // Recording methods
@@ -40,35 +40,25 @@ class AudioRecorderPlayerImpl {
     audioSets?: AudioSet,
     meteringEnabled?: boolean
   ): Promise<string> {
-    try {
-      console.log('🔧 Getting HybridObject for startRecorder...');
-      const hybridObject = this.getHybridObject();
-      console.log('🔧 HybridObject obtained, calling startRecorder...');
-      console.log('🔧 Parameters:', { uri, audioSets, meteringEnabled });
-
-      const result = await hybridObject.startRecorder(
-        uri,
-        audioSets,
-        meteringEnabled
-      );
-      console.log('🔧 startRecorder completed with result:', result);
-      return result;
-    } catch (error) {
-      console.error('🔧 startRecorder failed:', error);
-      throw error;
-    }
+    return NativeAudioRecorderPlayer.startRecorder(
+      uri,
+      audioSets,
+      meteringEnabled
+    );
   }
 
   async pauseRecorder(): Promise<string> {
-    return this.getHybridObject().pauseRecorder();
+    return NativeAudioRecorderPlayer.pauseRecorder();
   }
 
   async resumeRecorder(): Promise<string> {
-    return this.getHybridObject().resumeRecorder();
+    return NativeAudioRecorderPlayer.resumeRecorder();
   }
 
-  async stopRecorder(): Promise<string> {
-    return this.getHybridObject().stopRecorder();
+  async stopRecorder(): Promise<
+    string | { filePath: string; duration: number }
+  > {
+    return NativeAudioRecorderPlayer.stopRecorder();
   }
 
   // Playback methods
@@ -76,74 +66,131 @@ class AudioRecorderPlayerImpl {
     uri?: string,
     httpHeaders?: Record<string, string>
   ): Promise<string> {
-    return this.getHybridObject().startPlayer(uri, httpHeaders);
+    return NativeAudioRecorderPlayer.startPlayer(uri, httpHeaders);
   }
 
   async stopPlayer(): Promise<string> {
-    return this.getHybridObject().stopPlayer();
+    return NativeAudioRecorderPlayer.stopPlayer();
   }
 
   async pausePlayer(): Promise<string> {
-    return this.getHybridObject().pausePlayer();
+    return NativeAudioRecorderPlayer.pausePlayer();
   }
 
   async resumePlayer(): Promise<string> {
-    return this.getHybridObject().resumePlayer();
+    return NativeAudioRecorderPlayer.resumePlayer();
   }
 
   async seekToPlayer(time: number): Promise<string> {
-    return this.getHybridObject().seekToPlayer(time);
+    return NativeAudioRecorderPlayer.seekToPlayer(time);
   }
 
   async setVolume(volume: number): Promise<string> {
-    return this.getHybridObject().setVolume(volume);
+    return NativeAudioRecorderPlayer.setVolume(volume);
   }
 
   async setPlaybackSpeed(playbackSpeed: number): Promise<string> {
-    return this.getHybridObject().setPlaybackSpeed(playbackSpeed);
+    return NativeAudioRecorderPlayer.setPlaybackSpeed(playbackSpeed);
   }
 
   // Subscription
   setSubscriptionDuration(sec: number): void {
-    this.getHybridObject().setSubscriptionDuration(sec);
+    NativeAudioRecorderPlayer.setSubscriptionDuration(sec);
   }
 
   // Listeners
+  private playbackEndSubscription: any;
+
   addRecordBackListener(
     callback: (recordingMeta: RecordBackType) => void
   ): void {
-    this.getHybridObject().addRecordBackListener(callback);
+    // Remove existing subscription if any
+    if (this.recordBackSubscription) {
+      this.recordBackSubscription.remove();
+    }
+
+    // Set up event listener for both iOS and Android
+    if (this.eventEmitter) {
+      this.recordBackSubscription = this.eventEmitter.addListener(
+        'rn-recordback',
+        callback
+      );
+    }
+
+    // Still call native method for compatibility
+    NativeAudioRecorderPlayer.addRecordBackListener(callback);
   }
 
   removeRecordBackListener(): void {
-    this.getHybridObject().removeRecordBackListener();
+    // Remove event subscription
+    if (this.recordBackSubscription) {
+      this.recordBackSubscription.remove();
+      this.recordBackSubscription = null;
+    }
+
+    NativeAudioRecorderPlayer.removeRecordBackListener();
   }
 
   addPlayBackListener(callback: (playbackMeta: PlayBackType) => void): void {
-    this.getHybridObject().addPlayBackListener(callback);
+    // Remove existing subscription if any
+    if (this.playBackSubscription) {
+      this.playBackSubscription.remove();
+    }
+
+    // Set up event listener for both iOS and Android
+    if (this.eventEmitter) {
+      this.playBackSubscription = this.eventEmitter.addListener(
+        'rn-playback',
+        callback
+      );
+    }
+
+    // Still call native method for compatibility
+    NativeAudioRecorderPlayer.addPlayBackListener(callback);
   }
 
   removePlayBackListener(): void {
-    this.getHybridObject().removePlayBackListener();
+    // Remove event subscription
+    if (this.playBackSubscription) {
+      this.playBackSubscription.remove();
+      this.playBackSubscription = null;
+    }
+
+    NativeAudioRecorderPlayer.removePlayBackListener();
   }
 
   addPlaybackEndListener(
     callback: (playbackEndMeta: PlaybackEndType) => void
   ): void {
-    this.getHybridObject().addPlaybackEndListener(callback);
+    // Remove existing subscription if any
+    if (this.playbackEndSubscription) {
+      this.playbackEndSubscription.remove();
+    }
+
+    // Set up event listener for both iOS and Android
+    if (this.eventEmitter) {
+      this.playbackEndSubscription = this.eventEmitter.addListener(
+        'rn-playback-end',
+        callback
+      );
+    }
   }
 
   removePlaybackEndListener(): void {
-    this.getHybridObject().removePlaybackEndListener();
+    // Remove event subscription
+    if (this.playbackEndSubscription) {
+      this.playbackEndSubscription.remove();
+      this.playbackEndSubscription = null;
+    }
   }
 
   // Utility methods
   mmss(secs: number): string {
-    return this.getHybridObject().mmss(secs);
+    return NativeAudioRecorderPlayer.mmss(secs);
   }
 
   mmssss(milisecs: number): string {
-    return this.getHybridObject().mmssss(milisecs);
+    return NativeAudioRecorderPlayer.mmssss(milisecs);
   }
 }
 
