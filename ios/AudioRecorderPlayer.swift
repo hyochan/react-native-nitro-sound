@@ -2,7 +2,7 @@ import Foundation
 import AVFoundation
 import NitroModules
 
-public class AudioRecorderPlayerImpl: HybridAudioRecorderPlayerSpec {
+class AudioRecorderPlayerImpl: HybridAudioRecorderPlayerSpec {
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVAudioPlayer?
     private var audioEngine: AVAudioEngine?
