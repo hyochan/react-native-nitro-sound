@@ -83,7 +83,6 @@ ios/generated
 android/generated
 
 # React Native Nitro Modules
-nitrogen/
 build.log
 ios-build.log
 kotlin-compiler-*
