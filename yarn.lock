@@ -13166,7 +13166,7 @@ __metadata:
     react-native: 0.79.2
     react-native-builder-bob: ^0.40.12
     react-native-monorepo-config: ^0.1.9
-    react-native-nitro-modules: ^0.27.3
+    react-native-nitro-modules: 0.27.6
     react-native-web: ^0.20.0
     url-loader: ^4.1.1
     webpack: ^5.100.2
@@ -13296,7 +13296,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-nitro-modules@npm:0.27.6, react-native-nitro-modules@npm:^0.27.3, react-native-nitro-modules@npm:^0.27.6":
+"react-native-nitro-modules@npm:0.27.6, react-native-nitro-modules@npm:^0.27.6":
   version: 0.27.6
   resolution: "react-native-nitro-modules@npm:0.27.6"
   peerDependencies:
