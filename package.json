@@ -42,7 +42,7 @@
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
-    "prepare": "bob build && yarn nitrogen",
+    "prepare": "npx tsx scripts/check-nitro-versions.ts && bob build && yarn nitrogen",
     "nitrogen": "nitro-codegen",
     "release": "release-it --only-version",
     "web": "yarn workspace react-native-audio-recorder-player-example web",
