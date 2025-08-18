@@ -46,6 +46,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     // Interruption handling state
     var interruptionResumeTimer: Timer? = nil
     var lastInterruptionTime: Date? = nil
+    var isHandlingInterruption: Bool = false
+    var interruptionSegmentSaved: Bool = false
 
     override init() {
         super.init()
@@ -145,6 +147,11 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         recordTimer = nil;
 
         DispatchQueue.main.async {
+            // Prevent manual pause during interruption handling
+            if (self.isHandlingInterruption) {
+                return reject("RNAudioPlayerRecorder", "Cannot pause during interruption handling", nil)
+            }
+            
             if (self.audioRecorder == nil) {
                 return reject("RNAudioPlayerRecorder", "Recorder is not recording", nil)
             }
@@ -236,8 +243,16 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
         switch interruptionType {
         case AVAudioSession.InterruptionType.began.rawValue:
+            // Prevent handling multiple interruptions simultaneously
+            if isHandlingInterruption {
+                print("Already handling an interruption, ignoring new interruption")
+                return
+            }
+            
             // Record interruption time for rate limiting
             lastInterruptionTime = Date()
+            isHandlingInterruption = true
+            interruptionSegmentSaved = false
             
             // When interruption begins, save the current segment and update independent timing
             if audioRecorder != nil && audioRecorder.isRecording {
@@ -256,6 +271,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 recordingFinishCompletion = { [weak self] success in
                     guard let self = self else { return }
                     
+                    // Mark that we've saved the interruption segment
+                    self.interruptionSegmentSaved = true
+                    
                     // Save the current segment if recording was successful
                     if success, let currentURL = self.currentSegmentURL, FileManager.default.fileExists(atPath: currentURL.path) {
                         do {
@@ -272,6 +290,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                             print("Error checking segment file: \(error)")
                         }
                     }
+                    
+                    // Clear interruption handling state after segment is saved
+                    self.isHandlingInterruption = false
                 }
                 
                 // Stop recording on current segment
@@ -283,6 +304,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             break
             
         case AVAudioSession.InterruptionType.ended.rawValue:
+            // Clear interruption handling state when interruption ends
+            isHandlingInterruption = false
+            
             guard let option = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { 
                 return 
             }
@@ -292,6 +316,12 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 // Rate limit resumption attempts - don't try more than once every 2 seconds
                 if let lastTime = lastInterruptionTime, Date().timeIntervalSince(lastTime) < 2.0 {
                     print("Ignoring rapid interruption sequence")
+                    return
+                }
+                
+                // Ensure the interruption segment was saved before resuming
+                if !interruptionSegmentSaved && audioRecorder != nil {
+                    print("Waiting for interruption segment to be saved before resuming")
                     return
                 }
                 
@@ -385,6 +415,11 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         recordingStartTime = nil
         isRecordingActive = false
         isResumingFromInterruption = false
+        
+        // Reset interruption handling state
+        isHandlingInterruption = false
+        interruptionSegmentSaved = false
+        lastInterruptionTime = nil
 
         let encoding = audioSets["AVFormatIDKeyIOS"] as? String
         let mode = audioSets["AVModeIOS"] as? String
@@ -536,6 +571,16 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else {
                 reject("RNAudioPlayerRecorder", "Recording context was deallocated", nil)
+                return
+            }
+            
+            // Prevent stop during active interruption handling (let interruption complete first)
+            if (self.isHandlingInterruption && !self.interruptionSegmentSaved) {
+                print("⚠️ Deferring stop until interruption handling completes")
+                // Defer the stop operation
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.stopRecorder(returnSegments: returnSegments, resolve: resolve, rejecter: reject)
+                }
                 return
             }
             
