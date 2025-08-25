@@ -1,7 +1,7 @@
 require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
-folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
+folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1'
 
 Pod::Spec.new do |s|
   s.name         = "NitroAudioRecorderPlayer"
@@ -28,10 +28,12 @@ Pod::Spec.new do |s|
   s.pod_target_xcconfig = {
     "SWIFT_VERSION" => "5.0",
     "SWIFT_ACTIVE_COMPILATION_CONDITIONS" => "$(inherited)",
-    "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_MOBILE=1 FOLLY_USE_LIBCPP=1",
+    "HEADER_SEARCH_PATHS" => [
+       "${PODS_ROOT}/RCT-Folly",
+    ],
+    "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES",
+    "OTHER_CPLUSPLUSFLAGS" => folly_compiler_flags,
   }
-  
-  s.compiler_flags = folly_compiler_flags
 
   s.dependency 'React-Core'
   s.dependency 'React-jsi'
