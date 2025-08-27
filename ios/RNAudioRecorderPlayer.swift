@@ -313,12 +313,6 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             
             // Only attempt resume if we have the shouldResume flag and aren't already resuming
             if option == AVAudioSession.InterruptionOptions.shouldResume.rawValue && !isResumingFromInterruption {
-                // Rate limit resumption attempts - don't try more than once every 2 seconds
-                if let lastTime = lastInterruptionTime, Date().timeIntervalSince(lastTime) < 2.0 {
-                    print("Ignoring rapid interruption sequence")
-                    return
-                }
-                
                 // Ensure the interruption segment was saved before resuming
                 if !interruptionSegmentSaved && audioRecorder != nil {
                     print("Waiting for interruption segment to be saved before resuming")
@@ -329,7 +323,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 isResumingFromInterruption = true
                 
                 // Use a timer with a slightly longer delay (1.0 second) for better stability
-                interruptionResumeTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+                interruptionResumeTimer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: false) { [weak self] _ in
                     guard let self = self else { return }
                     
                     do {
@@ -356,6 +350,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                         }
                     } catch {
                         self.isResumingFromInterruption = false
+                        print("Failed to resume recorder: \(error)")
                     }
                 }
             }
