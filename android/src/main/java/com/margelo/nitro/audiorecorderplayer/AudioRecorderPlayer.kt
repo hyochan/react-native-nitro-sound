@@ -20,7 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class AudioRecorderPlayerImpl : HybridAudioRecorderPlayerSpec() {
+class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
     private var mediaRecorder: MediaRecorder? = null
     private var mediaPlayer: MediaPlayer? = null
     

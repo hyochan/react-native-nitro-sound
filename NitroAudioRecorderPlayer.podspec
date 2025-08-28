@@ -4,7 +4,7 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
 
 Pod::Spec.new do |s|
-  s.name         = "AudioRecorderPlayer"
+  s.name         = "NitroAudioRecorderPlayer"
   s.version      = package["version"]
   s.summary      = package["description"]
   s.homepage     = package["homepage"]
@@ -37,7 +37,7 @@ Pod::Spec.new do |s|
   s.dependency 'React-jsi'
   s.dependency 'React-callinvoker'
 
-  load File.join(__dir__, 'nitrogen/generated/ios/AudioRecorderPlayer+autolinking.rb')
+  load File.join(__dir__, 'nitrogen/generated/ios/NitroAudioRecorderPlayer+autolinking.rb')
   add_nitrogen_files(s)
 
   s.info_plist = {

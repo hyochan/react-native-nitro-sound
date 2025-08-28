@@ -22,7 +22,7 @@ def reactNativeArchitectures() {
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
-apply from: '../nitrogen/generated/android/audiorecorderplayer+autolinking.gradle'
+apply from: '../nitrogen/generated/android/NitroAudioRecorderPlayer+autolinking.gradle'
 
 apply plugin: "com.facebook.react"
 

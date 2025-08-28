@@ -1,15 +1,15 @@
 {
   "cxxNamespace": ["audiorecorderplayer"],
   "ios": {
-    "iosModuleName": "AudioRecorderPlayer"
+    "iosModuleName": "NitroAudioRecorderPlayer"
   },
   "android": {
     "androidNamespace": ["audiorecorderplayer"],
-    "androidCxxLibName": "audiorecorderplayer"
+    "androidCxxLibName": "NitroAudioRecorderPlayer"
   },
   "autolinking": {
     "AudioRecorderPlayer": {
-      "swift": "AudioRecorderPlayerImpl",
+      "swift": "HybridAudioRecorderPlayer",
       "kotlin": "HybridAudioRecorderPlayer"
     }
   },

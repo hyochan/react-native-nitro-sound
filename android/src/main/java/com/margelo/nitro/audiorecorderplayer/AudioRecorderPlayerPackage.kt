@@ -19,7 +19,7 @@ class AudioRecorderPlayerPackage : BaseReactPackage() {
 
     companion object {
         init {
-            System.loadLibrary("audiorecorderplayer")
+            System.loadLibrary("NitroAudioRecorderPlayer")
         }
     }
 }

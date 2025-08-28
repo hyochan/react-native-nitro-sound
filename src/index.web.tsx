@@ -4,9 +4,9 @@ import type {
   RecordBackType,
   PlayBackType,
   PlaybackEndType,
-} from './AudioRecorderPlayer.nitro';
+} from './specs/AudioRecorderPlayer.nitro';
 
-export * from './AudioRecorderPlayer.nitro';
+export * from './specs/AudioRecorderPlayer.nitro';
 
 class AudioRecorderPlayerWebImpl implements AudioRecorderPlayerType {
   private mediaRecorder: MediaRecorder | null = null;

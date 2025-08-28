@@ -2,15 +2,15 @@
 
 echo "🚀 Starting Android Emulator..."
 
-# Change to Example directory
-cd "${BASH_SOURCE%/*}/../Example"
+# Change to example directory
+cd "${BASH_SOURCE%/*}/../example"
 
 # Kill any existing Metro bundler
 pkill -f "metro" || true
 
-# Clear Metro cache
-echo "🧹 Clearing Metro cache..."
-npx expo start --clear &
+# Start Metro
+echo "🚀 Starting Metro..."
+npx react-native start --reset-cache &
 
 # Wait for Metro to start
 sleep 5
@@ -29,7 +29,7 @@ fi
 
 # Run Android
 echo "🤖 Launching Android app..."
-npx expo run:android
+npx react-native run-android
 
 # Keep the terminal open
 read -p "Press any key to exit..."

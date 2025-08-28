@@ -43,13 +43,14 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "npx tsx scripts/check-nitro-versions.ts && bob build && yarn nitrogen",
-    "nitrogen": "nitro-codegen",
+    "nitrogen": "npx nitro-codegen",
     "release": "release-it --only-version",
     "web": "yarn workspace react-native-audio-recorder-player-example web",
     "build:web": "yarn workspace react-native-audio-recorder-player-example build:web",
     "android": "yarn workspace react-native-audio-recorder-player-example android",
     "ios": "yarn workspace react-native-audio-recorder-player-example ios",
-    "start": "yarn workspace react-native-audio-recorder-player-example start"
+    "start": "yarn workspace react-native-audio-recorder-player-example start",
+    "logcat": "adb logcat -c && adb logcat --pid=$(adb shell pidof audiorecorderplayer.example)"
   },
   "keywords": [
     "react-native",

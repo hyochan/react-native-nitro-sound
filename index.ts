@@ -7,14 +7,14 @@ export type {
   AudioSet,
   RecordBackType,
   PlayBackType,
-} from './src/AudioRecorderPlayer.nitro';
+  AVEncodingOption,
+  AVModeIOSOption,
+} from './src/specs/AudioRecorderPlayer.nitro';
 
 export {
   AudioSourceAndroidType,
   OutputFormatAndroidType,
   AudioEncoderAndroidType,
-  type AVEncodingOption,
-  type AVModeIOSOption,
   AVEncoderAudioQualityIOSType,
   AVLinearPCMBitDepthKeyIOSType,
-} from './src/AudioRecorderPlayer.nitro';
+} from './src/specs/AudioRecorderPlayer.nitro';

@@ -6,35 +6,35 @@
       "request": "launch",
       "type": "node-terminal",
       "command": "${workspaceFolder}/.vscode/run_ios.sh",
-      "cwd": "${workspaceFolder}/Example"
+      "cwd": "${workspaceFolder}/example"
     },
     {
       "name": "Android Emulator",
       "request": "launch",
       "type": "node-terminal",
       "command": "${workspaceFolder}/.vscode/run_android.sh",
-      "cwd": "${workspaceFolder}/Example"
+      "cwd": "${workspaceFolder}/example"
     },
     {
-      "name": "Start Expo",
+      "name": "Start Metro",
       "request": "launch",
       "type": "node-terminal",
-      "command": "npx expo start --clear",
-      "cwd": "${workspaceFolder}/Example"
+      "command": "npx react-native start --reset-cache",
+      "cwd": "${workspaceFolder}/example"
     },
     {
       "name": "iOS Device",
       "request": "launch",
       "type": "node-terminal",
-      "command": "npx expo run:ios --device",
-      "cwd": "${workspaceFolder}/Example"
+      "command": "npx react-native run-ios --device",
+      "cwd": "${workspaceFolder}/example"
     },
     {
       "name": "Android Device",
       "request": "launch",
       "type": "node-terminal",
-      "command": "npx expo run:android --device",
-      "cwd": "${workspaceFolder}/Example"
+      "command": "npx react-native run-android --device",
+      "cwd": "${workspaceFolder}/example"
     }
   ]
 }

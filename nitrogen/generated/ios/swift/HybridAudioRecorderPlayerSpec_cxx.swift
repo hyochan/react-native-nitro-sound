@@ -20,7 +20,7 @@ import NitroModules
 open class HybridAudioRecorderPlayerSpec_cxx {
   /**
    * The Swift <> C++ bridge's namespace (`margelo::nitro::audiorecorderplayer::bridge::swift`)
-   * from `AudioRecorderPlayer-Swift-Cxx-Bridge.hpp`.
+   * from `NitroAudioRecorderPlayer-Swift-Cxx-Bridge.hpp`.
    * This contains specialized C++ templates, and C++ helper functions that can be accessed from Swift.
    */
   public typealias bridge = margelo.nitro.audiorecorderplayer.bridge.swift

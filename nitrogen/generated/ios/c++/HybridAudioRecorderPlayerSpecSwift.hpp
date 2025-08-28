@@ -10,7 +10,7 @@
 #include "HybridAudioRecorderPlayerSpec.hpp"
 
 // Forward declaration of `HybridAudioRecorderPlayerSpec_cxx` to properly resolve imports.
-namespace AudioRecorderPlayer { class HybridAudioRecorderPlayerSpec_cxx; }
+namespace NitroAudioRecorderPlayer { class HybridAudioRecorderPlayerSpec_cxx; }
 
 // Forward declaration of `AudioSet` to properly resolve imports.
 namespace margelo::nitro::audiorecorderplayer { struct AudioSet; }
@@ -55,7 +55,7 @@ namespace margelo::nitro::audiorecorderplayer { struct PlaybackEndType; }
 #include "PlayBackType.hpp"
 #include "PlaybackEndType.hpp"
 
-#include "AudioRecorderPlayer-Swift-Cxx-Umbrella.hpp"
+#include "NitroAudioRecorderPlayer-Swift-Cxx-Umbrella.hpp"
 
 namespace margelo::nitro::audiorecorderplayer {
 
@@ -72,13 +72,13 @@ namespace margelo::nitro::audiorecorderplayer {
   class HybridAudioRecorderPlayerSpecSwift: public virtual HybridAudioRecorderPlayerSpec {
   public:
     // Constructor from a Swift instance
-    explicit HybridAudioRecorderPlayerSpecSwift(const AudioRecorderPlayer::HybridAudioRecorderPlayerSpec_cxx& swiftPart):
+    explicit HybridAudioRecorderPlayerSpecSwift(const NitroAudioRecorderPlayer::HybridAudioRecorderPlayerSpec_cxx& swiftPart):
       HybridObject(HybridAudioRecorderPlayerSpec::TAG),
       _swiftPart(swiftPart) { }
 
   public:
     // Get the Swift part
-    inline AudioRecorderPlayer::HybridAudioRecorderPlayerSpec_cxx& getSwiftPart() noexcept {
+    inline NitroAudioRecorderPlayer::HybridAudioRecorderPlayerSpec_cxx& getSwiftPart() noexcept {
       return _swiftPart;
     }
 
@@ -244,7 +244,7 @@ namespace margelo::nitro::audiorecorderplayer {
     }
 
   private:
-    AudioRecorderPlayer::HybridAudioRecorderPlayerSpec_cxx _swiftPart;
+    NitroAudioRecorderPlayer::HybridAudioRecorderPlayerSpec_cxx _swiftPart;
   };
 
 } // namespace margelo::nitro::audiorecorderplayer

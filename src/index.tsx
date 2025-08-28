@@ -5,9 +5,9 @@ import type {
   RecordBackType,
   PlayBackType,
   PlaybackEndType,
-} from './AudioRecorderPlayer.nitro';
+} from './specs/AudioRecorderPlayer.nitro';
 
-export * from './AudioRecorderPlayer.nitro';
+export * from './specs/AudioRecorderPlayer.nitro';
 
 class AudioRecorderPlayerImpl {
   private hybridObject: AudioRecorderPlayerType | null = null;
