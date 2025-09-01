@@ -269,13 +269,18 @@ const App = () => {
     }
   };
 
-  const onStartPlay = async () => {
+  const onStartPlay = async (useRemoteUrl: boolean = false) => {
     if (isPlaying || isLoading) {
       console.log('Already playing or loading, ignoring...');
       return;
     }
 
-    console.log('Starting playback of:', recordingPath);
+    // Use remote URL for testing if requested
+    const urlToPlay = useRemoteUrl
+      ? 'https://github.com/user-attachments/files/22083370/hello.mp3'
+      : recordingPath;
+
+    console.log('Starting playback of:', urlToPlay);
     setIsLoading(true);
     setLoadingMessage('Loading...');
 
@@ -304,6 +309,7 @@ const App = () => {
           position: e.currentPosition,
           duration: e.duration,
           isMuted: e.isMuted,
+          isRemoteUrl: useRemoteUrl,
         });
 
         // Update position and duration states for seeking
@@ -337,8 +343,11 @@ const App = () => {
 
       console.log('Starting player...');
       // For web, if we get 'recording_in_progress', don't pass any path
-      const pathToPlay =
-        recordingPath === 'recording_in_progress' ? undefined : recordingPath;
+      const pathToPlay = useRemoteUrl
+        ? urlToPlay
+        : recordingPath === 'recording_in_progress'
+          ? undefined
+          : recordingPath;
       const msg = await AudioRecorderPlayer.startPlayer(pathToPlay);
       console.log('Started playing:', msg);
 
@@ -614,7 +623,7 @@ const App = () => {
                 (!recordingPath || isPlaying || isLoading || isStopLoading) &&
                   styles.disabledButton,
               ]}
-              onPress={onStartPlay}
+              onPress={() => onStartPlay(false)}
               disabled={
                 !recordingPath || isPlaying || isLoading || isStopLoading
               }
@@ -669,6 +678,34 @@ const App = () => {
             >
               <Text style={styles.buttonText}>Stop</Text>
             </TouchableOpacity>
+          </View>
+
+          {/* Remote URL Test Button */}
+          <View style={styles.remoteTestContainer}>
+            <Text style={styles.remoteTestLabel}>Test Remote URL Playback</Text>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                styles.remoteTestButton,
+                (isPlaying || isLoading) && styles.disabledButton,
+              ]}
+              onPress={() => onStartPlay(true)}
+              disabled={isPlaying || isLoading}
+            >
+              <View style={styles.buttonContent}>
+                {isLoading && (
+                  <ActivityIndicator
+                    size="small"
+                    color="white"
+                    style={styles.loadingSpinner}
+                  />
+                )}
+                <Text style={styles.buttonText}>Play Remote MP3</Text>
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.remoteTestInfo}>
+              Tests addPlayBackListener with HTTPS URL
+            </Text>
           </View>
 
           {!recordingPath && (
@@ -875,6 +912,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  remoteTestContainer: {
+    marginTop: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    backgroundColor: '#f0f8ff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#4a90e2',
+  },
+  remoteTestLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4a90e2',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  remoteTestButton: {
+    backgroundColor: '#4a90e2',
+  },
+  remoteTestInfo: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
     fontStyle: 'italic',
   },
 });
