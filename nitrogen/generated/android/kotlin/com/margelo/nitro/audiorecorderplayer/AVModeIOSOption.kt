@@ -17,7 +17,11 @@ import com.facebook.proguard.annotations.DoNotStrip
 @Keep
 enum class AVModeIOSOption(@DoNotStrip @Keep val value: Int) {
   GAMECHATAUDIO(0),
-  VIDEORECORDING(1),
-  VOICECHAT(2),
-  VIDEOCHAT(3);
+  MEASUREMENT(1),
+  MOVIEPLAYBACK(2),
+  SPOKENAUDIO(3),
+  VIDEOCHAT(4),
+  VIDEORECORDING(5),
+  VOICECHAT(6),
+  VOICEPROMPT(7);
 }

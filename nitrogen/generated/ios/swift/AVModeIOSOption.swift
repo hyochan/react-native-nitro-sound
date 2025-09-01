@@ -19,12 +19,20 @@ public extension AVModeIOSOption {
     switch string {
       case "gameChatAudio":
         self = .gamechataudio
+      case "measurement":
+        self = .measurement
+      case "moviePlayback":
+        self = .movieplayback
+      case "spokenAudio":
+        self = .spokenaudio
+      case "videoChat":
+        self = .videochat
       case "videoRecording":
         self = .videorecording
       case "voiceChat":
         self = .voicechat
-      case "videoChat":
-        self = .videochat
+      case "voicePrompt":
+        self = .voiceprompt
       default:
         return nil
     }
@@ -37,12 +45,20 @@ public extension AVModeIOSOption {
     switch self {
       case .gamechataudio:
         return "gameChatAudio"
+      case .measurement:
+        return "measurement"
+      case .movieplayback:
+        return "moviePlayback"
+      case .spokenaudio:
+        return "spokenAudio"
+      case .videochat:
+        return "videoChat"
       case .videorecording:
         return "videoRecording"
       case .voicechat:
         return "voiceChat"
-      case .videochat:
-        return "videoChat"
+      case .voiceprompt:
+        return "voicePrompt"
     }
   }
 }

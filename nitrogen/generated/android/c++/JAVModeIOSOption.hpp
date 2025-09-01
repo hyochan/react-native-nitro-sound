@@ -42,19 +42,31 @@ namespace margelo::nitro::audiorecorderplayer {
     static jni::alias_ref<JAVModeIOSOption> fromCpp(AVModeIOSOption value) {
       static const auto clazz = javaClassStatic();
       static const auto fieldGAMECHATAUDIO = clazz->getStaticField<JAVModeIOSOption>("GAMECHATAUDIO");
+      static const auto fieldMEASUREMENT = clazz->getStaticField<JAVModeIOSOption>("MEASUREMENT");
+      static const auto fieldMOVIEPLAYBACK = clazz->getStaticField<JAVModeIOSOption>("MOVIEPLAYBACK");
+      static const auto fieldSPOKENAUDIO = clazz->getStaticField<JAVModeIOSOption>("SPOKENAUDIO");
+      static const auto fieldVIDEOCHAT = clazz->getStaticField<JAVModeIOSOption>("VIDEOCHAT");
       static const auto fieldVIDEORECORDING = clazz->getStaticField<JAVModeIOSOption>("VIDEORECORDING");
       static const auto fieldVOICECHAT = clazz->getStaticField<JAVModeIOSOption>("VOICECHAT");
-      static const auto fieldVIDEOCHAT = clazz->getStaticField<JAVModeIOSOption>("VIDEOCHAT");
+      static const auto fieldVOICEPROMPT = clazz->getStaticField<JAVModeIOSOption>("VOICEPROMPT");
       
       switch (value) {
         case AVModeIOSOption::GAMECHATAUDIO:
           return clazz->getStaticFieldValue(fieldGAMECHATAUDIO);
+        case AVModeIOSOption::MEASUREMENT:
+          return clazz->getStaticFieldValue(fieldMEASUREMENT);
+        case AVModeIOSOption::MOVIEPLAYBACK:
+          return clazz->getStaticFieldValue(fieldMOVIEPLAYBACK);
+        case AVModeIOSOption::SPOKENAUDIO:
+          return clazz->getStaticFieldValue(fieldSPOKENAUDIO);
+        case AVModeIOSOption::VIDEOCHAT:
+          return clazz->getStaticFieldValue(fieldVIDEOCHAT);
         case AVModeIOSOption::VIDEORECORDING:
           return clazz->getStaticFieldValue(fieldVIDEORECORDING);
         case AVModeIOSOption::VOICECHAT:
           return clazz->getStaticFieldValue(fieldVOICECHAT);
-        case AVModeIOSOption::VIDEOCHAT:
-          return clazz->getStaticFieldValue(fieldVIDEOCHAT);
+        case AVModeIOSOption::VOICEPROMPT:
+          return clazz->getStaticFieldValue(fieldVOICEPROMPT);
         default:
           std::string stringValue = std::to_string(static_cast<int>(value));
           throw std::invalid_argument("Invalid enum value (" + stringValue + "!");
