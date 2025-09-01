@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 echo "🚀 Starting Android app..."
 
@@ -11,7 +12,8 @@ if lsof -Pi :8081 -sTCP:LISTEN -t >/dev/null ; then
 else
     echo "🚀 Starting Metro bundler..."
     yarn start --reset-cache > /dev/null 2>&1 &
-    sleep 3
+    # Wait for metro to start by polling the port
+    until lsof -i:8081 -t >/dev/null 2>&1; do sleep 0.5; done
 fi
 
 # Check if any device/emulator is connected
