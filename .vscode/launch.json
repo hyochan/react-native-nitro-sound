@@ -2,39 +2,72 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "iOS Simulator",
+      "name": "🍎 iOS Simulator",
       "request": "launch",
       "type": "node-terminal",
-      "command": "${workspaceFolder}/.vscode/run_ios.sh",
+      "command": "${workspaceFolder}/.vscode/ios.sh",
       "cwd": "${workspaceFolder}/example"
     },
     {
-      "name": "Android Emulator",
+      "name": "🤖 Android Emulator",
       "request": "launch",
       "type": "node-terminal",
-      "command": "${workspaceFolder}/.vscode/run_android.sh",
+      "command": "${workspaceFolder}/.vscode/android.sh",
       "cwd": "${workspaceFolder}/example"
     },
     {
-      "name": "Start Metro",
+      "name": "🚀 Metro Bundler",
       "request": "launch",
       "type": "node-terminal",
-      "command": "npx react-native start --reset-cache",
+      "command": "yarn start --reset-cache",
       "cwd": "${workspaceFolder}/example"
     },
     {
-      "name": "iOS Device",
+      "name": "📱 iOS Device",
       "request": "launch",
       "type": "node-terminal",
-      "command": "npx react-native run-ios --device",
+      "command": "yarn ios --device",
       "cwd": "${workspaceFolder}/example"
     },
     {
-      "name": "Android Device",
+      "name": "📱 Android Device",
       "request": "launch",
       "type": "node-terminal",
-      "command": "npx react-native run-android --device",
+      "command": "yarn android --device",
       "cwd": "${workspaceFolder}/example"
+    },
+    {
+      "name": "🧹 Clean Install (iOS)",
+      "request": "launch",
+      "type": "node-terminal",
+      "command": "cd ios && rm -rf Pods Podfile.lock && pod install --repo-update && cd .. && yarn ios",
+      "cwd": "${workspaceFolder}/example"
+    },
+    {
+      "name": "🧹 Clean Build (Android)",
+      "request": "launch",
+      "type": "node-terminal",
+      "command": "cd android && ./gradlew clean && cd .. && yarn android",
+      "cwd": "${workspaceFolder}/example"
+    },
+    {
+      "name": "🔄 Regenerate Nitro",
+      "request": "launch",
+      "type": "node-terminal",
+      "command": "yarn nitro-codegen && cd example/ios && pod install",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🚀 iOS + Metro",
+      "configurations": ["🚀 Metro Bundler", "🍎 iOS Simulator"],
+      "stopAll": true
+    },
+    {
+      "name": "🚀 Android + Metro",
+      "configurations": ["🚀 Metro Bundler", "🤖 Android Emulator"],
+      "stopAll": true
     }
   ]
 }

@@ -11932,18 +11932,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nitro-codegen@npm:^0.26.3":
-  version: 0.26.4
-  resolution: "nitro-codegen@npm:0.26.4"
+"nitro-codegen@npm:^0.29.2":
+  version: 0.29.2
+  resolution: "nitro-codegen@npm:0.29.2"
   dependencies:
     chalk: ^5.3.0
-    react-native-nitro-modules: ^0.26.4
+    react-native-nitro-modules: ^0.29.2
     ts-morph: ^25.0.0
     yargs: ^17.7.2
     zod: ^4.0.5
   bin:
     nitro-codegen: lib/index.js
-  checksum: a059c6fa2ada4922d3aba6875f8e19753b1bbe4be610aeecce910c384b623a2428f3270f6f182afe7b6e8ee141aded35aa7b1555b9847f60cfcaccbd97c9b3b4
+  checksum: e765dcba601a47b6bc2f86a1a613467f057d1c8c3a895df08b0bd693314f8f1a07d30bb716265246eed052bbe8cb5c24d2b336c78b13abc157217d92f479e684
   languageName: node
   linkType: hard
 
@@ -13230,7 +13230,7 @@ __metadata:
     react-native: 0.79.2
     react-native-builder-bob: ^0.40.12
     react-native-monorepo-config: ^0.1.9
-    react-native-nitro-modules: ^0.26.3
+    react-native-nitro-modules: ^0.29.2
     react-native-web: ^0.20.0
     url-loader: ^4.1.1
     webpack: ^5.100.2
@@ -13260,19 +13260,19 @@ __metadata:
     eslint-plugin-prettier: ^5.2.3
     expo: ^53.0.19
     jest: ^29.7.0
-    nitro-codegen: ^0.26.3
+    nitro-codegen: ^0.29.2
     prettier: ^3.0.3
     react: 19.0.0
     react-native: 0.79.2
     react-native-builder-bob: 0.38.4
-    react-native-nitro-modules: ^0.26.3
+    react-native-nitro-modules: ^0.29.2
     release-it: ^17.10.0
     turbo: ^1.10.7
     typescript: ^5.8.3
   peerDependencies:
     react: "*"
     react-native: "*"
-    react-native-nitro-modules: ^0.26.3
+    react-native-nitro-modules: "*"
   languageName: unknown
   linkType: soft
 
@@ -13360,13 +13360,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-nitro-modules@npm:^0.26.3, react-native-nitro-modules@npm:^0.26.4":
-  version: 0.26.4
-  resolution: "react-native-nitro-modules@npm:0.26.4"
+"react-native-nitro-modules@npm:^0.29.2":
+  version: 0.29.2
+  resolution: "react-native-nitro-modules@npm:0.29.2"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 1851f7c19c8af6c7ceaac97d2c8f105826a167ca29e1189525bcb4c4c52902ba72fc51b52a3d4ff0dd1beb4cf74405435b1badac7552a71ef8fbb235503274ba
+  checksum: 4e1ffba242c9d4a197a0e9e2c07b54f96d888d8fd22c901573cf7fdf62c5253522c30d8a9806ba37ef319b834bc6bff3dbd54f40fdfeab5bb2ac151b0f6f964b
   languageName: node
   linkType: hard
 
