@@ -36,6 +36,10 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
     private var recordStartTime: Long = 0L
     private var pausedRecordTime: Long = 0L
     private var meteringEnabled: Boolean = false
+    
+    // Metering-related properties
+    private var lastMeteringUpdateTime = 0L
+    private var lastMeteringValue = SILENCE_THRESHOLD_DB
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -83,12 +87,12 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
     override fun startRecorder(
         uri: String?,
         audioSets: AudioSet?,
-        meteringEnabled: Boolean?
+        enableMetering: Boolean?
     ): Promise<String> {
         val promise = Promise<String>()
 
       // For audio metering
-      this.meteringEnabled = meteringEnabled ?: false
+      this.meteringEnabled = enableMetering ?: false
 
         // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
@@ -535,10 +539,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
         return String.format("%02d:%02d:%02d", minutes, seconds, milliseconds)
     }
 
-    // Updated class properties to use constants
-    private var lastMeteringUpdateTime = 0L
-    private var lastMeteringValue = SILENCE_THRESHOLD_DB
-    private val meteringUpdateInterval = METERING_UPDATE_INTERVAL_MS
+    // Removed redundant meteringUpdateInterval property; using METERING_UPDATE_INTERVAL_MS directly
 
     // Private methods
     // For audioMetering using mediaRecorder
@@ -576,7 +577,7 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                 val currentTime = System.currentTimeMillis() - recordStartTime
                 val meteringValue = if (meteringEnabled) {
                   val now = System.currentTimeMillis()
-                  if (now - lastMeteringUpdateTime >= meteringUpdateInterval) {
+                  if (now - lastMeteringUpdateTime >= METERING_UPDATE_INTERVAL_MS) {
                     lastMeteringValue = getSimpleMetering()
                     lastMeteringUpdateTime = now
                   }
