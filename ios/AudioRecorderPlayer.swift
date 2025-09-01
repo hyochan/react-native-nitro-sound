@@ -36,7 +36,7 @@ class HybridAudioRecorderPlayer: HybridAudioRecorderPlayerSpec {
                 self.recordingSession = AVAudioSession.sharedInstance()
                 
                 // Apply AVModeIOS if provided
-                let sessionMode = audioSets?.AVModeIOS != nil ? self.getAudioSessionMode(from: audioSets!.AVModeIOS!) : .default
+                let sessionMode = audioSets?.AVModeIOS.map(self.getAudioSessionMode) ?? .default
                 
                 try self.recordingSession?.setCategory(.playAndRecord, 
                                                      mode: sessionMode, 
@@ -554,7 +554,7 @@ class HybridAudioRecorderPlayer: HybridAudioRecorderPlayerSpec {
             } else {
                 return .default
             }
-        default:
+        @unknown default:
             return .default
         }
     }
