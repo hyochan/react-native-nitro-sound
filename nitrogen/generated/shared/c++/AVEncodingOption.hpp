@@ -49,48 +49,46 @@ namespace margelo::nitro::audiorecorderplayer {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::audiorecorderplayer;
-
   // C++ AVEncodingOption <> JS AVEncodingOption (union)
   template <>
-  struct JSIConverter<AVEncodingOption> final {
-    static inline AVEncodingOption fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::audiorecorderplayer::AVEncodingOption> final {
+    static inline margelo::nitro::audiorecorderplayer::AVEncodingOption fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       std::string unionValue = JSIConverter<std::string>::fromJSI(runtime, arg);
       switch (hashString(unionValue.c_str(), unionValue.size())) {
-        case hashString("lpcm"): return AVEncodingOption::LPCM;
-        case hashString("ima4"): return AVEncodingOption::IMA4;
-        case hashString("aac"): return AVEncodingOption::AAC;
-        case hashString("MAC3"): return AVEncodingOption::MAC3;
-        case hashString("MAC6"): return AVEncodingOption::MAC6;
-        case hashString("ulaw"): return AVEncodingOption::ULAW;
-        case hashString("alaw"): return AVEncodingOption::ALAW;
-        case hashString("mp1"): return AVEncodingOption::MP1;
-        case hashString("mp2"): return AVEncodingOption::MP2;
-        case hashString("mp4"): return AVEncodingOption::MP4;
-        case hashString("alac"): return AVEncodingOption::ALAC;
-        case hashString("amr"): return AVEncodingOption::AMR;
-        case hashString("flac"): return AVEncodingOption::FLAC;
-        case hashString("opus"): return AVEncodingOption::OPUS;
+        case hashString("lpcm"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::LPCM;
+        case hashString("ima4"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::IMA4;
+        case hashString("aac"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::AAC;
+        case hashString("MAC3"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::MAC3;
+        case hashString("MAC6"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::MAC6;
+        case hashString("ulaw"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::ULAW;
+        case hashString("alaw"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::ALAW;
+        case hashString("mp1"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::MP1;
+        case hashString("mp2"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::MP2;
+        case hashString("mp4"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::MP4;
+        case hashString("alac"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::ALAC;
+        case hashString("amr"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::AMR;
+        case hashString("flac"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::FLAC;
+        case hashString("opus"): return margelo::nitro::audiorecorderplayer::AVEncodingOption::OPUS;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum AVEncodingOption - invalid value!");
       }
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, AVEncodingOption arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::audiorecorderplayer::AVEncodingOption arg) {
       switch (arg) {
-        case AVEncodingOption::LPCM: return JSIConverter<std::string>::toJSI(runtime, "lpcm");
-        case AVEncodingOption::IMA4: return JSIConverter<std::string>::toJSI(runtime, "ima4");
-        case AVEncodingOption::AAC: return JSIConverter<std::string>::toJSI(runtime, "aac");
-        case AVEncodingOption::MAC3: return JSIConverter<std::string>::toJSI(runtime, "MAC3");
-        case AVEncodingOption::MAC6: return JSIConverter<std::string>::toJSI(runtime, "MAC6");
-        case AVEncodingOption::ULAW: return JSIConverter<std::string>::toJSI(runtime, "ulaw");
-        case AVEncodingOption::ALAW: return JSIConverter<std::string>::toJSI(runtime, "alaw");
-        case AVEncodingOption::MP1: return JSIConverter<std::string>::toJSI(runtime, "mp1");
-        case AVEncodingOption::MP2: return JSIConverter<std::string>::toJSI(runtime, "mp2");
-        case AVEncodingOption::MP4: return JSIConverter<std::string>::toJSI(runtime, "mp4");
-        case AVEncodingOption::ALAC: return JSIConverter<std::string>::toJSI(runtime, "alac");
-        case AVEncodingOption::AMR: return JSIConverter<std::string>::toJSI(runtime, "amr");
-        case AVEncodingOption::FLAC: return JSIConverter<std::string>::toJSI(runtime, "flac");
-        case AVEncodingOption::OPUS: return JSIConverter<std::string>::toJSI(runtime, "opus");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::LPCM: return JSIConverter<std::string>::toJSI(runtime, "lpcm");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::IMA4: return JSIConverter<std::string>::toJSI(runtime, "ima4");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::AAC: return JSIConverter<std::string>::toJSI(runtime, "aac");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::MAC3: return JSIConverter<std::string>::toJSI(runtime, "MAC3");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::MAC6: return JSIConverter<std::string>::toJSI(runtime, "MAC6");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::ULAW: return JSIConverter<std::string>::toJSI(runtime, "ulaw");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::ALAW: return JSIConverter<std::string>::toJSI(runtime, "alaw");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::MP1: return JSIConverter<std::string>::toJSI(runtime, "mp1");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::MP2: return JSIConverter<std::string>::toJSI(runtime, "mp2");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::MP4: return JSIConverter<std::string>::toJSI(runtime, "mp4");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::ALAC: return JSIConverter<std::string>::toJSI(runtime, "alac");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::AMR: return JSIConverter<std::string>::toJSI(runtime, "amr");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::FLAC: return JSIConverter<std::string>::toJSI(runtime, "flac");
+        case margelo::nitro::audiorecorderplayer::AVEncodingOption::OPUS: return JSIConverter<std::string>::toJSI(runtime, "opus");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert AVEncodingOption to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");

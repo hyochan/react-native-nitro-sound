@@ -74,10 +74,10 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::shared_ptr<Promise<std::string>>`.
    */
   using std__shared_ptr_Promise_std__string__ = std::shared_ptr<Promise<std::string>>;
-  inline std::shared_ptr<Promise<std::string>> create_std__shared_ptr_Promise_std__string__() {
+  inline std::shared_ptr<Promise<std::string>> create_std__shared_ptr_Promise_std__string__() noexcept {
     return Promise<std::string>::create();
   }
-  inline PromiseHolder<std::string> wrap_std__shared_ptr_Promise_std__string__(std::shared_ptr<Promise<std::string>> promise) {
+  inline PromiseHolder<std::string> wrap_std__shared_ptr_Promise_std__string__(std::shared_ptr<Promise<std::string>> promise) noexcept {
     return PromiseHolder<std::string>(std::move(promise));
   }
   
@@ -92,14 +92,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
   class Func_void_std__string_Wrapper final {
   public:
     explicit Func_void_std__string_Wrapper(std::function<void(const std::string& /* result */)>&& func): _function(std::make_unique<std::function<void(const std::string& /* result */)>>(std::move(func))) {}
-    inline void call(std::string result) const {
+    inline void call(std::string result) const noexcept {
       _function->operator()(result);
     }
   private:
     std::unique_ptr<std::function<void(const std::string& /* result */)>> _function;
   } SWIFT_NONCOPYABLE;
-  Func_void_std__string create_Func_void_std__string(void* _Nonnull swiftClosureWrapper);
-  inline Func_void_std__string_Wrapper wrap_Func_void_std__string(Func_void_std__string value) {
+  Func_void_std__string create_Func_void_std__string(void* _Nonnull swiftClosureWrapper) noexcept;
+  inline Func_void_std__string_Wrapper wrap_Func_void_std__string(Func_void_std__string value) noexcept {
     return Func_void_std__string_Wrapper(std::move(value));
   }
   
@@ -114,14 +114,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
   class Func_void_std__exception_ptr_Wrapper final {
   public:
     explicit Func_void_std__exception_ptr_Wrapper(std::function<void(const std::exception_ptr& /* error */)>&& func): _function(std::make_unique<std::function<void(const std::exception_ptr& /* error */)>>(std::move(func))) {}
-    inline void call(std::exception_ptr error) const {
+    inline void call(std::exception_ptr error) const noexcept {
       _function->operator()(error);
     }
   private:
     std::unique_ptr<std::function<void(const std::exception_ptr& /* error */)>> _function;
   } SWIFT_NONCOPYABLE;
-  Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* _Nonnull swiftClosureWrapper);
-  inline Func_void_std__exception_ptr_Wrapper wrap_Func_void_std__exception_ptr(Func_void_std__exception_ptr value) {
+  Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* _Nonnull swiftClosureWrapper) noexcept;
+  inline Func_void_std__exception_ptr_Wrapper wrap_Func_void_std__exception_ptr(Func_void_std__exception_ptr value) noexcept {
     return Func_void_std__exception_ptr_Wrapper(std::move(value));
   }
   
@@ -130,8 +130,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<std::string>`.
    */
   using std__optional_std__string_ = std::optional<std::string>;
-  inline std::optional<std::string> create_std__optional_std__string_(const std::string& value) {
+  inline std::optional<std::string> create_std__optional_std__string_(const std::string& value) noexcept {
     return std::optional<std::string>(value);
+  }
+  inline bool has_value_std__optional_std__string_(const std::optional<std::string>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::string get_std__optional_std__string_(const std::optional<std::string>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::optional<AudioSourceAndroidType>
@@ -139,8 +145,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<AudioSourceAndroidType>`.
    */
   using std__optional_AudioSourceAndroidType_ = std::optional<AudioSourceAndroidType>;
-  inline std::optional<AudioSourceAndroidType> create_std__optional_AudioSourceAndroidType_(const AudioSourceAndroidType& value) {
+  inline std::optional<AudioSourceAndroidType> create_std__optional_AudioSourceAndroidType_(const AudioSourceAndroidType& value) noexcept {
     return std::optional<AudioSourceAndroidType>(value);
+  }
+  inline bool has_value_std__optional_AudioSourceAndroidType_(const std::optional<AudioSourceAndroidType>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline AudioSourceAndroidType get_std__optional_AudioSourceAndroidType_(const std::optional<AudioSourceAndroidType>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::optional<OutputFormatAndroidType>
@@ -148,8 +160,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<OutputFormatAndroidType>`.
    */
   using std__optional_OutputFormatAndroidType_ = std::optional<OutputFormatAndroidType>;
-  inline std::optional<OutputFormatAndroidType> create_std__optional_OutputFormatAndroidType_(const OutputFormatAndroidType& value) {
+  inline std::optional<OutputFormatAndroidType> create_std__optional_OutputFormatAndroidType_(const OutputFormatAndroidType& value) noexcept {
     return std::optional<OutputFormatAndroidType>(value);
+  }
+  inline bool has_value_std__optional_OutputFormatAndroidType_(const std::optional<OutputFormatAndroidType>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline OutputFormatAndroidType get_std__optional_OutputFormatAndroidType_(const std::optional<OutputFormatAndroidType>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::optional<AudioEncoderAndroidType>
@@ -157,8 +175,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<AudioEncoderAndroidType>`.
    */
   using std__optional_AudioEncoderAndroidType_ = std::optional<AudioEncoderAndroidType>;
-  inline std::optional<AudioEncoderAndroidType> create_std__optional_AudioEncoderAndroidType_(const AudioEncoderAndroidType& value) {
+  inline std::optional<AudioEncoderAndroidType> create_std__optional_AudioEncoderAndroidType_(const AudioEncoderAndroidType& value) noexcept {
     return std::optional<AudioEncoderAndroidType>(value);
+  }
+  inline bool has_value_std__optional_AudioEncoderAndroidType_(const std::optional<AudioEncoderAndroidType>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline AudioEncoderAndroidType get_std__optional_AudioEncoderAndroidType_(const std::optional<AudioEncoderAndroidType>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::optional<AVEncoderAudioQualityIOSType>
@@ -166,8 +190,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<AVEncoderAudioQualityIOSType>`.
    */
   using std__optional_AVEncoderAudioQualityIOSType_ = std::optional<AVEncoderAudioQualityIOSType>;
-  inline std::optional<AVEncoderAudioQualityIOSType> create_std__optional_AVEncoderAudioQualityIOSType_(const AVEncoderAudioQualityIOSType& value) {
+  inline std::optional<AVEncoderAudioQualityIOSType> create_std__optional_AVEncoderAudioQualityIOSType_(const AVEncoderAudioQualityIOSType& value) noexcept {
     return std::optional<AVEncoderAudioQualityIOSType>(value);
+  }
+  inline bool has_value_std__optional_AVEncoderAudioQualityIOSType_(const std::optional<AVEncoderAudioQualityIOSType>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline AVEncoderAudioQualityIOSType get_std__optional_AVEncoderAudioQualityIOSType_(const std::optional<AVEncoderAudioQualityIOSType>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::optional<AVModeIOSOption>
@@ -175,8 +205,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<AVModeIOSOption>`.
    */
   using std__optional_AVModeIOSOption_ = std::optional<AVModeIOSOption>;
-  inline std::optional<AVModeIOSOption> create_std__optional_AVModeIOSOption_(const AVModeIOSOption& value) {
+  inline std::optional<AVModeIOSOption> create_std__optional_AVModeIOSOption_(const AVModeIOSOption& value) noexcept {
     return std::optional<AVModeIOSOption>(value);
+  }
+  inline bool has_value_std__optional_AVModeIOSOption_(const std::optional<AVModeIOSOption>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline AVModeIOSOption get_std__optional_AVModeIOSOption_(const std::optional<AVModeIOSOption>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::optional<AVEncodingOption>
@@ -184,8 +220,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<AVEncodingOption>`.
    */
   using std__optional_AVEncodingOption_ = std::optional<AVEncodingOption>;
-  inline std::optional<AVEncodingOption> create_std__optional_AVEncodingOption_(const AVEncodingOption& value) {
+  inline std::optional<AVEncodingOption> create_std__optional_AVEncodingOption_(const AVEncodingOption& value) noexcept {
     return std::optional<AVEncodingOption>(value);
+  }
+  inline bool has_value_std__optional_AVEncodingOption_(const std::optional<AVEncodingOption>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline AVEncodingOption get_std__optional_AVEncodingOption_(const std::optional<AVEncodingOption>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::optional<double>
@@ -193,8 +235,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<double>`.
    */
   using std__optional_double_ = std::optional<double>;
-  inline std::optional<double> create_std__optional_double_(const double& value) {
+  inline std::optional<double> create_std__optional_double_(const double& value) noexcept {
     return std::optional<double>(value);
+  }
+  inline bool has_value_std__optional_double_(const std::optional<double>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline double get_std__optional_double_(const std::optional<double>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::optional<AVLinearPCMBitDepthKeyIOSType>
@@ -202,8 +250,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<AVLinearPCMBitDepthKeyIOSType>`.
    */
   using std__optional_AVLinearPCMBitDepthKeyIOSType_ = std::optional<AVLinearPCMBitDepthKeyIOSType>;
-  inline std::optional<AVLinearPCMBitDepthKeyIOSType> create_std__optional_AVLinearPCMBitDepthKeyIOSType_(const AVLinearPCMBitDepthKeyIOSType& value) {
+  inline std::optional<AVLinearPCMBitDepthKeyIOSType> create_std__optional_AVLinearPCMBitDepthKeyIOSType_(const AVLinearPCMBitDepthKeyIOSType& value) noexcept {
     return std::optional<AVLinearPCMBitDepthKeyIOSType>(value);
+  }
+  inline bool has_value_std__optional_AVLinearPCMBitDepthKeyIOSType_(const std::optional<AVLinearPCMBitDepthKeyIOSType>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline AVLinearPCMBitDepthKeyIOSType get_std__optional_AVLinearPCMBitDepthKeyIOSType_(const std::optional<AVLinearPCMBitDepthKeyIOSType>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::optional<bool>
@@ -211,8 +265,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<bool>`.
    */
   using std__optional_bool_ = std::optional<bool>;
-  inline std::optional<bool> create_std__optional_bool_(const bool& value) {
+  inline std::optional<bool> create_std__optional_bool_(const bool& value) noexcept {
     return std::optional<bool>(value);
+  }
+  inline bool has_value_std__optional_bool_(const std::optional<bool>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline bool get_std__optional_bool_(const std::optional<bool>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::optional<AudioQualityType>
@@ -220,8 +280,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<AudioQualityType>`.
    */
   using std__optional_AudioQualityType_ = std::optional<AudioQualityType>;
-  inline std::optional<AudioQualityType> create_std__optional_AudioQualityType_(const AudioQualityType& value) {
+  inline std::optional<AudioQualityType> create_std__optional_AudioQualityType_(const AudioQualityType& value) noexcept {
     return std::optional<AudioQualityType>(value);
+  }
+  inline bool has_value_std__optional_AudioQualityType_(const std::optional<AudioQualityType>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline AudioQualityType get_std__optional_AudioQualityType_(const std::optional<AudioQualityType>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::optional<AudioSet>
@@ -229,8 +295,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<AudioSet>`.
    */
   using std__optional_AudioSet_ = std::optional<AudioSet>;
-  inline std::optional<AudioSet> create_std__optional_AudioSet_(const AudioSet& value) {
+  inline std::optional<AudioSet> create_std__optional_AudioSet_(const AudioSet& value) noexcept {
     return std::optional<AudioSet>(value);
+  }
+  inline bool has_value_std__optional_AudioSet_(const std::optional<AudioSet>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline AudioSet get_std__optional_AudioSet_(const std::optional<AudioSet>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::unordered_map<std::string, std::string>
@@ -238,12 +310,12 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::unordered_map<std::string, std::string>`.
    */
   using std__unordered_map_std__string__std__string_ = std::unordered_map<std::string, std::string>;
-  inline std::unordered_map<std::string, std::string> create_std__unordered_map_std__string__std__string_(size_t size) {
+  inline std::unordered_map<std::string, std::string> create_std__unordered_map_std__string__std__string_(size_t size) noexcept {
     std::unordered_map<std::string, std::string> map;
     map.reserve(size);
     return map;
   }
-  inline std::vector<std::string> get_std__unordered_map_std__string__std__string__keys(const std__unordered_map_std__string__std__string_& map) {
+  inline std::vector<std::string> get_std__unordered_map_std__string__std__string__keys(const std__unordered_map_std__string__std__string_& map) noexcept {
     std::vector<std::string> keys;
     keys.reserve(map.size());
     for (const auto& entry : map) {
@@ -251,10 +323,10 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
     }
     return keys;
   }
-  inline std::string get_std__unordered_map_std__string__std__string__value(const std__unordered_map_std__string__std__string_& map, const std::string& key) {
-    return map.at(key);
+  inline std::string get_std__unordered_map_std__string__std__string__value(const std__unordered_map_std__string__std__string_& map, const std::string& key) noexcept {
+    return map.find(key)->second;
   }
-  inline void emplace_std__unordered_map_std__string__std__string_(std__unordered_map_std__string__std__string_& map, const std::string& key, const std::string& value) {
+  inline void emplace_std__unordered_map_std__string__std__string_(std__unordered_map_std__string__std__string_& map, const std::string& key, const std::string& value) noexcept {
     map.emplace(key, value);
   }
   
@@ -263,8 +335,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
    * Specialized version of `std::optional<std::unordered_map<std::string, std::string>>`.
    */
   using std__optional_std__unordered_map_std__string__std__string__ = std::optional<std::unordered_map<std::string, std::string>>;
-  inline std::optional<std::unordered_map<std::string, std::string>> create_std__optional_std__unordered_map_std__string__std__string__(const std::unordered_map<std::string, std::string>& value) {
+  inline std::optional<std::unordered_map<std::string, std::string>> create_std__optional_std__unordered_map_std__string__std__string__(const std::unordered_map<std::string, std::string>& value) noexcept {
     return std::optional<std::unordered_map<std::string, std::string>>(value);
+  }
+  inline bool has_value_std__optional_std__unordered_map_std__string__std__string__(const std::optional<std::unordered_map<std::string, std::string>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::unordered_map<std::string, std::string> get_std__optional_std__unordered_map_std__string__std__string__(const std::optional<std::unordered_map<std::string, std::string>>& optional) noexcept {
+    return *optional;
   }
   
   // pragma MARK: std::function<void(const RecordBackType& /* recordingMeta */)>
@@ -278,14 +356,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
   class Func_void_RecordBackType_Wrapper final {
   public:
     explicit Func_void_RecordBackType_Wrapper(std::function<void(const RecordBackType& /* recordingMeta */)>&& func): _function(std::make_unique<std::function<void(const RecordBackType& /* recordingMeta */)>>(std::move(func))) {}
-    inline void call(RecordBackType recordingMeta) const {
+    inline void call(RecordBackType recordingMeta) const noexcept {
       _function->operator()(recordingMeta);
     }
   private:
     std::unique_ptr<std::function<void(const RecordBackType& /* recordingMeta */)>> _function;
   } SWIFT_NONCOPYABLE;
-  Func_void_RecordBackType create_Func_void_RecordBackType(void* _Nonnull swiftClosureWrapper);
-  inline Func_void_RecordBackType_Wrapper wrap_Func_void_RecordBackType(Func_void_RecordBackType value) {
+  Func_void_RecordBackType create_Func_void_RecordBackType(void* _Nonnull swiftClosureWrapper) noexcept;
+  inline Func_void_RecordBackType_Wrapper wrap_Func_void_RecordBackType(Func_void_RecordBackType value) noexcept {
     return Func_void_RecordBackType_Wrapper(std::move(value));
   }
   
@@ -300,14 +378,14 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
   class Func_void_PlayBackType_Wrapper final {
   public:
     explicit Func_void_PlayBackType_Wrapper(std::function<void(const PlayBackType& /* playbackMeta */)>&& func): _function(std::make_unique<std::function<void(const PlayBackType& /* playbackMeta */)>>(std::move(func))) {}
-    inline void call(PlayBackType playbackMeta) const {
+    inline void call(PlayBackType playbackMeta) const noexcept {
       _function->operator()(playbackMeta);
     }
   private:
     std::unique_ptr<std::function<void(const PlayBackType& /* playbackMeta */)>> _function;
   } SWIFT_NONCOPYABLE;
-  Func_void_PlayBackType create_Func_void_PlayBackType(void* _Nonnull swiftClosureWrapper);
-  inline Func_void_PlayBackType_Wrapper wrap_Func_void_PlayBackType(Func_void_PlayBackType value) {
+  Func_void_PlayBackType create_Func_void_PlayBackType(void* _Nonnull swiftClosureWrapper) noexcept;
+  inline Func_void_PlayBackType_Wrapper wrap_Func_void_PlayBackType(Func_void_PlayBackType value) noexcept {
     return Func_void_PlayBackType_Wrapper(std::move(value));
   }
   
@@ -322,53 +400,53 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
   class Func_void_PlaybackEndType_Wrapper final {
   public:
     explicit Func_void_PlaybackEndType_Wrapper(std::function<void(const PlaybackEndType& /* playbackEndMeta */)>&& func): _function(std::make_unique<std::function<void(const PlaybackEndType& /* playbackEndMeta */)>>(std::move(func))) {}
-    inline void call(PlaybackEndType playbackEndMeta) const {
+    inline void call(PlaybackEndType playbackEndMeta) const noexcept {
       _function->operator()(playbackEndMeta);
     }
   private:
     std::unique_ptr<std::function<void(const PlaybackEndType& /* playbackEndMeta */)>> _function;
   } SWIFT_NONCOPYABLE;
-  Func_void_PlaybackEndType create_Func_void_PlaybackEndType(void* _Nonnull swiftClosureWrapper);
-  inline Func_void_PlaybackEndType_Wrapper wrap_Func_void_PlaybackEndType(Func_void_PlaybackEndType value) {
+  Func_void_PlaybackEndType create_Func_void_PlaybackEndType(void* _Nonnull swiftClosureWrapper) noexcept;
+  inline Func_void_PlaybackEndType_Wrapper wrap_Func_void_PlaybackEndType(Func_void_PlaybackEndType value) noexcept {
     return Func_void_PlaybackEndType_Wrapper(std::move(value));
   }
   
-  // pragma MARK: std::shared_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpec>
+  // pragma MARK: std::shared_ptr<HybridAudioRecorderPlayerSpec>
   /**
-   * Specialized version of `std::shared_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpec>`.
+   * Specialized version of `std::shared_ptr<HybridAudioRecorderPlayerSpec>`.
    */
-  using std__shared_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_ = std::shared_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpec>;
-  std::shared_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpec> create_std__shared_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_(void* _Nonnull swiftUnsafePointer);
-  void* _Nonnull get_std__shared_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_(std__shared_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_ cppType);
+  using std__shared_ptr_HybridAudioRecorderPlayerSpec_ = std::shared_ptr<HybridAudioRecorderPlayerSpec>;
+  std::shared_ptr<HybridAudioRecorderPlayerSpec> create_std__shared_ptr_HybridAudioRecorderPlayerSpec_(void* _Nonnull swiftUnsafePointer) noexcept;
+  void* _Nonnull get_std__shared_ptr_HybridAudioRecorderPlayerSpec_(std__shared_ptr_HybridAudioRecorderPlayerSpec_ cppType) noexcept;
   
-  // pragma MARK: std::weak_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpec>
-  using std__weak_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_ = std::weak_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpec>;
-  inline std__weak_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_ weakify_std__shared_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_(const std::shared_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpec>& strong) { return strong; }
+  // pragma MARK: std::weak_ptr<HybridAudioRecorderPlayerSpec>
+  using std__weak_ptr_HybridAudioRecorderPlayerSpec_ = std::weak_ptr<HybridAudioRecorderPlayerSpec>;
+  inline std__weak_ptr_HybridAudioRecorderPlayerSpec_ weakify_std__shared_ptr_HybridAudioRecorderPlayerSpec_(const std::shared_ptr<HybridAudioRecorderPlayerSpec>& strong) noexcept { return strong; }
   
   // pragma MARK: Result<std::shared_ptr<Promise<std::string>>>
   using Result_std__shared_ptr_Promise_std__string___ = Result<std::shared_ptr<Promise<std::string>>>;
-  inline Result_std__shared_ptr_Promise_std__string___ create_Result_std__shared_ptr_Promise_std__string___(const std::shared_ptr<Promise<std::string>>& value) {
+  inline Result_std__shared_ptr_Promise_std__string___ create_Result_std__shared_ptr_Promise_std__string___(const std::shared_ptr<Promise<std::string>>& value) noexcept {
     return Result<std::shared_ptr<Promise<std::string>>>::withValue(value);
   }
-  inline Result_std__shared_ptr_Promise_std__string___ create_Result_std__shared_ptr_Promise_std__string___(const std::exception_ptr& error) {
+  inline Result_std__shared_ptr_Promise_std__string___ create_Result_std__shared_ptr_Promise_std__string___(const std::exception_ptr& error) noexcept {
     return Result<std::shared_ptr<Promise<std::string>>>::withError(error);
   }
   
   // pragma MARK: Result<void>
   using Result_void_ = Result<void>;
-  inline Result_void_ create_Result_void_() {
+  inline Result_void_ create_Result_void_() noexcept {
     return Result<void>::withValue();
   }
-  inline Result_void_ create_Result_void_(const std::exception_ptr& error) {
+  inline Result_void_ create_Result_void_(const std::exception_ptr& error) noexcept {
     return Result<void>::withError(error);
   }
   
   // pragma MARK: Result<std::string>
   using Result_std__string_ = Result<std::string>;
-  inline Result_std__string_ create_Result_std__string_(const std::string& value) {
+  inline Result_std__string_ create_Result_std__string_(const std::string& value) noexcept {
     return Result<std::string>::withValue(value);
   }
-  inline Result_std__string_ create_Result_std__string_(const std::exception_ptr& error) {
+  inline Result_std__string_ create_Result_std__string_(const std::exception_ptr& error) noexcept {
     return Result<std::string>::withError(error);
   }
 

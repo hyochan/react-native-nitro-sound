@@ -80,50 +80,48 @@ namespace margelo::nitro::audiorecorderplayer {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::audiorecorderplayer;
-
   // C++ AudioSet <> JS AudioSet (object)
   template <>
-  struct JSIConverter<AudioSet> final {
-    static inline AudioSet fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::audiorecorderplayer::AudioSet> final {
+    static inline margelo::nitro::audiorecorderplayer::AudioSet fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
-      return AudioSet(
-        JSIConverter<std::optional<AudioSourceAndroidType>>::fromJSI(runtime, obj.getProperty(runtime, "AudioSourceAndroid")),
-        JSIConverter<std::optional<OutputFormatAndroidType>>::fromJSI(runtime, obj.getProperty(runtime, "OutputFormatAndroid")),
-        JSIConverter<std::optional<AudioEncoderAndroidType>>::fromJSI(runtime, obj.getProperty(runtime, "AudioEncoderAndroid")),
-        JSIConverter<std::optional<AVEncoderAudioQualityIOSType>>::fromJSI(runtime, obj.getProperty(runtime, "AVEncoderAudioQualityKeyIOS")),
-        JSIConverter<std::optional<AVModeIOSOption>>::fromJSI(runtime, obj.getProperty(runtime, "AVModeIOS")),
-        JSIConverter<std::optional<AVEncodingOption>>::fromJSI(runtime, obj.getProperty(runtime, "AVEncodingOptionIOS")),
-        JSIConverter<std::optional<AVEncodingOption>>::fromJSI(runtime, obj.getProperty(runtime, "AVFormatIDKeyIOS")),
+      return margelo::nitro::audiorecorderplayer::AudioSet(
+        JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AudioSourceAndroidType>>::fromJSI(runtime, obj.getProperty(runtime, "AudioSourceAndroid")),
+        JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::OutputFormatAndroidType>>::fromJSI(runtime, obj.getProperty(runtime, "OutputFormatAndroid")),
+        JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AudioEncoderAndroidType>>::fromJSI(runtime, obj.getProperty(runtime, "AudioEncoderAndroid")),
+        JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVEncoderAudioQualityIOSType>>::fromJSI(runtime, obj.getProperty(runtime, "AVEncoderAudioQualityKeyIOS")),
+        JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVModeIOSOption>>::fromJSI(runtime, obj.getProperty(runtime, "AVModeIOS")),
+        JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVEncodingOption>>::fromJSI(runtime, obj.getProperty(runtime, "AVEncodingOptionIOS")),
+        JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVEncodingOption>>::fromJSI(runtime, obj.getProperty(runtime, "AVFormatIDKeyIOS")),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "AVNumberOfChannelsKeyIOS")),
-        JSIConverter<std::optional<AVLinearPCMBitDepthKeyIOSType>>::fromJSI(runtime, obj.getProperty(runtime, "AVLinearPCMBitDepthKeyIOS")),
+        JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVLinearPCMBitDepthKeyIOSType>>::fromJSI(runtime, obj.getProperty(runtime, "AVLinearPCMBitDepthKeyIOS")),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, "AVLinearPCMIsBigEndianKeyIOS")),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, "AVLinearPCMIsFloatKeyIOS")),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, "AVLinearPCMIsNonInterleavedIOS")),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "AVSampleRateKeyIOS")),
-        JSIConverter<std::optional<AudioQualityType>>::fromJSI(runtime, obj.getProperty(runtime, "AudioQuality")),
+        JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AudioQualityType>>::fromJSI(runtime, obj.getProperty(runtime, "AudioQuality")),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "AudioChannels")),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "AudioSamplingRate")),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "AudioEncodingBitRate")),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, "IncludeBase64"))
       );
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, const AudioSet& arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::audiorecorderplayer::AudioSet& arg) {
       jsi::Object obj(runtime);
-      obj.setProperty(runtime, "AudioSourceAndroid", JSIConverter<std::optional<AudioSourceAndroidType>>::toJSI(runtime, arg.AudioSourceAndroid));
-      obj.setProperty(runtime, "OutputFormatAndroid", JSIConverter<std::optional<OutputFormatAndroidType>>::toJSI(runtime, arg.OutputFormatAndroid));
-      obj.setProperty(runtime, "AudioEncoderAndroid", JSIConverter<std::optional<AudioEncoderAndroidType>>::toJSI(runtime, arg.AudioEncoderAndroid));
-      obj.setProperty(runtime, "AVEncoderAudioQualityKeyIOS", JSIConverter<std::optional<AVEncoderAudioQualityIOSType>>::toJSI(runtime, arg.AVEncoderAudioQualityKeyIOS));
-      obj.setProperty(runtime, "AVModeIOS", JSIConverter<std::optional<AVModeIOSOption>>::toJSI(runtime, arg.AVModeIOS));
-      obj.setProperty(runtime, "AVEncodingOptionIOS", JSIConverter<std::optional<AVEncodingOption>>::toJSI(runtime, arg.AVEncodingOptionIOS));
-      obj.setProperty(runtime, "AVFormatIDKeyIOS", JSIConverter<std::optional<AVEncodingOption>>::toJSI(runtime, arg.AVFormatIDKeyIOS));
+      obj.setProperty(runtime, "AudioSourceAndroid", JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AudioSourceAndroidType>>::toJSI(runtime, arg.AudioSourceAndroid));
+      obj.setProperty(runtime, "OutputFormatAndroid", JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::OutputFormatAndroidType>>::toJSI(runtime, arg.OutputFormatAndroid));
+      obj.setProperty(runtime, "AudioEncoderAndroid", JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AudioEncoderAndroidType>>::toJSI(runtime, arg.AudioEncoderAndroid));
+      obj.setProperty(runtime, "AVEncoderAudioQualityKeyIOS", JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVEncoderAudioQualityIOSType>>::toJSI(runtime, arg.AVEncoderAudioQualityKeyIOS));
+      obj.setProperty(runtime, "AVModeIOS", JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVModeIOSOption>>::toJSI(runtime, arg.AVModeIOS));
+      obj.setProperty(runtime, "AVEncodingOptionIOS", JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVEncodingOption>>::toJSI(runtime, arg.AVEncodingOptionIOS));
+      obj.setProperty(runtime, "AVFormatIDKeyIOS", JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVEncodingOption>>::toJSI(runtime, arg.AVFormatIDKeyIOS));
       obj.setProperty(runtime, "AVNumberOfChannelsKeyIOS", JSIConverter<std::optional<double>>::toJSI(runtime, arg.AVNumberOfChannelsKeyIOS));
-      obj.setProperty(runtime, "AVLinearPCMBitDepthKeyIOS", JSIConverter<std::optional<AVLinearPCMBitDepthKeyIOSType>>::toJSI(runtime, arg.AVLinearPCMBitDepthKeyIOS));
+      obj.setProperty(runtime, "AVLinearPCMBitDepthKeyIOS", JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVLinearPCMBitDepthKeyIOSType>>::toJSI(runtime, arg.AVLinearPCMBitDepthKeyIOS));
       obj.setProperty(runtime, "AVLinearPCMIsBigEndianKeyIOS", JSIConverter<std::optional<bool>>::toJSI(runtime, arg.AVLinearPCMIsBigEndianKeyIOS));
       obj.setProperty(runtime, "AVLinearPCMIsFloatKeyIOS", JSIConverter<std::optional<bool>>::toJSI(runtime, arg.AVLinearPCMIsFloatKeyIOS));
       obj.setProperty(runtime, "AVLinearPCMIsNonInterleavedIOS", JSIConverter<std::optional<bool>>::toJSI(runtime, arg.AVLinearPCMIsNonInterleavedIOS));
       obj.setProperty(runtime, "AVSampleRateKeyIOS", JSIConverter<std::optional<double>>::toJSI(runtime, arg.AVSampleRateKeyIOS));
-      obj.setProperty(runtime, "AudioQuality", JSIConverter<std::optional<AudioQualityType>>::toJSI(runtime, arg.AudioQuality));
+      obj.setProperty(runtime, "AudioQuality", JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AudioQualityType>>::toJSI(runtime, arg.AudioQuality));
       obj.setProperty(runtime, "AudioChannels", JSIConverter<std::optional<double>>::toJSI(runtime, arg.AudioChannels));
       obj.setProperty(runtime, "AudioSamplingRate", JSIConverter<std::optional<double>>::toJSI(runtime, arg.AudioSamplingRate));
       obj.setProperty(runtime, "AudioEncodingBitRate", JSIConverter<std::optional<double>>::toJSI(runtime, arg.AudioEncodingBitRate));
@@ -135,20 +133,20 @@ namespace margelo::nitro {
         return false;
       }
       jsi::Object obj = value.getObject(runtime);
-      if (!JSIConverter<std::optional<AudioSourceAndroidType>>::canConvert(runtime, obj.getProperty(runtime, "AudioSourceAndroid"))) return false;
-      if (!JSIConverter<std::optional<OutputFormatAndroidType>>::canConvert(runtime, obj.getProperty(runtime, "OutputFormatAndroid"))) return false;
-      if (!JSIConverter<std::optional<AudioEncoderAndroidType>>::canConvert(runtime, obj.getProperty(runtime, "AudioEncoderAndroid"))) return false;
-      if (!JSIConverter<std::optional<AVEncoderAudioQualityIOSType>>::canConvert(runtime, obj.getProperty(runtime, "AVEncoderAudioQualityKeyIOS"))) return false;
-      if (!JSIConverter<std::optional<AVModeIOSOption>>::canConvert(runtime, obj.getProperty(runtime, "AVModeIOS"))) return false;
-      if (!JSIConverter<std::optional<AVEncodingOption>>::canConvert(runtime, obj.getProperty(runtime, "AVEncodingOptionIOS"))) return false;
-      if (!JSIConverter<std::optional<AVEncodingOption>>::canConvert(runtime, obj.getProperty(runtime, "AVFormatIDKeyIOS"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AudioSourceAndroidType>>::canConvert(runtime, obj.getProperty(runtime, "AudioSourceAndroid"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::OutputFormatAndroidType>>::canConvert(runtime, obj.getProperty(runtime, "OutputFormatAndroid"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AudioEncoderAndroidType>>::canConvert(runtime, obj.getProperty(runtime, "AudioEncoderAndroid"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVEncoderAudioQualityIOSType>>::canConvert(runtime, obj.getProperty(runtime, "AVEncoderAudioQualityKeyIOS"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVModeIOSOption>>::canConvert(runtime, obj.getProperty(runtime, "AVModeIOS"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVEncodingOption>>::canConvert(runtime, obj.getProperty(runtime, "AVEncodingOptionIOS"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVEncodingOption>>::canConvert(runtime, obj.getProperty(runtime, "AVFormatIDKeyIOS"))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, "AVNumberOfChannelsKeyIOS"))) return false;
-      if (!JSIConverter<std::optional<AVLinearPCMBitDepthKeyIOSType>>::canConvert(runtime, obj.getProperty(runtime, "AVLinearPCMBitDepthKeyIOS"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AVLinearPCMBitDepthKeyIOSType>>::canConvert(runtime, obj.getProperty(runtime, "AVLinearPCMBitDepthKeyIOS"))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, "AVLinearPCMIsBigEndianKeyIOS"))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, "AVLinearPCMIsFloatKeyIOS"))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, "AVLinearPCMIsNonInterleavedIOS"))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, "AVSampleRateKeyIOS"))) return false;
-      if (!JSIConverter<std::optional<AudioQualityType>>::canConvert(runtime, obj.getProperty(runtime, "AudioQuality"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::audiorecorderplayer::AudioQualityType>>::canConvert(runtime, obj.getProperty(runtime, "AudioQuality"))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, "AudioChannels"))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, "AudioSamplingRate"))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, "AudioEncodingBitRate"))) return false;

@@ -43,21 +43,19 @@ namespace margelo::nitro::audiorecorderplayer {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::audiorecorderplayer;
-
   // C++ RecordBackType <> JS RecordBackType (object)
   template <>
-  struct JSIConverter<RecordBackType> final {
-    static inline RecordBackType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::audiorecorderplayer::RecordBackType> final {
+    static inline margelo::nitro::audiorecorderplayer::RecordBackType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
-      return RecordBackType(
+      return margelo::nitro::audiorecorderplayer::RecordBackType(
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, "isRecording")),
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, "currentPosition")),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "currentMetering")),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "recordSecs"))
       );
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, const RecordBackType& arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::audiorecorderplayer::RecordBackType& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, "isRecording", JSIConverter<std::optional<bool>>::toJSI(runtime, arg.isRecording));
       obj.setProperty(runtime, "currentPosition", JSIConverter<double>::toJSI(runtime, arg.currentPosition));

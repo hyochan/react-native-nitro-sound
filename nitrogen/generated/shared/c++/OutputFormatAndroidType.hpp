@@ -40,16 +40,14 @@ namespace margelo::nitro::audiorecorderplayer {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::audiorecorderplayer;
-
   // C++ OutputFormatAndroidType <> JS OutputFormatAndroidType (enum)
   template <>
-  struct JSIConverter<OutputFormatAndroidType> final {
-    static inline OutputFormatAndroidType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::audiorecorderplayer::OutputFormatAndroidType> final {
+    static inline margelo::nitro::audiorecorderplayer::OutputFormatAndroidType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       int enumValue = JSIConverter<int>::fromJSI(runtime, arg);
-      return static_cast<OutputFormatAndroidType>(enumValue);
+      return static_cast<margelo::nitro::audiorecorderplayer::OutputFormatAndroidType>(enumValue);
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, OutputFormatAndroidType arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::audiorecorderplayer::OutputFormatAndroidType arg) {
       int enumValue = static_cast<int>(arg);
       return JSIConverter<int>::toJSI(runtime, enumValue);
     }

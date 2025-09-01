@@ -24,7 +24,7 @@
   HybridObjectRegistry::registerHybridObjectConstructor(
     "AudioRecorderPlayer",
     []() -> std::shared_ptr<HybridObject> {
-      std::shared_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpec> hybridObject = NitroAudioRecorderPlayer::NitroAudioRecorderPlayerAutolinking::createAudioRecorderPlayer();
+      std::shared_ptr<HybridAudioRecorderPlayerSpec> hybridObject = NitroAudioRecorderPlayer::NitroAudioRecorderPlayerAutolinking::createAudioRecorderPlayer();
       return hybridObject;
     }
   );

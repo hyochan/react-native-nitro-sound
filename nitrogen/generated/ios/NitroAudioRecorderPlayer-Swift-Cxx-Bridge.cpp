@@ -14,7 +14,7 @@
 namespace margelo::nitro::audiorecorderplayer::bridge::swift {
 
   // pragma MARK: std::function<void(const std::string& /* result */)>
-  Func_void_std__string create_Func_void_std__string(void* _Nonnull swiftClosureWrapper) {
+  Func_void_std__string create_Func_void_std__string(void* _Nonnull swiftClosureWrapper) noexcept {
     auto swiftClosure = NitroAudioRecorderPlayer::Func_void_std__string::fromUnsafe(swiftClosureWrapper);
     return [swiftClosure = std::move(swiftClosure)](const std::string& result) mutable -> void {
       swiftClosure.call(result);
@@ -22,7 +22,7 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
   }
   
   // pragma MARK: std::function<void(const std::exception_ptr& /* error */)>
-  Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* _Nonnull swiftClosureWrapper) {
+  Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* _Nonnull swiftClosureWrapper) noexcept {
     auto swiftClosure = NitroAudioRecorderPlayer::Func_void_std__exception_ptr::fromUnsafe(swiftClosureWrapper);
     return [swiftClosure = std::move(swiftClosure)](const std::exception_ptr& error) mutable -> void {
       swiftClosure.call(error);
@@ -30,7 +30,7 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
   }
   
   // pragma MARK: std::function<void(const RecordBackType& /* recordingMeta */)>
-  Func_void_RecordBackType create_Func_void_RecordBackType(void* _Nonnull swiftClosureWrapper) {
+  Func_void_RecordBackType create_Func_void_RecordBackType(void* _Nonnull swiftClosureWrapper) noexcept {
     auto swiftClosure = NitroAudioRecorderPlayer::Func_void_RecordBackType::fromUnsafe(swiftClosureWrapper);
     return [swiftClosure = std::move(swiftClosure)](const RecordBackType& recordingMeta) mutable -> void {
       swiftClosure.call(recordingMeta);
@@ -38,7 +38,7 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
   }
   
   // pragma MARK: std::function<void(const PlayBackType& /* playbackMeta */)>
-  Func_void_PlayBackType create_Func_void_PlayBackType(void* _Nonnull swiftClosureWrapper) {
+  Func_void_PlayBackType create_Func_void_PlayBackType(void* _Nonnull swiftClosureWrapper) noexcept {
     auto swiftClosure = NitroAudioRecorderPlayer::Func_void_PlayBackType::fromUnsafe(swiftClosureWrapper);
     return [swiftClosure = std::move(swiftClosure)](const PlayBackType& playbackMeta) mutable -> void {
       swiftClosure.call(playbackMeta);
@@ -46,19 +46,19 @@ namespace margelo::nitro::audiorecorderplayer::bridge::swift {
   }
   
   // pragma MARK: std::function<void(const PlaybackEndType& /* playbackEndMeta */)>
-  Func_void_PlaybackEndType create_Func_void_PlaybackEndType(void* _Nonnull swiftClosureWrapper) {
+  Func_void_PlaybackEndType create_Func_void_PlaybackEndType(void* _Nonnull swiftClosureWrapper) noexcept {
     auto swiftClosure = NitroAudioRecorderPlayer::Func_void_PlaybackEndType::fromUnsafe(swiftClosureWrapper);
     return [swiftClosure = std::move(swiftClosure)](const PlaybackEndType& playbackEndMeta) mutable -> void {
       swiftClosure.call(playbackEndMeta);
     };
   }
   
-  // pragma MARK: std::shared_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpec>
-  std::shared_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpec> create_std__shared_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_(void* _Nonnull swiftUnsafePointer) {
+  // pragma MARK: std::shared_ptr<HybridAudioRecorderPlayerSpec>
+  std::shared_ptr<HybridAudioRecorderPlayerSpec> create_std__shared_ptr_HybridAudioRecorderPlayerSpec_(void* _Nonnull swiftUnsafePointer) noexcept {
     NitroAudioRecorderPlayer::HybridAudioRecorderPlayerSpec_cxx swiftPart = NitroAudioRecorderPlayer::HybridAudioRecorderPlayerSpec_cxx::fromUnsafe(swiftUnsafePointer);
     return std::make_shared<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpecSwift>(swiftPart);
   }
-  void* _Nonnull get_std__shared_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_(std__shared_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_ cppType) {
+  void* _Nonnull get_std__shared_ptr_HybridAudioRecorderPlayerSpec_(std__shared_ptr_HybridAudioRecorderPlayerSpec_ cppType) noexcept {
     std::shared_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpecSwift> swiftWrapper = std::dynamic_pointer_cast<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpecSwift>(cppType);
     #ifdef NITRO_DEBUG
     if (swiftWrapper == nullptr) [[unlikely]] {

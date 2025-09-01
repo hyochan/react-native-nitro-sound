@@ -42,20 +42,18 @@ namespace margelo::nitro::audiorecorderplayer {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::audiorecorderplayer;
-
   // C++ PlayBackType <> JS PlayBackType (object)
   template <>
-  struct JSIConverter<PlayBackType> final {
-    static inline PlayBackType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::audiorecorderplayer::PlayBackType> final {
+    static inline margelo::nitro::audiorecorderplayer::PlayBackType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
-      return PlayBackType(
+      return margelo::nitro::audiorecorderplayer::PlayBackType(
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, "isMuted")),
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, "duration")),
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, "currentPosition"))
       );
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, const PlayBackType& arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::audiorecorderplayer::PlayBackType& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, "isMuted", JSIConverter<std::optional<bool>>::toJSI(runtime, arg.isMuted));
       obj.setProperty(runtime, "duration", JSIConverter<double>::toJSI(runtime, arg.duration));

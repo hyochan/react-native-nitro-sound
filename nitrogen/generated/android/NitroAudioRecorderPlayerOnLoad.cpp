@@ -41,8 +41,7 @@ int initialize(JavaVM* vm) {
       []() -> std::shared_ptr<HybridObject> {
         static DefaultConstructableObject<JHybridAudioRecorderPlayerSpec::javaobject> object("com/margelo/nitro/audiorecorderplayer/HybridAudioRecorderPlayer");
         auto instance = object.create();
-        auto globalRef = jni::make_global(instance);
-        return globalRef->cthis()->shared();
+        return instance->cthis()->shared();
       }
     );
   });

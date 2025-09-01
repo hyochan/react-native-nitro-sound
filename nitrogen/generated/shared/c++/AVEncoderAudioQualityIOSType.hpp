@@ -35,16 +35,14 @@ namespace margelo::nitro::audiorecorderplayer {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::audiorecorderplayer;
-
   // C++ AVEncoderAudioQualityIOSType <> JS AVEncoderAudioQualityIOSType (enum)
   template <>
-  struct JSIConverter<AVEncoderAudioQualityIOSType> final {
-    static inline AVEncoderAudioQualityIOSType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::audiorecorderplayer::AVEncoderAudioQualityIOSType> final {
+    static inline margelo::nitro::audiorecorderplayer::AVEncoderAudioQualityIOSType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       int enumValue = JSIConverter<int>::fromJSI(runtime, arg);
-      return static_cast<AVEncoderAudioQualityIOSType>(enumValue);
+      return static_cast<margelo::nitro::audiorecorderplayer::AVEncoderAudioQualityIOSType>(enumValue);
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, AVEncoderAudioQualityIOSType arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::audiorecorderplayer::AVEncoderAudioQualityIOSType arg) {
       int enumValue = static_cast<int>(arg);
       return JSIConverter<int>::toJSI(runtime, enumValue);
     }

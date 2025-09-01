@@ -33,7 +33,7 @@ open class HybridAudioRecorderPlayerSpec_cxx {
   /**
    * Holds a weak pointer to the C++ class that wraps the Swift class.
    */
-  private var __cxxPart: bridge.std__weak_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_
+  private var __cxxPart: bridge.std__weak_ptr_HybridAudioRecorderPlayerSpec_
 
   /**
    * Create a new `HybridAudioRecorderPlayerSpec_cxx` that wraps the given `HybridAudioRecorderPlayerSpec`.
@@ -72,15 +72,15 @@ open class HybridAudioRecorderPlayerSpec_cxx {
 
   /**
    * Gets (or creates) the C++ part of this Hybrid Object.
-   * The C++ part is a `std::shared_ptr<margelo::nitro::audiorecorderplayer::HybridAudioRecorderPlayerSpec>`.
+   * The C++ part is a `std::shared_ptr<HybridAudioRecorderPlayerSpec>`.
    */
-  public func getCxxPart() -> bridge.std__shared_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_ {
+  public func getCxxPart() -> bridge.std__shared_ptr_HybridAudioRecorderPlayerSpec_ {
     let cachedCxxPart = self.__cxxPart.lock()
     if cachedCxxPart.__convertToBool() {
       return cachedCxxPart
     } else {
-      let newCxxPart = bridge.create_std__shared_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_(self.toUnsafe())
-      __cxxPart = bridge.weakify_std__shared_ptr_margelo__nitro__audiorecorderplayer__HybridAudioRecorderPlayerSpec_(newCxxPart)
+      let newCxxPart = bridge.create_std__shared_ptr_HybridAudioRecorderPlayerSpec_(self.toUnsafe())
+      __cxxPart = bridge.weakify_std__shared_ptr_HybridAudioRecorderPlayerSpec_(newCxxPart)
       return newCxxPart
     }
   }
@@ -113,13 +113,15 @@ open class HybridAudioRecorderPlayerSpec_cxx {
   public final func startRecorder(uri: bridge.std__optional_std__string_, audioSets: bridge.std__optional_AudioSet_, meteringEnabled: bridge.std__optional_bool_) -> bridge.Result_std__shared_ptr_Promise_std__string___ {
     do {
       let __result = try self.__implementation.startRecorder(uri: { () -> String? in
-        if let __unwrapped = uri.value {
+        if bridge.has_value_std__optional_std__string_(uri) {
+          let __unwrapped = bridge.get_std__optional_std__string_(uri)
           return String(__unwrapped)
         } else {
           return nil
         }
       }(), audioSets: { () -> AudioSet? in
-        if let __unwrapped = audioSets.value {
+        if bridge.has_value_std__optional_AudioSet_(audioSets) {
+          let __unwrapped = bridge.get_std__optional_AudioSet_(audioSets)
           return __unwrapped
         } else {
           return nil
@@ -201,13 +203,15 @@ open class HybridAudioRecorderPlayerSpec_cxx {
   public final func startPlayer(uri: bridge.std__optional_std__string_, httpHeaders: bridge.std__optional_std__unordered_map_std__string__std__string__) -> bridge.Result_std__shared_ptr_Promise_std__string___ {
     do {
       let __result = try self.__implementation.startPlayer(uri: { () -> String? in
-        if let __unwrapped = uri.value {
+        if bridge.has_value_std__optional_std__string_(uri) {
+          let __unwrapped = bridge.get_std__optional_std__string_(uri)
           return String(__unwrapped)
         } else {
           return nil
         }
       }(), httpHeaders: { () -> Dictionary<String, String>? in
-        if let __unwrapped = httpHeaders.value {
+        if bridge.has_value_std__optional_std__unordered_map_std__string__std__string__(httpHeaders) {
+          let __unwrapped = bridge.get_std__optional_std__unordered_map_std__string__std__string__(httpHeaders)
           return { () -> Dictionary<String, String> in
             var __dictionary = Dictionary<String, String>(minimumCapacity: __unwrapped.size())
             let __keys = bridge.get_std__unordered_map_std__string__std__string__keys(__unwrapped)

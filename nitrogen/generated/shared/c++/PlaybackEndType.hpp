@@ -41,19 +41,17 @@ namespace margelo::nitro::audiorecorderplayer {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::audiorecorderplayer;
-
   // C++ PlaybackEndType <> JS PlaybackEndType (object)
   template <>
-  struct JSIConverter<PlaybackEndType> final {
-    static inline PlaybackEndType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::audiorecorderplayer::PlaybackEndType> final {
+    static inline margelo::nitro::audiorecorderplayer::PlaybackEndType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
-      return PlaybackEndType(
+      return margelo::nitro::audiorecorderplayer::PlaybackEndType(
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, "duration")),
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, "currentPosition"))
       );
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, const PlaybackEndType& arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::audiorecorderplayer::PlaybackEndType& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, "duration", JSIConverter<double>::toJSI(runtime, arg.duration));
       obj.setProperty(runtime, "currentPosition", JSIConverter<double>::toJSI(runtime, arg.currentPosition));
