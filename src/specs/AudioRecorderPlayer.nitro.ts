@@ -57,9 +57,13 @@ export type AVEncodingOption =
 
 export type AVModeIOSOption =
   | 'gameChatAudio'
+  | 'measurement'
+  | 'moviePlayback'
+  | 'spokenAudio'
+  | 'videoChat'
   | 'videoRecording'
   | 'voiceChat'
-  | 'videoChat';
+  | 'voicePrompt';
 
 export enum AVEncoderAudioQualityIOSType {
   min = 0,
