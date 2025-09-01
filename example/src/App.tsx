@@ -180,6 +180,7 @@ const App = () => {
         AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
         AVNumberOfChannelsKeyIOS: 2,
         AVFormatIDKeyIOS: 'aac' as const,
+        AVModeIOS: 'measurement' as const, // Using measurement mode for accurate audio recording
       };
 
       console.log('🎤 Audio settings created successfully:', audioSet);

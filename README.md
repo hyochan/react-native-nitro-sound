@@ -323,6 +323,7 @@ const audioSet: AudioSet = {
   AVFormatIDKeyIOS: AVEncodingOption.aac,
   AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
   AVNumberOfChannelsKeyIOS: 2,
+  AVModeIOS: 'measurement', // Available options: 'gameChatAudio', 'measurement', 'moviePlayback', 'spokenAudio', 'videoChat', 'videoRecording', 'voiceChat', 'voicePrompt'
 
   // Android Settings
   AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
