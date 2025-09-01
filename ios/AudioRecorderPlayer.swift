@@ -34,8 +34,12 @@ class HybridAudioRecorderPlayer: HybridAudioRecorderPlayerSpec {
             do {
                 // Setup audio session in background
                 self.recordingSession = AVAudioSession.sharedInstance()
+                
+                // Apply AVModeIOS if provided
+                let sessionMode = audioSets?.AVModeIOS != nil ? self.getAudioSessionMode(from: audioSets!.AVModeIOS!) : .default
+                
                 try self.recordingSession?.setCategory(.playAndRecord, 
-                                                     mode: .default, 
+                                                     mode: sessionMode, 
                                                      options: [.defaultToSpeaker, .allowBluetooth])
                 try self.recordingSession?.setActive(true)
                 
@@ -525,6 +529,33 @@ class HybridAudioRecorderPlayer: HybridAudioRecorderPlayerSpec {
         default:
             // Handle unexpected enum case by returning AAC as default
             return Int(kAudioFormatMPEG4AAC)
+        }
+    }
+    
+    private func getAudioSessionMode(from mode: AVModeIOSOption) -> AVAudioSession.Mode {
+        switch mode {
+        case .gamechataudio:
+            return .gameChat
+        case .measurement:
+            return .measurement
+        case .movieplayback:
+            return .moviePlayback
+        case .spokenaudio:
+            return .spokenAudio
+        case .videochat:
+            return .videoChat
+        case .videorecording:
+            return .videoRecording
+        case .voicechat:
+            return .voiceChat
+        case .voiceprompt:
+            if #available(iOS 12.0, *) {
+                return .voicePrompt
+            } else {
+                return .default
+            }
+        default:
+            return .default
         }
     }
     
