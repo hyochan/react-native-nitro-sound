@@ -121,14 +121,32 @@ class HybridAudioRecorderPlayer: HybridAudioRecorderPlayerSpec {
             // Start recording on main queue
             DispatchQueue.main.async {
                 print("🎙️ Starting recording...")
-                let started = self.audioRecorder?.record() ?? false
-                print("🎙️ Recording started: \(started)")
                 
-                if started {
-                    self.startRecordTimer()
-                    promise.resolve(withResult: fileURL.absoluteString)
-                } else {
-                    promise.reject(withError: RuntimeError.error(withMessage: "Failed to start recording"))
+                // Ensure audio session is active before recording
+                do {
+                    // Try to activate the session with notification to other apps
+                    try self.recordingSession?.setActive(true, options: .notifyOthersOnDeactivation)
+                    print("🎙️ Audio session activated with notification")
+                } catch {
+                    print("🎙️ Warning: Could not activate session with notification: \(error)")
+                    // Try without notification option as fallback
+                    try? self.recordingSession?.setActive(true)
+                }
+                
+                // Small delay to ensure session is fully active
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    let started = self.audioRecorder?.record() ?? false
+                    print("🎙️ Recording started: \(started)")
+                    
+                    if started {
+                        self.startRecordTimer()
+                        promise.resolve(withResult: fileURL.absoluteString)
+                    } else {
+                        // If still fails, log more details for debugging
+                        let isRecording = self.audioRecorder?.isRecording ?? false
+                        print("🎙️ Recorder state - isRecording: \(isRecording)")
+                        promise.reject(withError: RuntimeError.error(withMessage: "Failed to start recording. Please check microphone permissions and try again."))
+                    }
                 }
             }
             

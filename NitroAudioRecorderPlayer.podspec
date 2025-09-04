@@ -31,6 +31,7 @@ Pod::Spec.new do |s|
     "HEADER_SEARCH_PATHS" => "$(inherited) ${PODS_ROOT}/RCT-Folly",
     "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_MOBILE=1 FOLLY_USE_LIBCPP=1 FOLLY_CFG_NO_COROUTINES",
     "OTHER_CPLUSPLUSFLAGS" => "$(inherited) #{folly_compiler_flags}",
+    "PRODUCT_MODULE_NAME" => "NitroAudioRecorderPlayer",
   }
 
   s.dependency 'React-Core'
