@@ -39,7 +39,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: example/ios/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock', 'example/ios/Podfile', 'example/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
 
       - name: Setup Ruby + Bundler cache
         uses: ruby/setup-ruby@v1
@@ -52,10 +54,15 @@ jobs:
         run: |
           cd example
           if [ "${{ steps.pods-cache.outputs.cache-hit }}" = "true" ]; then
-            echo "Using cached Pods -> running deterministic install"
-            bundle exec pod install --project-directory=ios --deployment
+            echo "Cache hit - verifying pod installation"
+            if bundle exec pod check --project-directory=ios; then
+              echo "✅ Pods are up to date"
+            else
+              echo "⚠️ Pods need update - running pod install"
+              bundle exec pod install --project-directory=ios
+            fi
           else
-            echo "Cold cache -> updating repo and cleaning Pods once"
+            echo "No cache hit - installing pods from scratch"
             rm -rf ios/Pods
             bundle exec pod install --project-directory=ios --repo-update
           fi
