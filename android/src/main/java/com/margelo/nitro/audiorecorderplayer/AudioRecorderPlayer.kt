@@ -24,6 +24,7 @@ import kotlin.math.log10
 class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
     private var mediaRecorder: MediaRecorder? = null
     private var mediaPlayer: MediaPlayer? = null
+    private var currentRecordingPath: String? = null
 
     private var recordTimer: Timer? = null
     private var playTimer: Timer? = null
@@ -103,6 +104,8 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                 val fileName = "sound_${System.currentTimeMillis()}.mp4"
                 File(dir, fileName).absolutePath
             }
+            // Store the recording path
+            currentRecordingPath = filePath
 
             // Initialize MediaRecorder
             mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -277,7 +280,9 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     stopRecordTimer()
                 }
 
-                promise.resolve("Recorder stopped")
+                val path = currentRecordingPath ?: "Unknown path"
+                currentRecordingPath = null // Clear after returning
+                promise.resolve(path)
             } catch (e: Exception) {
                 mediaRecorder?.release()
                 mediaRecorder = null
