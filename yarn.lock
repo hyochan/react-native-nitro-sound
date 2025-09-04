@@ -13560,14 +13560,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:^19.1.0":
-  version: 19.1.1
-  resolution: "react-dom@npm:19.1.1"
+"react-dom@npm:19.1.0":
+  version: 19.1.0
+  resolution: "react-dom@npm:19.1.0"
   dependencies:
     scheduler: ^0.26.0
   peerDependencies:
-    react: ^19.1.1
-  checksum: 71d63df955e99bb58470c6ae12ebb82fa80e2a73147c387b73a31c17bcff803ce8aded52ae0c4391c9b413be0aa449249d8be7d063136826d1f0caba9720a907
+    react: ^19.1.0
+  checksum: 1d154b6543467095ac269e61ca59db546f34ef76bcdeb90f2dad41d682cd210aae492e70c85010ed5d0a2caea225e9a55139ebc1a615ee85bf197d7f99678cdf
   languageName: node
   linkType: hard
 
@@ -13604,7 +13604,7 @@ __metadata:
     babel-plugin-react-native-web: ^0.20.0
     html-webpack-plugin: ^5.6.3
     react: 19.1.0
-    react-dom: ^19.1.0
+    react-dom: 19.1.0
     react-native: ^0.81.0
     react-native-builder-bob: ^0.40.12
     react-native-monorepo-config: ^0.1.9
