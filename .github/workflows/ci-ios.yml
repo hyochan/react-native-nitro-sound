@@ -39,15 +39,15 @@ jobs:
         with:
           path: example/ios/Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
 
-      - name: Install cocoapods
+      - name: Install CocoaPods (fresh)
         run: |
           cd example
           gem install bundler -v 2.3.25
           bundle install
-          bundle exec pod install --project-directory=ios
+          # Clear potentially stale cached Pods from older RN versions
+          rm -rf ios/Pods
+          bundle exec pod install --project-directory=ios --repo-update
 
       - name: Verify iOS dependencies
         run: |
