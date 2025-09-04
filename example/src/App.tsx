@@ -20,6 +20,7 @@ import AudioRecorderPlayer, {
   type PlayBackType,
   type PlaybackEndType,
 } from '../../src';
+import { RapidSwitchTest } from './RapidSwitchTest';
 
 const App = () => {
   const [recordSecs, setRecordSecs] = useState(0);
@@ -41,6 +42,7 @@ const App = () => {
   const [currentPosition, setCurrentPosition] = useState(0);
   const [totalDuration, setTotalDuration] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [showTestView, setShowTestView] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -458,291 +460,310 @@ const App = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.section}>
-          <Text style={styles.title}>Audio Recorder</Text>
+      <View style={styles.toggleButtonContainer}>
+        <TouchableOpacity
+          style={[styles.button, styles.toggleButton]}
+          onPress={() => setShowTestView(!showTestView)}
+        >
+          <Text style={styles.buttonText}>
+            {showTestView ? 'Show Main App' : 'Show Bug Test'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-          <View style={styles.timeContainer}>
-            <Text style={styles.timeText}>{recordTime}</Text>
-            <Text style={styles.timeLabel}>
-              {isRecording
-                ? 'Recording...'
-                : recordSecs > 0
-                  ? 'Recorded'
-                  : 'Recording Time'}
-            </Text>
-            {actualRecordedDuration > 0 && !isRecording && (
-              <Text style={styles.durationInfo}>
-                Duration: {AudioRecorderPlayer.mmssss(actualRecordedDuration)}
+      {showTestView ? (
+        <RapidSwitchTest />
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.section}>
+            <Text style={styles.title}>Audio Recorder</Text>
+
+            <View style={styles.timeContainer}>
+              <Text style={styles.timeText}>{recordTime}</Text>
+              <Text style={styles.timeLabel}>
+                {isRecording
+                  ? 'Recording...'
+                  : recordSecs > 0
+                    ? 'Recorded'
+                    : 'Recording Time'}
               </Text>
-            )}
-          </View>
+              {actualRecordedDuration > 0 && !isRecording && (
+                <Text style={styles.durationInfo}>
+                  Duration: {AudioRecorderPlayer.mmssss(actualRecordedDuration)}
+                </Text>
+              )}
+            </View>
 
-          <View style={styles.buttonRow}>
-            {!isRecording ? (
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  styles.recordButton,
-                  isRecordLoading && styles.disabledButton,
-                ]}
-                onPress={onStartRecord}
-                disabled={isRecordLoading}
-              >
-                {isRecordLoading ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator
-                      size="small"
-                      color="white"
-                      style={styles.loadingSpinner}
-                    />
-                    <Text style={styles.buttonText}>{loadingMessage}</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.buttonText}>Start Record</Text>
-                )}
-              </TouchableOpacity>
-            ) : (
-              <>
-                {!isPaused ? (
-                  <TouchableOpacity
-                    style={[styles.button, styles.pauseButton]}
-                    onPress={onPauseRecord}
-                  >
-                    <Text style={styles.buttonText}>Pause</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    style={[styles.button, styles.resumeButton]}
-                    onPress={onResumeRecord}
-                  >
-                    <Text style={styles.buttonText}>Resume</Text>
-                  </TouchableOpacity>
-                )}
+            <View style={styles.buttonRow}>
+              {!isRecording ? (
                 <TouchableOpacity
                   style={[
                     styles.button,
-                    styles.stopButton,
-                    isStopLoading && styles.disabledButton,
+                    styles.recordButton,
+                    isRecordLoading && styles.disabledButton,
                   ]}
-                  onPress={onStopRecord}
-                  disabled={isStopLoading}
+                  onPress={onStartRecord}
+                  disabled={isRecordLoading}
                 >
-                  <View style={styles.buttonContent}>
-                    {isStopLoading && (
+                  {isRecordLoading ? (
+                    <View style={styles.loadingContainer}>
                       <ActivityIndicator
                         size="small"
                         color="white"
                         style={styles.loadingSpinner}
                       />
-                    )}
-                    <Text style={styles.buttonText}>
-                      {isStopLoading ? 'Stopping...' : 'Stop'}
-                    </Text>
-                  </View>
+                      <Text style={styles.buttonText}>{loadingMessage}</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.buttonText}>Start Record</Text>
+                  )}
                 </TouchableOpacity>
-              </>
+              ) : (
+                <>
+                  {!isPaused ? (
+                    <TouchableOpacity
+                      style={[styles.button, styles.pauseButton]}
+                      onPress={onPauseRecord}
+                    >
+                      <Text style={styles.buttonText}>Pause</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.button, styles.resumeButton]}
+                      onPress={onResumeRecord}
+                    >
+                      <Text style={styles.buttonText}>Resume</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={[
+                      styles.button,
+                      styles.stopButton,
+                      isStopLoading && styles.disabledButton,
+                    ]}
+                    onPress={onStopRecord}
+                    disabled={isStopLoading}
+                  >
+                    <View style={styles.buttonContent}>
+                      {isStopLoading && (
+                        <ActivityIndicator
+                          size="small"
+                          color="white"
+                          style={styles.loadingSpinner}
+                        />
+                      )}
+                      <Text style={styles.buttonText}>
+                        {isStopLoading ? 'Stopping...' : 'Stop'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.separator} />
+
+          <View style={styles.section}>
+            <Text style={styles.title}>Audio Player</Text>
+
+            <View style={styles.timeContainer}>
+              <Text style={styles.timeText}>
+                {playTime} / {duration}
+              </Text>
+              <Text style={styles.timeLabel}>Playback Time</Text>
+            </View>
+
+            {/* Progress Bar for Seeking */}
+            {totalDuration > 0 && (
+              <View style={styles.progressContainer}>
+                <Text style={styles.progressLabel}>Seek Position</Text>
+                {Platform.OS === 'ios' ? (
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={0}
+                    maximumValue={totalDuration}
+                    value={currentPosition}
+                    onValueChange={(value: number) => setCurrentPosition(value)}
+                    onSlidingComplete={onSeek}
+                    minimumTrackTintColor="#5f27cd"
+                    maximumTrackTintColor="#e0e0e0"
+                    thumbTintColor="#5f27cd"
+                    disabled={!isPlaying && currentPosition === 0}
+                  />
+                ) : (
+                  <View style={styles.androidProgressBar}>
+                    <View
+                      style={[
+                        styles.androidProgressFill,
+                        {
+                          width: `${(currentPosition / totalDuration) * 100}%`,
+                        },
+                      ]}
+                    />
+                  </View>
+                )}
+              </View>
             )}
-          </View>
-        </View>
 
-        <View style={styles.separator} />
-
-        <View style={styles.section}>
-          <Text style={styles.title}>Audio Player</Text>
-
-          <View style={styles.timeContainer}>
-            <Text style={styles.timeText}>
-              {playTime} / {duration}
-            </Text>
-            <Text style={styles.timeLabel}>Playback Time</Text>
-          </View>
-
-          {/* Progress Bar for Seeking */}
-          {totalDuration > 0 && (
-            <View style={styles.progressContainer}>
-              <Text style={styles.progressLabel}>Seek Position</Text>
+            {/* Volume Control */}
+            <View style={styles.controlContainer}>
+              <Text style={styles.controlLabel}>
+                Volume: {Math.round(volume * 100)}%
+              </Text>
               {Platform.OS === 'ios' ? (
                 <Slider
                   style={styles.slider}
                   minimumValue={0}
-                  maximumValue={totalDuration}
-                  value={currentPosition}
-                  onValueChange={(value: number) => setCurrentPosition(value)}
-                  onSlidingComplete={onSeek}
-                  minimumTrackTintColor="#5f27cd"
+                  maximumValue={1}
+                  value={volume}
+                  onValueChange={onVolumeChange}
+                  minimumTrackTintColor="#00d2d3"
                   maximumTrackTintColor="#e0e0e0"
-                  thumbTintColor="#5f27cd"
-                  disabled={!isPlaying && currentPosition === 0}
+                  thumbTintColor="#00d2d3"
                 />
               ) : (
-                <View style={styles.androidProgressBar}>
-                  <View
-                    style={[
-                      styles.androidProgressFill,
-                      { width: `${(currentPosition / totalDuration) * 100}%` },
-                    ]}
-                  />
-                </View>
+                <Text style={styles.androidNote}>
+                  Volume control available on iOS
+                </Text>
               )}
             </View>
-          )}
 
-          {/* Volume Control */}
-          <View style={styles.controlContainer}>
-            <Text style={styles.controlLabel}>
-              Volume: {Math.round(volume * 100)}%
-            </Text>
-            {Platform.OS === 'ios' ? (
-              <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={1}
-                value={volume}
-                onValueChange={onVolumeChange}
-                minimumTrackTintColor="#00d2d3"
-                maximumTrackTintColor="#e0e0e0"
-                thumbTintColor="#00d2d3"
-              />
-            ) : (
-              <Text style={styles.androidNote}>
-                Volume control available on iOS
+            {/* Playback Speed Control */}
+            <View style={styles.controlContainer}>
+              <Text style={styles.controlLabel}>
+                Speed: {playbackSpeed.toFixed(1)}x
               </Text>
-            )}
-          </View>
+              {Platform.OS === 'ios' ? (
+                <Slider
+                  style={styles.slider}
+                  minimumValue={0.5}
+                  maximumValue={2.0}
+                  value={playbackSpeed}
+                  onValueChange={onSpeedChange}
+                  minimumTrackTintColor="#ffa502"
+                  maximumTrackTintColor="#e0e0e0"
+                  thumbTintColor="#ffa502"
+                />
+              ) : (
+                <Text style={styles.androidNote}>
+                  Speed control available on iOS
+                </Text>
+              )}
+            </View>
 
-          {/* Playback Speed Control */}
-          <View style={styles.controlContainer}>
-            <Text style={styles.controlLabel}>
-              Speed: {playbackSpeed.toFixed(1)}x
-            </Text>
-            {Platform.OS === 'ios' ? (
-              <Slider
-                style={styles.slider}
-                minimumValue={0.5}
-                maximumValue={2.0}
-                value={playbackSpeed}
-                onValueChange={onSpeedChange}
-                minimumTrackTintColor="#ffa502"
-                maximumTrackTintColor="#e0e0e0"
-                thumbTintColor="#ffa502"
-              />
-            ) : (
-              <Text style={styles.androidNote}>
-                Speed control available on iOS
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.playButton,
+                  (!recordingPath || isPlaying || isLoading || isStopLoading) &&
+                    styles.disabledButton,
+                ]}
+                onPress={() => onStartPlay(false)}
+                disabled={
+                  !recordingPath || isPlaying || isLoading || isStopLoading
+                }
+              >
+                <View style={styles.buttonContent}>
+                  {isLoading && (
+                    <ActivityIndicator
+                      size="small"
+                      color="white"
+                      style={styles.loadingSpinner}
+                    />
+                  )}
+                  <Text style={styles.buttonText}>
+                    {isLoading
+                      ? loadingMessage
+                      : isPlaying
+                        ? 'Playing...'
+                        : 'Play'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.pauseButton,
+                  (!isPlaying || isPlaybackPaused) && styles.disabledButton,
+                ]}
+                onPress={onPausePlay}
+                disabled={!isPlaying || isPlaybackPaused}
+              >
+                <Text style={styles.buttonText}>Pause</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.resumeButton,
+                  !isPlaybackPaused && styles.disabledButton,
+                ]}
+                onPress={onResumePlay}
+                disabled={!isPlaybackPaused}
+              >
+                <Text style={styles.buttonText}>Resume</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.stopButton,
+                  !isPlaying && currentPosition === 0 && styles.disabledButton,
+                ]}
+                onPress={onStopPlay}
+                disabled={!isPlaying && currentPosition === 0}
+              >
+                <Text style={styles.buttonText}>Stop</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Remote URL Test Button */}
+            <View style={styles.remoteTestContainer}>
+              <Text style={styles.remoteTestLabel}>
+                Test Remote URL Playback
               </Text>
-            )}
-          </View>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.remoteTestButton,
+                  (isPlaying || isLoading) && styles.disabledButton,
+                ]}
+                onPress={() => onStartPlay(true)}
+                disabled={isPlaying || isLoading}
+              >
+                <View style={styles.buttonContent}>
+                  {isLoading && (
+                    <ActivityIndicator
+                      size="small"
+                      color="white"
+                      style={styles.loadingSpinner}
+                    />
+                  )}
+                  <Text style={styles.buttonText}>Play Remote MP3</Text>
+                </View>
+              </TouchableOpacity>
+              <Text style={styles.remoteTestInfo}>
+                Tests addPlayBackListener with HTTPS URL
+              </Text>
+            </View>
 
-          <View style={styles.buttonRow}>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.playButton,
-                (!recordingPath || isPlaying || isLoading || isStopLoading) &&
-                  styles.disabledButton,
-              ]}
-              onPress={() => onStartPlay(false)}
-              disabled={
-                !recordingPath || isPlaying || isLoading || isStopLoading
-              }
-            >
-              <View style={styles.buttonContent}>
-                {isLoading && (
-                  <ActivityIndicator
-                    size="small"
-                    color="white"
-                    style={styles.loadingSpinner}
-                  />
-                )}
-                <Text style={styles.buttonText}>
-                  {isLoading
-                    ? loadingMessage
-                    : isPlaying
-                      ? 'Playing...'
-                      : 'Play'}
+            {!recordingPath && (
+              <View style={styles.instructionContainer}>
+                <Text style={styles.instructionText}>
+                  Please record audio first before playing
                 </Text>
               </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.pauseButton,
-                (!isPlaying || isPlaybackPaused) && styles.disabledButton,
-              ]}
-              onPress={onPausePlay}
-              disabled={!isPlaying || isPlaybackPaused}
-            >
-              <Text style={styles.buttonText}>Pause</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.resumeButton,
-                !isPlaybackPaused && styles.disabledButton,
-              ]}
-              onPress={onResumePlay}
-              disabled={!isPlaybackPaused}
-            >
-              <Text style={styles.buttonText}>Resume</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.stopButton,
-                !isPlaying && currentPosition === 0 && styles.disabledButton,
-              ]}
-              onPress={onStopPlay}
-              disabled={!isPlaying && currentPosition === 0}
-            >
-              <Text style={styles.buttonText}>Stop</Text>
-            </TouchableOpacity>
-          </View>
+            )}
 
-          {/* Remote URL Test Button */}
-          <View style={styles.remoteTestContainer}>
-            <Text style={styles.remoteTestLabel}>Test Remote URL Playback</Text>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.remoteTestButton,
-                (isPlaying || isLoading) && styles.disabledButton,
-              ]}
-              onPress={() => onStartPlay(true)}
-              disabled={isPlaying || isLoading}
-            >
-              <View style={styles.buttonContent}>
-                {isLoading && (
-                  <ActivityIndicator
-                    size="small"
-                    color="white"
-                    style={styles.loadingSpinner}
-                  />
-                )}
-                <Text style={styles.buttonText}>Play Remote MP3</Text>
+            {recordingPath ? (
+              <View style={styles.pathContainer}>
+                <Text style={styles.pathLabel}>Recording Path:</Text>
+                <Text style={styles.pathText}>{recordingPath}</Text>
               </View>
-            </TouchableOpacity>
-            <Text style={styles.remoteTestInfo}>
-              Tests addPlayBackListener with HTTPS URL
-            </Text>
+            ) : null}
           </View>
-
-          {!recordingPath && (
-            <View style={styles.instructionContainer}>
-              <Text style={styles.instructionText}>
-                Please record audio first before playing
-              </Text>
-            </View>
-          )}
-
-          {recordingPath ? (
-            <View style={styles.pathContainer}>
-              <Text style={styles.pathLabel}>Recording Path:</Text>
-              <Text style={styles.pathText}>{recordingPath}</Text>
-            </View>
-          ) : null}
-        </View>
-      </ScrollView>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -958,6 +979,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     fontStyle: 'italic',
+  },
+  toggleButton: {
+    backgroundColor: '#FF5722',
+    marginHorizontal: 20,
+    marginVertical: 10,
+  },
+  toggleButtonContainer: {
+    paddingTop: 10,
+    paddingBottom: 5,
+    backgroundColor: '#f5f5f5',
   },
 });
 

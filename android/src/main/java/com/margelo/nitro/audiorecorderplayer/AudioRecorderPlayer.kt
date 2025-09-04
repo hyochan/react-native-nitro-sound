@@ -344,6 +344,42 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     setAudioStreamType(AudioManager.STREAM_MUSIC)
                 }
 
+                // Track if promise has been resolved to avoid double resolution
+                var isPromiseResolved = false
+
+                // Set up error listener BEFORE any operations that might fail
+                setOnErrorListener { _, what, extra ->
+                    if (!isPromiseResolved) {
+                        isPromiseResolved = true
+                        promise.reject(Exception("MediaPlayer error: what=$what, extra=$extra"))
+                    }
+                    // Log error for debugging but don't try to reject promise again
+                    true
+                }
+
+                setOnCompletionListener {
+                    handler.post {
+                        stopPlayTimer()
+
+                        // Send final playback update
+                        playBackListener?.invoke(
+                            PlayBackType(
+                                isMuted = false,
+                                duration = duration.toDouble(),
+                                currentPosition = duration.toDouble()
+                            )
+                        )
+
+                        // Send playback end event
+                        playbackEndListener?.invoke(
+                            PlaybackEndType(
+                                duration = duration.toDouble(),
+                                currentPosition = duration.toDouble()
+                            )
+                        )
+                    }
+                }
+
                 when {
                     uri.startsWith("http") -> {
                         // Handle network audio
@@ -365,36 +401,11 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
 
                     // Start playback on main thread
                     handler.post {
-                        start()
-                        startPlayTimer()
-                        promise.resolve(uri)
-                    }
-
-                    setOnErrorListener { _, what, extra ->
-                        promise.reject(Exception("MediaPlayer error: what=$what, extra=$extra"))
-                        true
-                    }
-
-                    setOnCompletionListener {
-                        handler.post {
-                            stopPlayTimer()
-
-                            // Send final playback update
-                            playBackListener?.invoke(
-                                PlayBackType(
-                                    isMuted = false,
-                                    duration = duration.toDouble(),
-                                    currentPosition = duration.toDouble()
-                                )
-                            )
-
-                            // Send playback end event
-                            playbackEndListener?.invoke(
-                                PlaybackEndType(
-                                    duration = duration.toDouble(),
-                                    currentPosition = duration.toDouble()
-                                )
-                            )
+                        if (!isPromiseResolved) {
+                            start()
+                            startPlayTimer()
+                            isPromiseResolved = true
+                            promise.resolve(uri)
                         }
                     }
                 }
