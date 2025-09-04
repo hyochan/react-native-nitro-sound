@@ -51,10 +51,10 @@
       "cwd": "${workspaceFolder}/example"
     },
     {
-      "name": "🔄 Regenerate Nitro",
+      "name": "🔄 Regenerate Nitro + Pods",
       "request": "launch",
       "type": "node-terminal",
-      "command": "yarn nitro-codegen && cd example/ios && pod install",
+      "command": "yarn nitrogen && cd example && npx pod-install",
       "cwd": "${workspaceFolder}"
     }
   ],

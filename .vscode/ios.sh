@@ -2,7 +2,24 @@
 
 echo "🚀 Starting iOS app..."
 
-# Navigate to example directory
+# 1) Regenerate Nitro bindings at repo root
+echo "🧬 Running Nitrogen codegen..."
+ROOT_DIR="$(dirname "$0")/.."
+pushd "$ROOT_DIR" >/dev/null
+yarn nitrogen || {
+  echo "❌ Nitrogen codegen failed"; exit 1;
+}
+popd >/dev/null
+
+# 2) Install iOS Pods in example (via npx pod-install)
+echo "📦 Installing iOS pods in example..."
+pushd "$(dirname "$0")/../example" >/dev/null
+npx pod-install || {
+  echo "❌ pod-install failed"; exit 1;
+}
+popd >/dev/null
+
+# 3) Navigate to example directory to run Metro and the app
 cd "$(dirname "$0")/../example"
 
 # Check if Metro is already running
