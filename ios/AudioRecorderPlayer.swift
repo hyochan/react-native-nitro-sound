@@ -3,6 +3,8 @@ import AVFoundation
 import NitroModules
 
 class HybridAudioRecorderPlayer: HybridAudioRecorderPlayerSpec {
+    // Small delay to ensure the audio session is fully active before recording starts
+    private let audioSessionActivationDelay: TimeInterval = 0.1
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVAudioPlayer?
     private var audioEngine: AVAudioEngine?
@@ -129,12 +131,19 @@ class HybridAudioRecorderPlayer: HybridAudioRecorderPlayerSpec {
                     print("🎙️ Audio session activated with notification")
                 } catch {
                     print("🎙️ Warning: Could not activate session with notification: \(error)")
-                    // Try without notification option as fallback
-                    try? self.recordingSession?.setActive(true)
+                    // Try without notification option as fallback, but fail explicitly if it also errors
+                    do {
+                        try self.recordingSession?.setActive(true)
+                        print("🎙️ Audio session activated without notification (fallback)")
+                    } catch let fallbackError {
+                        print("🎙️ Error: Fallback audio session activation failed: \(fallbackError)")
+                        promise.reject(withError: RuntimeError.error(withMessage: "Failed to activate audio session: \(fallbackError.localizedDescription)"))
+                        return
+                    }
                 }
                 
                 // Small delay to ensure session is fully active
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + self.audioSessionActivationDelay) {
                     let started = self.audioRecorder?.record() ?? false
                     print("🎙️ Recording started: \(started)")
                     
