@@ -12,7 +12,7 @@ jobs:
   ios-dependencies:
     runs-on: macos-14
     env:
-      XCODE_VERSION: 15.4
+      XCODE_VERSION: 16.1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,19 +35,30 @@ jobs:
           xcode-version: ${{ env.XCODE_VERSION }}
 
       - name: Cache CocoaPods
+        id: pods-cache
         uses: actions/cache@v4
         with:
           path: example/ios/Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock') }}
 
-      - name: Install CocoaPods (fresh)
+      - name: Setup Ruby + Bundler cache
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: example
+
+      - name: Install CocoaPods
         run: |
           cd example
-          gem install bundler -v 2.3.25
-          bundle install
-          # Clear potentially stale cached Pods from older RN versions
-          rm -rf ios/Pods
-          bundle exec pod install --project-directory=ios --repo-update
+          if [ "${{ steps.pods-cache.outputs.cache-hit }}" = "true" ]; then
+            echo "Using cached Pods -> running deterministic install"
+            bundle exec pod install --project-directory=ios --deployment
+          else
+            echo "Cold cache -> updating repo and cleaning Pods once"
+            rm -rf ios/Pods
+            bundle exec pod install --project-directory=ios --repo-update
+          fi
 
       - name: Verify iOS dependencies
         run: |
