@@ -329,7 +329,6 @@ class AudioRecorderPlayerWebImpl implements AudioRecorderPlayerType {
         this.mediaRecorder?.state === 'recording'
       ) {
         const currentPosition = performance.now() - startTime;
-        const recordSecs = currentPosition / 1000;
 
         this.recordBackListener({
           isRecording: true,
@@ -337,7 +336,8 @@ class AudioRecorderPlayerWebImpl implements AudioRecorderPlayerType {
           currentMetering: meteringEnabled
             ? this.getCurrentMetering()
             : undefined,
-          recordSecs,
+          // Keep consistent with native (ms)
+          recordSecs: currentPosition,
         });
       }
     }, this.subscriptionDuration);
