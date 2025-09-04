@@ -260,9 +260,28 @@ const App = () => {
       setIsRecording(false);
       setIsPaused(false);
       setIsStopLoading(false);
-      console.log('Recording stopped:', result);
-      console.log('Final recorded duration:', finalTime);
-      console.log('Actual recorded milliseconds:', recordSecs);
+
+      // Log the recording path returned from stopRecorder
+      console.log('🎤 ============================================');
+      console.log('🎤 Recording stopped successfully!');
+      console.log('🎤 Returned file path:', result);
+      console.log('🎤 Type of result:', typeof result);
+      console.log(
+        '🎤 Is path valid?:',
+        result && result !== 'Recorder stopped'
+      );
+      console.log('🎤 Final recorded duration:', finalTime);
+      console.log('🎤 Actual recorded milliseconds:', recordSecs);
+      console.log('🎤 ============================================');
+
+      // Show alert with the returned path for easy verification
+      if (Platform.OS === 'android') {
+        Alert.alert(
+          'Recording Stopped',
+          `File saved at:\n${result}\n\nDuration: ${finalTime}`,
+          [{ text: 'OK' }]
+        );
+      }
     } catch (error) {
       console.error('Stop record error:', error);
       setIsStopLoading(false);
