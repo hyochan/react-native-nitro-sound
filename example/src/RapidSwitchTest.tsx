@@ -19,7 +19,7 @@ const TEST_AUDIO_URLS = [
 export const RapidSwitchTest: React.FC = () => {
   const [isTestRunning, setIsTestRunning] = useState(false);
   const [testLog, setTestLog] = useState<string[]>([]);
-  const [currentTrack, setCurrentTrack] = useState(0);
+  const [currentTrack, setCurrentTrack] = useState(-1);
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -102,7 +102,10 @@ export const RapidSwitchTest: React.FC = () => {
           });
         } catch (error) {
           addLog(`ERROR on switch ${i + 1}: ${error}`);
-          if (error.toString().includes('already resolved')) {
+          if (
+            error instanceof Error &&
+            error.toString().includes('already resolved')
+          ) {
             Alert.alert(
               'Bug Found!',
               'Promise already resolved error occurred!'

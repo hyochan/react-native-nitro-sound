@@ -345,12 +345,11 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                 }
 
                 // Track if promise has been resolved to avoid double resolution
-                var isPromiseResolved = false
+                val isPromiseResolved = java.util.concurrent.atomic.AtomicBoolean(false)
 
                 // Set up error listener BEFORE any operations that might fail
                 setOnErrorListener { _, what, extra ->
-                    if (!isPromiseResolved) {
-                        isPromiseResolved = true
+                    if (isPromiseResolved.compareAndSet(false, true)) {
                         promise.reject(Exception("MediaPlayer error: what=$what, extra=$extra"))
                     }
                     // Log error for debugging but don't try to reject promise again
@@ -401,10 +400,9 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
 
                     // Start playback on main thread
                     handler.post {
-                        if (!isPromiseResolved) {
+                        if (isPromiseResolved.compareAndSet(false, true)) {
                             start()
                             startPlayTimer()
-                            isPromiseResolved = true
                             promise.resolve(uri)
                         }
                     }
