@@ -224,7 +224,8 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     startRecordTimer()
                 }
 
-                promise.resolve(filePath)
+                val fileUri = Uri.fromFile(File(filePath)).toString()
+                promise.resolve(fileUri)
             } catch (e: Exception) {
                 promise.reject(e)
             }
@@ -280,9 +281,13 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                     stopRecordTimer()
                 }
 
-                val path = currentRecordingPath ?: "Unknown path"
-                currentRecordingPath = null // Clear after returning
-                promise.resolve(path)
+                val path = currentRecordingPath
+                currentRecordingPath = null // State is cleared regardless of outcome
+                
+                path?.let { 
+                    val fileUri = Uri.fromFile(File(it)).toString()
+                    promise.resolve(fileUri)
+                } ?: promise.reject(Exception("Recorder not started or path is unavailable."))
             } catch (e: Exception) {
                 mediaRecorder?.release()
                 mediaRecorder = null
@@ -389,8 +394,13 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                         // Handle content URI
                         setDataSource(context, Uri.parse(uri))
                     }
+                    uri.startsWith("file://") -> {
+                        // Handle file:// URIs - strip the prefix for local files
+                        val filePath = uri.substring(7) // Remove "file://" prefix
+                        setDataSource(filePath)
+                    }
                     else -> {
-                        // Handle local file
+                        // Handle local file paths
                         setDataSource(uri)
                     }
                 }
