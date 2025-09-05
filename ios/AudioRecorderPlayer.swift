@@ -165,30 +165,55 @@ class HybridAudioRecorderPlayer: HybridAudioRecorderPlayerSpec {
                             let currentCategory = audioSession.category
                             let currentMode = audioSession.mode
                             
-                            // Check if another library changed the audio session
-                            if currentCategory != .playAndRecord {
-                                print("🎙️ ⚠️ Audio session category was changed to: \(currentCategory)")
-                                print("🎙️ ⚠️ Audio session mode was changed to: \(currentMode)")
-                                print("🎙️ Forcing correct category and mode for recording...")
+                            // Always force correct settings on every attempt
+                            if currentCategory != .playAndRecord || recordAttempts > 1 {
+                                if currentCategory != .playAndRecord {
+                                    print("🎙️ ⚠️ Audio session category was changed to: \(currentCategory)")
+                                    print("🎙️ ⚠️ Audio session mode was changed to: \(currentMode)")
+                                }
+                                print("🎙️ Forcing correct category and mode for recording (attempt \(recordAttempts))...")
                                 
-                                // Force deactivate first to reset
-                                try audioSession.setActive(false)
+                                // More aggressive reset sequence
+                                // 1. First try to interrupt other audio sessions
+                                try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+                                Thread.sleep(forTimeInterval: 0.05)
                                 
-                                // Force the correct category and mode
-                                let sessionMode = self.audioRecorder?.isMeteringEnabled == true ? AVAudioSession.Mode.measurement : AVAudioSession.Mode.default
+                                // 2. Set our category with mixing options to reduce conflicts
+                                let sessionMode = AVAudioSession.Mode.default
+                                try audioSession.setCategory(.playAndRecord, 
+                                                           mode: sessionMode,
+                                                           options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
+                                
+                                // 3. Activate with interruption
+                                try audioSession.setActive(true, options: [])
+                                Thread.sleep(forTimeInterval: 0.05)
+                                
+                                // 4. Now set final category without mixing (exclusive access)
                                 try audioSession.setCategory(.playAndRecord, 
                                                            mode: sessionMode,
                                                            options: [.defaultToSpeaker, .allowBluetooth])
-                                
-                                // Activate with notification
                                 try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-                                print("🎙️ Audio session corrected and reactivated")
                                 
-                                // Add a small delay after correcting the session
-                                Thread.sleep(forTimeInterval: 0.1)
+                                print("🎙️ Audio session corrected and exclusively activated")
+                                
+                                // Longer delay to let the system settle
+                                Thread.sleep(forTimeInterval: 0.2)
                             }
-                        } catch {
+                        } catch let error as NSError {
                             print("🎙️ Error correcting audio session: \(error)")
+                            print("🎙️ Error code: \(error.code), domain: \(error.domain)")
+                            
+                            // If we get OSStatus -50 (param error), try simpler activation
+                            if error.code == -50 {
+                                print("🎙️ Attempting simple activation due to param error...")
+                                do {
+                                    try audioSession.setCategory(.playAndRecord)
+                                    try audioSession.setActive(true)
+                                    Thread.sleep(forTimeInterval: 0.1)
+                                } catch {
+                                    print("🎙️ Simple activation also failed: \(error)")
+                                }
+                            }
                         }
                         
                         let started = self.audioRecorder?.record() ?? false
