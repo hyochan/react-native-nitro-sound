@@ -2,13 +2,18 @@
 
 echo "🚀 Starting iOS app..."
 
+# Helper function to check if directory contains workspace package.json
+is_workspace_root() {
+  [ -f "$1/package.json" ] && grep -q '"workspaces"' "$1/package.json" 2>/dev/null
+}
+
 # Get the absolute paths - handle both launch.json and direct execution
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Find the root directory by looking for package.json with workspaces
-if [ -f "$SCRIPT_DIR/../package.json" ] && grep -q '"workspaces"' "$SCRIPT_DIR/../package.json" 2>/dev/null; then
+if is_workspace_root "$SCRIPT_DIR/.."; then
   ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-elif [ -f "$(pwd)/../package.json" ] && grep -q '"workspaces"' "$(pwd)/../package.json" 2>/dev/null; then
+elif is_workspace_root "$(pwd)/.."; then
   ROOT_DIR="$(cd "$(pwd)/.." && pwd)"
 else
   echo "❌ Could not find workspace root directory"
