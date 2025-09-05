@@ -354,31 +354,41 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
 
                 // Set up error listener BEFORE any operations that might fail
                 setOnErrorListener { _, what, extra ->
-                    if (isPromiseResolved.compareAndSet(false, true)) {
-                        promise.reject(Exception("MediaPlayer error: what=$what, extra=$extra"))
+                    handler.post {
+                        stopPlayTimer()
+                        if (isPromiseResolved.compareAndSet(false, true)) {
+                            promise.reject(Exception("MediaPlayer error: what=$what, extra=$extra"))
+                        }
                     }
                     // Log error for debugging but don't try to reject promise again
                     true
                 }
 
-                setOnCompletionListener {
+                setOnCompletionListener { player ->
                     handler.post {
                         stopPlayTimer()
+
+                        // Get duration safely
+                        val safeDuration = try {
+                            player.duration.toDouble()
+                        } catch (e: IllegalStateException) {
+                            0.0
+                        }
 
                         // Send final playback update
                         playBackListener?.invoke(
                             PlayBackType(
                                 isMuted = false,
-                                duration = duration.toDouble(),
-                                currentPosition = duration.toDouble()
+                                duration = safeDuration,
+                                currentPosition = safeDuration
                             )
                         )
 
                         // Send playback end event
                         playbackEndListener?.invoke(
                             PlaybackEndType(
-                                duration = duration.toDouble(),
-                                currentPosition = duration.toDouble()
+                                duration = safeDuration,
+                                currentPosition = safeDuration
                             )
                         )
                     }
@@ -409,10 +419,17 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
 
                     // Start playback on main thread
                     handler.post {
-                        if (isPromiseResolved.compareAndSet(false, true)) {
-                            start()
-                            startPlayTimer()
-                            promise.resolve(uri)
+                        try {
+                            if (isPromiseResolved.compareAndSet(false, true)) {
+                                start()
+                                startPlayTimer()
+                                promise.resolve(uri)
+                            }
+                        } catch (e: Exception) {
+                            // If start() fails, make sure we don't leave promise unresolved
+                            if (isPromiseResolved.compareAndSet(false, true)) {
+                                promise.reject(Exception("Failed to start MediaPlayer: ${e.message}", e))
+                            }
                         }
                     }
                 }
@@ -634,14 +651,37 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
         playTimer?.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 mediaPlayer?.let { player ->
-                    handler.post {
-                        playBackListener?.invoke(
-                            PlayBackType(
-                                isMuted = false,
-                                duration = player.duration.toDouble(),
-                                currentPosition = player.currentPosition.toDouble()
-                            )
-                        )
+                    try {
+                        // Check if player is in valid state for getting duration/position
+                        val safeDuration = try {
+                            player.duration.toDouble()
+                        } catch (e: IllegalStateException) {
+                            -1.0 // Invalid state, skip this update
+                        }
+                        
+                        val safeCurrentPosition = try {
+                            player.currentPosition.toDouble()
+                        } catch (e: IllegalStateException) {
+                            -1.0 // Invalid state, skip this update
+                        }
+                        
+                        // Only invoke callback if we have valid data
+                        if (safeDuration >= 0 && safeCurrentPosition >= 0) {
+                            handler.post {
+                                playBackListener?.invoke(
+                                    PlayBackType(
+                                        isMuted = false,
+                                        duration = safeDuration,
+                                        currentPosition = safeCurrentPosition
+                                    )
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // MediaPlayer might be in invalid state, stop timer
+                        handler.post {
+                            stopPlayTimer()
+                        }
                     }
                 }
             }

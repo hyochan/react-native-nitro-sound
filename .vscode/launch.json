@@ -5,8 +5,7 @@
       "name": "🍎 iOS Simulator",
       "request": "launch",
       "type": "node-terminal",
-      "command": "${workspaceFolder}/.vscode/ios.sh",
-      "cwd": "${workspaceFolder}/example"
+      "command": "${workspaceFolder}/.vscode/ios.sh"
     },
     {
       "name": "🤖 Android Emulator",

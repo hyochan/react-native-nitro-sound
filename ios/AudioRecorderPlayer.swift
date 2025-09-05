@@ -144,18 +144,106 @@ class HybridAudioRecorderPlayer: HybridAudioRecorderPlayerSpec {
                 
                 // Small delay to ensure session is fully active
                 DispatchQueue.main.asyncAfter(deadline: .now() + self.audioSessionActivationDelay) {
-                    let started = self.audioRecorder?.record() ?? false
-                    print("🎙️ Recording started: \(started)")
-                    
-                    if started {
-                        self.startRecordTimer()
-                        promise.resolve(withResult: fileURL.absoluteString)
+                    // Check if audio session is still active
+                    let audioSession = AVAudioSession.sharedInstance()
+                    if !audioSession.isOtherAudioPlaying {
+                        print("🎙️ No other audio playing, proceeding with recording")
                     } else {
-                        // If still fails, log more details for debugging
-                        let isRecording = self.audioRecorder?.isRecording ?? false
-                        print("🎙️ Recorder state - isRecording: \(isRecording)")
-                        promise.reject(withError: RuntimeError.error(withMessage: "Failed to start recording. Please check microphone permissions and try again."))
+                        print("🎙️ Warning: Other audio is playing")
                     }
+                    
+                    // Try to record with retry mechanism
+                    var recordAttempts = 0
+                    let maxAttempts = 3
+                    
+                    func attemptRecording() {
+                        recordAttempts += 1
+                        print("🎙️ Recording attempt \(recordAttempts)/\(maxAttempts)")
+                        
+                        // Before each attempt, force the correct audio session settings
+                        do {
+                            let currentCategory = audioSession.category
+                            let currentMode = audioSession.mode
+                            
+                            // Check if another library changed the audio session
+                            if currentCategory != .playAndRecord {
+                                print("🎙️ ⚠️ Audio session category was changed to: \(currentCategory)")
+                                print("🎙️ ⚠️ Audio session mode was changed to: \(currentMode)")
+                                print("🎙️ Forcing correct category and mode for recording...")
+                                
+                                // Force deactivate first to reset
+                                try audioSession.setActive(false)
+                                
+                                // Force the correct category and mode
+                                let sessionMode = self.audioRecorder?.isMeteringEnabled == true ? AVAudioSession.Mode.measurement : AVAudioSession.Mode.default
+                                try audioSession.setCategory(.playAndRecord, 
+                                                           mode: sessionMode,
+                                                           options: [.defaultToSpeaker, .allowBluetooth])
+                                
+                                // Activate with notification
+                                try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                                print("🎙️ Audio session corrected and reactivated")
+                                
+                                // Add a small delay after correcting the session
+                                Thread.sleep(forTimeInterval: 0.1)
+                            }
+                        } catch {
+                            print("🎙️ Error correcting audio session: \(error)")
+                        }
+                        
+                        let started = self.audioRecorder?.record() ?? false
+                        print("🎙️ Recording started: \(started)")
+                        
+                        if started {
+                            self.startRecordTimer()
+                            promise.resolve(withResult: fileURL.absoluteString)
+                        } else if recordAttempts < maxAttempts {
+                            print("🎙️ Recording attempt \(recordAttempts) failed, retrying in 0.3s...")
+                            
+                            // Try to fully reset audio session before retry
+                            do {
+                                try audioSession.setActive(false)
+                                
+                                // Re-set the category to ensure it's correct
+                                let sessionMode = self.audioRecorder?.isMeteringEnabled == true ? AVAudioSession.Mode.measurement : AVAudioSession.Mode.default
+                                try audioSession.setCategory(.playAndRecord, 
+                                                           mode: sessionMode,
+                                                           options: [.defaultToSpeaker, .allowBluetooth])
+                                try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                                print("🎙️ Audio session fully reset for retry")
+                            } catch {
+                                print("🎙️ Warning: Could not reset session: \(error)")
+                            }
+                            
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                attemptRecording()
+                            }
+                        } else {
+                            // All attempts failed, provide detailed error info
+                            let isRecording = self.audioRecorder?.isRecording ?? false
+                            let sessionCategory = audioSession.category
+                            let sessionMode = audioSession.mode
+                            let otherAudioPlaying = audioSession.isOtherAudioPlaying
+                            
+                            print("🎙️ All recording attempts failed")
+                            print("🎙️ Recorder state - isRecording: \(isRecording)")
+                            print("🎙️ Audio session - category: \(sessionCategory), mode: \(sessionMode)")
+                            print("🎙️ Audio session - other audio playing: \(otherAudioPlaying)")
+                            
+                            var errorMessage = "Failed to start recording after \(maxAttempts) attempts."
+                            if sessionCategory != .playAndRecord {
+                                errorMessage += " Audio session was hijacked by another app (category: \(sessionCategory.rawValue)). Try closing other media apps."
+                            } else if otherAudioPlaying {
+                                errorMessage += " Other audio is currently playing. Please stop other audio apps and try again."
+                            } else {
+                                errorMessage += " Please check microphone permissions and ensure no other apps are using the microphone."
+                            }
+                            
+                            promise.reject(withError: RuntimeError.error(withMessage: errorMessage))
+                        }
+                    }
+                    
+                    attemptRecording()
                 }
             }
             
