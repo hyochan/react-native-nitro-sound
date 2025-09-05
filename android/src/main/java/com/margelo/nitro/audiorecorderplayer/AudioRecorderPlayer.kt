@@ -395,9 +395,8 @@ class HybridAudioRecorderPlayer : HybridAudioRecorderPlayerSpec() {
                         setDataSource(context, Uri.parse(uri))
                     }
                     uri.startsWith("file://") -> {
-                        // Handle file:// URIs - strip the prefix for local files
-                        val filePath = uri.substring(7) // Remove "file://" prefix
-                        setDataSource(filePath)
+                        // Handle file URI
+                        setDataSource(context, Uri.parse(uri))
                     }
                     else -> {
                         // Handle local file paths
