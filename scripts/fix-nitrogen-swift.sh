@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 # Fix Nitrogen-generated Swift code that uses C++ std::optional syntax
 
 AUDIO_SET_FILE="nitrogen/generated/ios/swift/AudioSet.swift"
