@@ -37,7 +37,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - NitroSound (0.0.2):
+  - NitroSound (0.1.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2614,7 +2614,7 @@ SPEC CHECKSUMS:
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: 4f8246b1f6d79f625e0d99472d1f3a71da4d28ca
   NitroModules: fb1a99c1009adb251a440be2280587331092317d
-  NitroSound: c32264722cb6ab4d2eaa27e91efa526b8d8c0c4d
+  NitroSound: 37dd6e24f585f446a3f6bb9eccae6c25cd8938d3
   RCT-Folly: 59ec0ac1f2f39672a0c6e6cecdd39383b764646f
   RCTDeprecation: c4b9e2fd0ab200e3af72b013ed6113187c607077
   RCTRequired: e97dd5dafc1db8094e63bc5031e0371f092ae92a
@@ -2682,6 +2682,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: fa23995c18b65978347b096d0836f4f5093df545
 
-PODFILE CHECKSUM: 276f5f2d3ddb13bbe091e4d32841f4ca7c09d388
+PODFILE CHECKSUM: 0cc11c4613be3ded6586d28a6486183052f21404
 
 COCOAPODS: 1.16.2

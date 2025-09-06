@@ -28,23 +28,32 @@ echo "📍 Working from root: $ROOT_DIR"
 echo "📦 Ensuring workspace dependencies are installed..."
 cd "$ROOT_DIR"
 
-# Force clean install if react-native is missing
-if [ ! -d "$EXAMPLE_DIR/node_modules/react-native/scripts" ]; then
-  echo "⚠️  React Native scripts missing, performing clean install..."
-  rm -rf node_modules example/node_modules
+# Always check and install dependencies if react-native scripts are missing
+if [ ! -f "$EXAMPLE_DIR/node_modules/react-native/scripts/react_native_pods.rb" ]; then
+  echo "⚠️  React Native scripts missing, installing dependencies..."
+  
+  # Clean install to ensure everything is properly linked
+  echo "🧹 Cleaning old node_modules..."
+  rm -rf node_modules example/node_modules yarn.lock example/yarn.lock
+  
+  echo "📦 Installing fresh dependencies..."
   yarn install || {
     echo "❌ Workspace yarn install failed"
     exit 1
   }
-fi
-
-# Regular check for node_modules
-if [ ! -d "node_modules" ] || [ ! -d "example/node_modules" ]; then
-  echo "Installing workspace dependencies..."
-  yarn install || {
-    echo "❌ Workspace yarn install failed"
-    exit 1
-  }
+  
+  # Verify installation
+  if [ ! -f "$EXAMPLE_DIR/node_modules/react-native/scripts/react_native_pods.rb" ]; then
+    echo "⚠️  React Native still not properly installed, trying alternative approach..."
+    cd "$EXAMPLE_DIR"
+    yarn install || {
+      echo "❌ Example yarn install failed"
+      exit 1
+    }
+    cd "$ROOT_DIR"
+  fi
+else
+  echo "✅ Dependencies already installed"
 fi
 
 # 2) Regenerate Nitro bindings at repo root
@@ -56,21 +65,13 @@ yarn nitrogen || {
 
 # 3) Final verification of critical files
 if [ ! -f "$EXAMPLE_DIR/node_modules/react-native/scripts/react_native_pods.rb" ]; then
-  echo "⚠️  Critical React Native files still missing after install"
-  echo "Running clean workspace install..."
-  cd "$ROOT_DIR"
-  rm -rf node_modules example/node_modules
-  yarn cache clean
-  yarn install || {
-    echo "❌ Clean workspace install failed"
-    exit 1
-  }
-  
-  # Final check
-  if [ ! -f "$EXAMPLE_DIR/node_modules/react-native/scripts/react_native_pods.rb" ]; then
-    echo "❌ Failed to install React Native properly. Please run 'yarn install' manually from project root."
-    exit 1
-  fi
+  echo "❌ Critical React Native files still missing after all install attempts"
+  echo "Please try the following manually:"
+  echo "  1. cd $ROOT_DIR"
+  echo "  2. rm -rf node_modules example/node_modules yarn.lock"
+  echo "  3. yarn install"
+  echo "  4. Run this script again"
+  exit 1
 fi
 
 # 4) Install iOS Pods in example

@@ -1,18 +1,5 @@
-buildscript {
-  ext.getExtOrDefault = {name ->
-    return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['Sound_' + name]
-  }
-
-  repositories {
-    google()
-    mavenCentral()
-  }
-
-  dependencies {
-    classpath "com.android.tools.build:gradle:8.7.2"
-    // noinspection DifferentKotlinGradleVersion
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${getExtOrDefault('kotlinVersion')}"
-  }
+def getExtOrDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['Sound_' + name]
 }
 
 def reactNativeArchitectures() {
@@ -20,11 +7,11 @@ def reactNativeArchitectures() {
   return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
+apply plugin: "com.facebook.react"
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
-apply from: '../nitrogen/generated/android/NitroSound+autolinking.gradle'
 
-apply plugin: "com.facebook.react"
+apply from: '../nitrogen/generated/android/NitroSound+autolinking.gradle'
 
 def getExtOrIntegerDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["Sound_" + name]).toInteger()
@@ -33,26 +20,17 @@ def getExtOrIntegerDefault(name) {
 android {
   namespace "com.margelo.nitro.sound"
 
-  compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
+  compileSdk getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
-    minSdkVersion getExtOrIntegerDefault("minSdkVersion")
-    targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
+    minSdk getExtOrIntegerDefault("minSdkVersion")
+    targetSdk getExtOrIntegerDefault("targetSdkVersion")
 
     externalNativeBuild {
       cmake {
         cppFlags "-frtti -fexceptions -Wall -fstack-protector-all"
         arguments "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
         abiFilters (*reactNativeArchitectures())
-
-        buildTypes {
-          debug {
-            cppFlags "-O1 -g"
-          }
-          release {
-            cppFlags "-O2"
-          }
-        }
       }
     }
   }

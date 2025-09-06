@@ -1,6 +1,6 @@
 {
   "name": "react-native-nitro-sound",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "React Native Sound Module 🔥 by Nitro",
   "homepage": "https://github.com/hyochan/react-native-nitro-sound",
   "main": "./lib/module/index.js",
@@ -87,12 +87,12 @@
     "eslint-plugin-prettier": "^5.2.3",
     "expo": "^53.0.19",
     "jest": "^29.7.0",
-    "nitro-codegen": "^0.29.2",
+    "nitro-codegen": "^0.29.3",
     "prettier": "^3.0.3",
     "react": "19.0.0",
     "react-native": "0.79.2",
     "react-native-builder-bob": "0.38.4",
-    "react-native-nitro-modules": "^0.29.2",
+    "react-native-nitro-modules": "^0.29.3",
     "release-it": "^17.10.0",
     "turbo": "^1.10.7",
     "typescript": "^5.8.3"
