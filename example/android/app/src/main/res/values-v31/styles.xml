@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ splash configuration -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- Keep existing background for pre-draw & pre-12 fallback -->
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <!-- System splashscreen on API 31+ -->
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/launch</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <!-- Optional: reduce extra animation time -->
+        <item name="android:windowSplashScreenAnimationDuration">200</item>
+    </style>
+</resources>
+

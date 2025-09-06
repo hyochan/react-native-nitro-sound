@@ -41,5 +41,30 @@ target 'SoundExample' do
         config.build_settings['CLANG_WARN_DOCUMENTATION_COMMENTS'] = 'NO'
       end
     end
+
+    # Patch RN Codegen script phase to use stable relative paths (fixes xcodebuild 65)
+    installer.pods_project.targets.each do |t|
+      t.build_phases.each do |phase|
+        next unless phase.respond_to?(:name) && phase.respond_to?(:shell_script)
+        name = phase.name.to_s
+        script = phase.shell_script.to_s
+        if name.include?('Generate Specs') || script.include?('RCT_SCRIPT_RN_DIR')
+          phase.shell_script = <<-'SCRIPT'
+pushd "$PODS_ROOT/../" > /dev/null
+RCT_SCRIPT_POD_INSTALLATION_ROOT=$(pwd)
+popd >/dev/null
+
+export RCT_SCRIPT_RN_DIR="$PODS_ROOT/../../node_modules/react-native"
+export RCT_SCRIPT_APP_PATH="$PODS_ROOT/../../"
+export RCT_SCRIPT_OUTPUT_DIR="$RCT_SCRIPT_POD_INSTALLATION_ROOT"
+export RCT_SCRIPT_TYPE="withCodegenDiscovery"
+
+export SCRIPT_PHASES_SCRIPT="$RCT_SCRIPT_RN_DIR/scripts/react_native_pods_utils/script_phases.sh"
+export WITH_ENVIRONMENT="$RCT_SCRIPT_RN_DIR/scripts/xcode/with-environment.sh"
+/bin/sh -c '"$WITH_ENVIRONMENT" "$SCRIPT_PHASES_SCRIPT"'
+SCRIPT
+        end
+      end
+    end
   end
 end
