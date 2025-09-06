@@ -28,7 +28,7 @@
 #include "OutputFormatAndroidType.hpp"
 #include <optional>
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   using namespace facebook;
 
@@ -37,7 +37,7 @@ namespace margelo::nitro::audiorecorderplayer {
    */
   struct JAudioSet final: public jni::JavaClass<JAudioSet> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/audiorecorderplayer/AudioSet;";
+    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AudioSet;";
 
   public:
     /**
@@ -134,4 +134,4 @@ namespace margelo::nitro::audiorecorderplayer {
     }
   };
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound

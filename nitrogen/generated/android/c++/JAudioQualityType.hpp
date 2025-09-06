@@ -10,7 +10,7 @@
 #include <fbjni/fbjni.h>
 #include "AudioQualityType.hpp"
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   using namespace facebook;
 
@@ -19,7 +19,7 @@ namespace margelo::nitro::audiorecorderplayer {
    */
   struct JAudioQualityType final: public jni::JavaClass<JAudioQualityType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/audiorecorderplayer/AudioQualityType;";
+    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AudioQualityType;";
 
   public:
     /**
@@ -59,4 +59,4 @@ namespace margelo::nitro::audiorecorderplayer {
     }
   };
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound

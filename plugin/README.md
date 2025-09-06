@@ -1,6 +1,6 @@
-# Expo Config Plugin for react-native-audio-recorder-player
+# Expo Config Plugin for react-native-nitro-sound
 
-This plugin automatically configures your Expo project for using react-native-audio-recorder-player.
+This plugin automatically configures your Expo project for using react-native-nitro-sound.
 
 ## What it does
 
@@ -21,7 +21,7 @@ In your `app.json` or `app.config.js`:
 {
   "expo": {
     "plugins": [
-      "react-native-audio-recorder-player"
+      "react-native-nitro-sound"
     ]
   }
 }
@@ -34,7 +34,7 @@ Or with custom microphone permission text:
   "expo": {
     "plugins": [
       [
-        "react-native-audio-recorder-player",
+        "react-native-nitro-sound",
         {
           "microphonePermissionText": "This app needs access to your microphone to record audio messages."
         }

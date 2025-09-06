@@ -1,34 +1,29 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import type {
-  AudioRecorderPlayer as AudioRecorderPlayerType,
+  Sound as SoundType,
   AudioSet,
   RecordBackType,
   PlayBackType,
   PlaybackEndType,
-} from './specs/AudioRecorderPlayer.nitro';
+} from './specs/Sound.nitro';
 
-export * from './specs/AudioRecorderPlayer.nitro';
+export * from './specs/Sound.nitro';
 
-class AudioRecorderPlayerImpl {
-  private hybridObject: AudioRecorderPlayerType | null = null;
+class SoundImpl {
+  private hybridObject: SoundType | null = null;
 
-  private getHybridObject(): AudioRecorderPlayerType {
+  private getHybridObject(): SoundType {
     if (!this.hybridObject) {
       try {
-        console.log('🔧 Creating AudioRecorderPlayer HybridObject...');
-        this.hybridObject =
-          NitroModules.createHybridObject<AudioRecorderPlayerType>(
-            'AudioRecorderPlayer'
-          );
+        console.log('🔧 Creating Sound HybridObject...');
+        this.hybridObject = NitroModules.createHybridObject<SoundType>('Sound');
         console.log(
           '🔧 HybridObject created successfully:',
           !!this.hybridObject
         );
       } catch (error) {
         console.error('🔧 Failed to create HybridObject:', error);
-        throw new Error(
-          `Failed to create AudioRecorderPlayer HybridObject: ${error}`
-        );
+        throw new Error(`Failed to create Sound HybridObject: ${error}`);
       }
     }
     return this.hybridObject;
@@ -148,6 +143,6 @@ class AudioRecorderPlayerImpl {
 }
 
 // Create singleton instance
-const AudioRecorderPlayer = new AudioRecorderPlayerImpl();
+const Sound = new SoundImpl();
 
-export default AudioRecorderPlayer;
+export default Sound;

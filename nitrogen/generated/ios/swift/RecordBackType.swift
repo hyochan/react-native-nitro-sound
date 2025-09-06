@@ -10,10 +10,10 @@ import NitroModules
 /**
  * Represents an instance of `RecordBackType`, backed by a C++ struct.
  */
-public typealias RecordBackType = margelo.nitro.audiorecorderplayer.RecordBackType
+public typealias RecordBackType = margelo.nitro.sound.RecordBackType
 
 public extension RecordBackType {
-  private typealias bridge = margelo.nitro.audiorecorderplayer.bridge.swift
+  private typealias bridge = margelo.nitro.sound.bridge.swift
 
   /**
    * Create a new instance of `RecordBackType`.

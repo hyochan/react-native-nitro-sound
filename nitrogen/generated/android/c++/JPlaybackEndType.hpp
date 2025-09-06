@@ -12,7 +12,7 @@
 
 
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   using namespace facebook;
 
@@ -21,7 +21,7 @@ namespace margelo::nitro::audiorecorderplayer {
    */
   struct JPlaybackEndType final: public jni::JavaClass<JPlaybackEndType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/audiorecorderplayer/PlaybackEndType;";
+    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/PlaybackEndType;";
 
   public:
     /**
@@ -54,4 +54,4 @@ namespace margelo::nitro::audiorecorderplayer {
     }
   };
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound

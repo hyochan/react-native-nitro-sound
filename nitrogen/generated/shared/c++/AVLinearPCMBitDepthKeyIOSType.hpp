@@ -18,7 +18,7 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   /**
    * An enum which can be represented as a JavaScript enum (AVLinearPCMBitDepthKeyIOSType).
@@ -30,18 +30,18 @@ namespace margelo::nitro::audiorecorderplayer {
     BIT32      SWIFT_NAME(bit32) = 32,
   } CLOSED_ENUM;
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound
 
 namespace margelo::nitro {
 
   // C++ AVLinearPCMBitDepthKeyIOSType <> JS AVLinearPCMBitDepthKeyIOSType (enum)
   template <>
-  struct JSIConverter<margelo::nitro::audiorecorderplayer::AVLinearPCMBitDepthKeyIOSType> final {
-    static inline margelo::nitro::audiorecorderplayer::AVLinearPCMBitDepthKeyIOSType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::sound::AVLinearPCMBitDepthKeyIOSType> final {
+    static inline margelo::nitro::sound::AVLinearPCMBitDepthKeyIOSType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       int enumValue = JSIConverter<int>::fromJSI(runtime, arg);
-      return static_cast<margelo::nitro::audiorecorderplayer::AVLinearPCMBitDepthKeyIOSType>(enumValue);
+      return static_cast<margelo::nitro::sound::AVLinearPCMBitDepthKeyIOSType>(enumValue);
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::audiorecorderplayer::AVLinearPCMBitDepthKeyIOSType arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::sound::AVLinearPCMBitDepthKeyIOSType arg) {
       int enumValue = static_cast<int>(arg);
       return JSIConverter<int>::toJSI(runtime, enumValue);
     }

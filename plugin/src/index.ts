@@ -9,16 +9,16 @@ import {
 import { version } from './version';
 
 const pkg = {
-  name: 'react-native-audio-recorder-player',
+  name: 'react-native-nitro-sound',
   version,
 };
 
 // Global flag to prevent duplicate logs
 let hasLoggedPluginExecution = false;
 
-const withAudioRecorderPlayerAndroid: ConfigPlugin = (config: any) => {
-  config = withAndroidManifest(config, (config: any) => {
-    const manifest = config.modResults;
+const withSoundAndroid: ConfigPlugin = (config: any) => {
+  config = withAndroidManifest(config, (c: any) => {
+    const manifest = c.modResults;
     if (!manifest.manifest['uses-permission']) {
       manifest.manifest['uses-permission'] = [];
     }
@@ -46,23 +46,23 @@ const withAudioRecorderPlayerAndroid: ConfigPlugin = (config: any) => {
 
     if (addedPermissions.length > 0 && !hasLoggedPluginExecution) {
       console.log(
-        `✅ react-native-audio-recorder-player: Added Android permissions to AndroidManifest.xml:\n   ${addedPermissions.join('\n   ')}`
+        `✅ react-native-nitro-sound: Added Android permissions to AndroidManifest.xml:\n   ${addedPermissions.join('\n   ')}`
       );
     } else if (!hasLoggedPluginExecution) {
       console.log(
-        'ℹ️  react-native-audio-recorder-player: All required Android permissions already exist in AndroidManifest.xml'
+        'ℹ️  react-native-nitro-sound: All required Android permissions already exist in AndroidManifest.xml'
       );
     }
 
-    return config;
+    return c;
   });
 
   return config;
 };
 
-const withAudioRecorderPlayerIOS: ConfigPlugin = (config: any) => {
-  config = withInfoPlist(config, (config: any) => {
-    const infoPlist = config.modResults;
+const withSoundIOS: ConfigPlugin = (config: any) => {
+  config = withInfoPlist(config, (c: any) => {
+    const infoPlist = c.modResults;
 
     // Add microphone usage description
     if (!infoPlist.NSMicrophoneUsageDescription) {
@@ -71,24 +71,24 @@ const withAudioRecorderPlayerIOS: ConfigPlugin = (config: any) => {
 
       if (!hasLoggedPluginExecution) {
         console.log(
-          '✅ react-native-audio-recorder-player: Added NSMicrophoneUsageDescription to Info.plist'
+          '✅ react-native-nitro-sound: Added NSMicrophoneUsageDescription to Info.plist'
         );
       }
     } else {
       if (!hasLoggedPluginExecution) {
         console.log(
-          'ℹ️  react-native-audio-recorder-player: NSMicrophoneUsageDescription already exists in Info.plist'
+          'ℹ️  react-native-nitro-sound: NSMicrophoneUsageDescription already exists in Info.plist'
         );
       }
     }
 
-    return config;
+    return c;
   });
 
   return config;
 };
 
-const withAudioRecorderPlayer: ConfigPlugin<
+const withSound: ConfigPlugin<
   {
     microphonePermissionText?: string;
   } | void
@@ -96,18 +96,18 @@ const withAudioRecorderPlayer: ConfigPlugin<
   try {
     // Apply iOS microphone permission text if provided
     if (props?.microphonePermissionText) {
-      config = withInfoPlist(config, (config: any) => {
-        config.modResults.NSMicrophoneUsageDescription =
+      config = withInfoPlist(config, (c: any) => {
+        c.modResults.NSMicrophoneUsageDescription =
           props.microphonePermissionText;
-        return config;
+        return c;
       });
     }
 
     // Apply Android configuration
-    config = withAudioRecorderPlayerAndroid(config);
+    config = withSoundAndroid(config);
 
     // Apply iOS configuration
-    config = withAudioRecorderPlayerIOS(config);
+    config = withSoundIOS(config);
 
     // Set flag after first execution to prevent duplicate logs
     hasLoggedPluginExecution = true;
@@ -115,16 +115,12 @@ const withAudioRecorderPlayer: ConfigPlugin<
     return config;
   } catch (error) {
     WarningAggregator.addWarningAndroid(
-      'react-native-audio-recorder-player',
-      `react-native-audio-recorder-player plugin encountered an error: ${error}`
+      'react-native-nitro-sound',
+      `react-native-nitro-sound plugin encountered an error: ${error}`
     );
-    console.error('react-native-audio-recorder-player plugin error:', error);
+    console.error('react-native-nitro-sound plugin error:', error);
     return config;
   }
 };
 
-export default createRunOncePlugin(
-  withAudioRecorderPlayer,
-  pkg.name,
-  pkg.version
-);
+export default createRunOncePlugin(withSound, pkg.name, pkg.version);

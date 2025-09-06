@@ -10,7 +10,7 @@
 #include <fbjni/fbjni.h>
 #include "AVEncodingOption.hpp"
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   using namespace facebook;
 
@@ -19,7 +19,7 @@ namespace margelo::nitro::audiorecorderplayer {
    */
   struct JAVEncodingOption final: public jni::JavaClass<JAVEncodingOption> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/audiorecorderplayer/AVEncodingOption;";
+    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AVEncodingOption;";
 
   public:
     /**
@@ -92,4 +92,4 @@ namespace margelo::nitro::audiorecorderplayer {
     }
   };
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound

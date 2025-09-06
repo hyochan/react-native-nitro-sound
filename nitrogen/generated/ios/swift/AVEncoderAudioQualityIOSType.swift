@@ -8,7 +8,7 @@
 /**
  * Represents the JS enum `AVEncoderAudioQualityIOSType`, backed by a C++ enum.
  */
-public typealias AVEncoderAudioQualityIOSType = margelo.nitro.audiorecorderplayer.AVEncoderAudioQualityIOSType
+public typealias AVEncoderAudioQualityIOSType = margelo.nitro.sound.AVEncoderAudioQualityIOSType
 
 public extension AVEncoderAudioQualityIOSType {
   /**

@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const appDirectory = path.resolve(__dirname);
 const compileNodeModules = [
   'react-native-web',
-  'react-native-audio-recorder-player',
+  'react-native-nitro-sound',
   '@react-native-community/slider',
 ].map((moduleName) => path.resolve(appDirectory, `node_modules/${moduleName}`));
 

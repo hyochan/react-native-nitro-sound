@@ -8,7 +8,7 @@
 /**
  * Represents the JS union `AVModeIOSOption`, backed by a C++ enum.
  */
-public typealias AVModeIOSOption = margelo.nitro.audiorecorderplayer.AVModeIOSOption
+public typealias AVModeIOSOption = margelo.nitro.sound.AVModeIOSOption
 
 public extension AVModeIOSOption {
   /**

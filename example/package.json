@@ -1,5 +1,5 @@
 {
-  "name": "react-native-audio-recorder-player-example",
+  "name": "react-native-nitro-sound-example",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -8,7 +8,7 @@
     "ios:pod": "cd ios && pod install --repo-update && cd ..",
     "start": "react-native start",
     "build:android": "react-native build-android --extra-params \"--no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a\"",
-    "build:ios": "react-native build-ios --mode Release --scheme AudioRecorderPlayerExample",
+    "build:ios": "react-native build-ios --mode Release --scheme SoundExample",
     "web": "webpack serve --mode development",
     "build:web": "webpack --mode production"
   },

@@ -8,7 +8,7 @@
 /**
  * Represents the JS enum `AVLinearPCMBitDepthKeyIOSType`, backed by a C++ enum.
  */
-public typealias AVLinearPCMBitDepthKeyIOSType = margelo.nitro.audiorecorderplayer.AVLinearPCMBitDepthKeyIOSType
+public typealias AVLinearPCMBitDepthKeyIOSType = margelo.nitro.sound.AVLinearPCMBitDepthKeyIOSType
 
 public extension AVLinearPCMBitDepthKeyIOSType {
   /**

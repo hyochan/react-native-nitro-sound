@@ -10,7 +10,7 @@
 #include <fbjni/fbjni.h>
 #include "AudioEncoderAndroidType.hpp"
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   using namespace facebook;
 
@@ -19,7 +19,7 @@ namespace margelo::nitro::audiorecorderplayer {
    */
   struct JAudioEncoderAndroidType final: public jni::JavaClass<JAudioEncoderAndroidType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/audiorecorderplayer/AudioEncoderAndroidType;";
+    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AudioEncoderAndroidType;";
 
   public:
     /**
@@ -71,4 +71,4 @@ namespace margelo::nitro::audiorecorderplayer {
     }
   };
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound

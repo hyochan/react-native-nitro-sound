@@ -8,7 +8,7 @@
 /**
  * Represents the JS enum `AudioSourceAndroidType`, backed by a C++ enum.
  */
-public typealias AudioSourceAndroidType = margelo.nitro.audiorecorderplayer.AudioSourceAndroidType
+public typealias AudioSourceAndroidType = margelo.nitro.sound.AudioSourceAndroidType
 
 public extension AudioSourceAndroidType {
   /**

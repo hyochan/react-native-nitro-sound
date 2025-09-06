@@ -10,10 +10,10 @@ import NitroModules
 /**
  * Represents an instance of `AudioSet`, backed by a C++ struct.
  */
-public typealias AudioSet = margelo.nitro.audiorecorderplayer.AudioSet
+public typealias AudioSet = margelo.nitro.sound.AudioSet
 
 public extension AudioSet {
-  private typealias bridge = margelo.nitro.audiorecorderplayer.bridge.swift
+  private typealias bridge = margelo.nitro.sound.bridge.swift
 
   /**
    * Create a new instance of `AudioSet`.

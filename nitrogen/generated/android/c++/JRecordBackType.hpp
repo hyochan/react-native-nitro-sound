@@ -12,7 +12,7 @@
 
 #include <optional>
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   using namespace facebook;
 
@@ -21,7 +21,7 @@ namespace margelo::nitro::audiorecorderplayer {
    */
   struct JRecordBackType final: public jni::JavaClass<JRecordBackType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/audiorecorderplayer/RecordBackType;";
+    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/RecordBackType;";
 
   public:
     /**
@@ -62,4 +62,4 @@ namespace margelo::nitro::audiorecorderplayer {
     }
   };
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound

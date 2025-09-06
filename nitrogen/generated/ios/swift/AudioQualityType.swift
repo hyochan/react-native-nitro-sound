@@ -8,7 +8,7 @@
 /**
  * Represents the JS union `AudioQualityType`, backed by a C++ enum.
  */
-public typealias AudioQualityType = margelo.nitro.audiorecorderplayer.AudioQualityType
+public typealias AudioQualityType = margelo.nitro.sound.AudioQualityType
 
 public extension AudioQualityType {
   /**

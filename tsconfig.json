@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "react-native-audio-recorder-player": ["./src/index"]
+      "react-native-nitro-sound": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

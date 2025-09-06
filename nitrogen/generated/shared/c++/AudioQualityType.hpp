@@ -23,7 +23,7 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   /**
    * An enum which can be represented as a JavaScript union (AudioQualityType).
@@ -34,28 +34,28 @@ namespace margelo::nitro::audiorecorderplayer {
     HIGH      SWIFT_NAME(high) = 2,
   } CLOSED_ENUM;
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound
 
 namespace margelo::nitro {
 
   // C++ AudioQualityType <> JS AudioQualityType (union)
   template <>
-  struct JSIConverter<margelo::nitro::audiorecorderplayer::AudioQualityType> final {
-    static inline margelo::nitro::audiorecorderplayer::AudioQualityType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::sound::AudioQualityType> final {
+    static inline margelo::nitro::sound::AudioQualityType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       std::string unionValue = JSIConverter<std::string>::fromJSI(runtime, arg);
       switch (hashString(unionValue.c_str(), unionValue.size())) {
-        case hashString("low"): return margelo::nitro::audiorecorderplayer::AudioQualityType::LOW;
-        case hashString("medium"): return margelo::nitro::audiorecorderplayer::AudioQualityType::MEDIUM;
-        case hashString("high"): return margelo::nitro::audiorecorderplayer::AudioQualityType::HIGH;
+        case hashString("low"): return margelo::nitro::sound::AudioQualityType::LOW;
+        case hashString("medium"): return margelo::nitro::sound::AudioQualityType::MEDIUM;
+        case hashString("high"): return margelo::nitro::sound::AudioQualityType::HIGH;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum AudioQualityType - invalid value!");
       }
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::audiorecorderplayer::AudioQualityType arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::sound::AudioQualityType arg) {
       switch (arg) {
-        case margelo::nitro::audiorecorderplayer::AudioQualityType::LOW: return JSIConverter<std::string>::toJSI(runtime, "low");
-        case margelo::nitro::audiorecorderplayer::AudioQualityType::MEDIUM: return JSIConverter<std::string>::toJSI(runtime, "medium");
-        case margelo::nitro::audiorecorderplayer::AudioQualityType::HIGH: return JSIConverter<std::string>::toJSI(runtime, "high");
+        case margelo::nitro::sound::AudioQualityType::LOW: return JSIConverter<std::string>::toJSI(runtime, "low");
+        case margelo::nitro::sound::AudioQualityType::MEDIUM: return JSIConverter<std::string>::toJSI(runtime, "medium");
+        case margelo::nitro::sound::AudioQualityType::HIGH: return JSIConverter<std::string>::toJSI(runtime, "high");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert AudioQualityType to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");

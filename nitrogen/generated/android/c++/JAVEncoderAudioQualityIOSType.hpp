@@ -10,7 +10,7 @@
 #include <fbjni/fbjni.h>
 #include "AVEncoderAudioQualityIOSType.hpp"
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   using namespace facebook;
 
@@ -19,7 +19,7 @@ namespace margelo::nitro::audiorecorderplayer {
    */
   struct JAVEncoderAudioQualityIOSType final: public jni::JavaClass<JAVEncoderAudioQualityIOSType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/audiorecorderplayer/AVEncoderAudioQualityIOSType;";
+    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AVEncoderAudioQualityIOSType;";
 
   public:
     /**
@@ -65,4 +65,4 @@ namespace margelo::nitro::audiorecorderplayer {
     }
   };
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound

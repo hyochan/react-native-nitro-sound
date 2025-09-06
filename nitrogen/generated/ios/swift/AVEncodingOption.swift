@@ -8,7 +8,7 @@
 /**
  * Represents the JS union `AVEncodingOption`, backed by a C++ enum.
  */
-public typealias AVEncodingOption = margelo.nitro.audiorecorderplayer.AVEncodingOption
+public typealias AVEncodingOption = margelo.nitro.sound.AVEncodingOption
 
 public extension AVEncodingOption {
   /**

@@ -14,7 +14,7 @@
 #include <functional>
 #include "JPlaybackEndType.hpp"
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   using namespace facebook;
 
@@ -24,7 +24,7 @@ namespace margelo::nitro::audiorecorderplayer {
    */
   struct JFunc_void_PlaybackEndType: public jni::JavaClass<JFunc_void_PlaybackEndType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/audiorecorderplayer/Func_void_PlaybackEndType;";
+    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/Func_void_PlaybackEndType;";
 
   public:
     /**
@@ -60,7 +60,7 @@ namespace margelo::nitro::audiorecorderplayer {
     }
 
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/audiorecorderplayer/Func_void_PlaybackEndType_cxx;";
+    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/Func_void_PlaybackEndType_cxx;";
     static void registerNatives() {
       registerHybrid({makeNativeMethod("invoke_cxx", JFunc_void_PlaybackEndType_cxx::invoke_cxx)});
     }
@@ -73,4 +73,4 @@ namespace margelo::nitro::audiorecorderplayer {
     std::function<void(const PlaybackEndType& /* playbackEndMeta */)> _func;
   };
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound

@@ -1,8 +1,8 @@
 {
-  "name": "react-native-audio-recorder-player",
-  "version": "4.4.4",
-  "description": "React Native Audio Recorder and Player.",
-  "homepage": "https://github.com/hyochan/react-native-audio-recorder-player",
+  "name": "react-native-nitro-sound",
+  "version": "1.0.0",
+  "description": "React Native Sound Module 🔥 by Nitro",
+  "homepage": "https://github.com/hyochan/react-native-nitro-sound",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -37,7 +37,7 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace react-native-audio-recorder-player-example",
+    "example": "yarn workspace react-native-nitro-sound-example",
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
@@ -45,12 +45,12 @@
     "prepare": "npx tsx scripts/check-nitro-versions.ts && bob build && yarn nitrogen",
     "nitrogen": "npx nitro-codegen",
     "release": "release-it --only-version",
-    "web": "yarn workspace react-native-audio-recorder-player-example web",
-    "build:web": "yarn workspace react-native-audio-recorder-player-example build:web",
-    "android": "yarn workspace react-native-audio-recorder-player-example android",
-    "ios": "yarn workspace react-native-audio-recorder-player-example ios",
-    "start": "yarn workspace react-native-audio-recorder-player-example start",
-    "logcat": "adb logcat -c && adb logcat --pid=$(adb shell pidof audiorecorderplayer.example)"
+    "web": "yarn workspace react-native-nitro-sound-example web",
+    "build:web": "yarn workspace react-native-nitro-sound-example build:web",
+    "android": "yarn workspace react-native-nitro-sound-example android",
+    "ios": "yarn workspace react-native-nitro-sound-example ios",
+    "start": "yarn workspace react-native-nitro-sound-example start",
+    "logcat": "adb logcat -c && adb logcat --pid=$(adb shell pidof sound.example)"
   },
   "keywords": [
     "react-native",
@@ -59,12 +59,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hyochan/react-native-audio-recorder-player.git"
+    "url": "git+https://github.com/hyochan/react-native-nitro-sound.git"
   },
   "author": "hyochan <hyo@hyo.dev> (https://github.com/hyochan)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/hyochan/react-native-audio-recorder-player/issues"
+    "url": "https://github.com/hyochan/react-native-nitro-sound/issues"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"

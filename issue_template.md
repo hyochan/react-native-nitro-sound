@@ -1,7 +1,6 @@
 > Please fill the template to help you out. Also, please try the `Example` project compare before submiting the issue when you have certain issue with your project setup.
 
-### Version of react-native-audio-recorder-player
-
+### Version of react-native-nitro-sound
 
 ### Version of React Native
 

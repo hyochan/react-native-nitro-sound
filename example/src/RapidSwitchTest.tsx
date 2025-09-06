@@ -8,7 +8,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import AudioRecorderPlayer from '../../src';
+import Sound from '../../src';
 
 const TEST_AUDIO_URLS = [
   'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
@@ -41,7 +41,7 @@ export const RapidSwitchTest: React.FC = () => {
         setCurrentTrack(trackIndex);
 
         try {
-          await AudioRecorderPlayer.startPlayer(url);
+          await Sound.startPlayer(url);
           addLog(`Playing track ${trackIndex + 1}`);
 
           // Play for a very short time (100-500ms)
@@ -50,7 +50,7 @@ export const RapidSwitchTest: React.FC = () => {
           );
 
           addLog(`Stopping track ${trackIndex + 1}...`);
-          await AudioRecorderPlayer.stopPlayer();
+          await Sound.stopPlayer();
           addLog(`Stopped track ${trackIndex + 1}`);
 
           // Very short delay between switches (0-100ms)
@@ -74,7 +74,7 @@ export const RapidSwitchTest: React.FC = () => {
       setCurrentTrack(-1);
       // Ensure player is stopped
       try {
-        await AudioRecorderPlayer.stopPlayer();
+        await Sound.stopPlayer();
       } catch {}
     }
   };
@@ -93,8 +93,8 @@ export const RapidSwitchTest: React.FC = () => {
         addLog(`Quick switch ${i + 1}...`);
 
         try {
-          const startPromise = AudioRecorderPlayer.startPlayer(url);
-          const stopPromise = AudioRecorderPlayer.stopPlayer();
+          const startPromise = Sound.startPlayer(url);
+          const stopPromise = Sound.stopPlayer();
 
           await Promise.all([startPromise, stopPromise]).catch((err) => {
             // One might fail, but we continue
@@ -124,7 +124,7 @@ export const RapidSwitchTest: React.FC = () => {
       setIsTestRunning(false);
       // Clean up
       try {
-        await AudioRecorderPlayer.stopPlayer();
+        await Sound.stopPlayer();
       } catch {}
     }
   };

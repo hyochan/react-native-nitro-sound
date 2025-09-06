@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "react-native-audio-recorder-player",
+      "name": "react-native-nitro-sound",
       "dependencies": {
         "hyochan-welcome": "^1.0.0",
       },

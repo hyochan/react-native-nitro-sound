@@ -3,7 +3,7 @@ exampleExpo/
 .idea/
 gen/
 node_modules/
-android/react-native-audio-recorder-player.iml
+android/react-native-nitro-sound.iml
 android/android.iml
 index.ts
 CONTRIBUTING.md

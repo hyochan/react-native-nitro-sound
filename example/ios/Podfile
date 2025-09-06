@@ -10,7 +10,7 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, '15.1'
 prepare_react_native_project!
 
-project 'AudioRecorderPlayerExample.xcodeproj'
+project 'SoundExample.xcodeproj'
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
@@ -18,7 +18,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'AudioRecorderPlayerExample' do
+target 'SoundExample' do
   config = use_native_modules!
 
   use_react_native!(

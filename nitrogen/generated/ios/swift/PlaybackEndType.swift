@@ -10,10 +10,10 @@ import NitroModules
 /**
  * Represents an instance of `PlaybackEndType`, backed by a C++ struct.
  */
-public typealias PlaybackEndType = margelo.nitro.audiorecorderplayer.PlaybackEndType
+public typealias PlaybackEndType = margelo.nitro.sound.PlaybackEndType
 
 public extension PlaybackEndType {
-  private typealias bridge = margelo.nitro.audiorecorderplayer.bridge.swift
+  private typealias bridge = margelo.nitro.sound.bridge.swift
 
   /**
    * Create a new instance of `PlaybackEndType`.

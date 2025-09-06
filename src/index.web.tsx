@@ -1,14 +1,14 @@
 import type {
-  AudioRecorderPlayer as AudioRecorderPlayerType,
+  Sound as SoundType,
   AudioSet,
   RecordBackType,
   PlayBackType,
   PlaybackEndType,
-} from './specs/AudioRecorderPlayer.nitro';
+} from './specs/Sound.nitro';
 
-export * from './specs/AudioRecorderPlayer.nitro';
+export * from './specs/Sound.nitro';
 
-class AudioRecorderPlayerWebImpl implements AudioRecorderPlayerType {
+class SoundWebImpl implements SoundType {
   private mediaRecorder: MediaRecorder | null = null;
   private audioContext: AudioContext | null = null;
   private audio: HTMLAudioElement | null = null;
@@ -404,10 +404,10 @@ class AudioRecorderPlayerWebImpl implements AudioRecorderPlayerType {
 
   // Required by HybridObject interface but not used in web
   get name(): string {
-    return 'AudioRecorderPlayer';
+    return 'Sound';
   }
 
-  equals(other: AudioRecorderPlayerType): boolean {
+  equals(other: SoundType): boolean {
     return other === this;
   }
 
@@ -416,7 +416,7 @@ class AudioRecorderPlayerWebImpl implements AudioRecorderPlayerType {
   }
 
   toString(): string {
-    return 'AudioRecorderPlayer (Web)';
+    return 'Sound (Web)';
   }
 
   dispose(): void {
@@ -432,6 +432,6 @@ class AudioRecorderPlayerWebImpl implements AudioRecorderPlayerType {
 }
 
 // Create singleton instance
-const AudioRecorderPlayer = new AudioRecorderPlayerWebImpl();
+const Sound = new SoundWebImpl();
 
-export default AudioRecorderPlayer;
+export default Sound;

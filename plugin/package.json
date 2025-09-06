@@ -1,7 +1,7 @@
 {
-  "name": "react-native-audio-recorder-player-plugin",
+  "name": "react-native-nitro-sound-plugin",
   "version": "1.0.0",
-  "description": "Expo config plugin for react-native-audio-recorder-player",
+  "description": "Expo config plugin for react-native-nitro-sound",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {

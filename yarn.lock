@@ -13585,75 +13585,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-audio-recorder-player-example@workspace:example":
-  version: 0.0.0-use.local
-  resolution: "react-native-audio-recorder-player-example@workspace:example"
-  dependencies:
-    "@babel/core": ^7.25.2
-    "@babel/preset-env": ^7.25.3
-    "@babel/runtime": ^7.25.0
-    "@react-native-community/cli": ^20.0.0
-    "@react-native-community/cli-platform-android": ^20.0.0
-    "@react-native-community/cli-platform-ios": ^20.0.0
-    "@react-native-community/slider": ^4.5.7
-    "@react-native/babel-preset": ^0.81.0
-    "@react-native/metro-config": ^0.81.0
-    "@react-native/typescript-config": 0.81.1
-    "@types/react": ^19.1.0
-    babel-loader: ^10.0.0
-    babel-plugin-react-native-web: ^0.20.0
-    html-webpack-plugin: ^5.6.3
-    react: 19.1.0
-    react-dom: 19.1.0
-    react-native: ^0.81.0
-    react-native-builder-bob: ^0.40.12
-    react-native-monorepo-config: ^0.1.9
-    react-native-nitro-modules: ^0.29.2
-    react-native-web: ^0.20.0
-    url-loader: ^4.1.1
-    webpack: ^5.100.2
-    webpack-cli: ^6.0.1
-    webpack-dev-server: ^5.2.2
-  languageName: unknown
-  linkType: soft
-
-"react-native-audio-recorder-player@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "react-native-audio-recorder-player@workspace:."
-  dependencies:
-    "@commitlint/config-conventional": ^19.6.0
-    "@eslint/compat": ^1.2.7
-    "@eslint/eslintrc": ^3.3.0
-    "@eslint/js": ^9.22.0
-    "@evilmartians/lefthook": ^1.5.0
-    "@react-native/babel-preset": 0.79.2
-    "@react-native/eslint-config": ^0.78.0
-    "@release-it/conventional-changelog": ^9.0.2
-    "@types/jest": ^29.5.5
-    "@types/react": ^19.0.0
-    commitlint: ^19.6.1
-    del-cli: ^5.1.0
-    eslint: ^9.22.0
-    eslint-config-prettier: ^10.1.1
-    eslint-plugin-prettier: ^5.2.3
-    expo: ^53.0.19
-    jest: ^29.7.0
-    nitro-codegen: ^0.29.2
-    prettier: ^3.0.3
-    react: 19.0.0
-    react-native: 0.79.2
-    react-native-builder-bob: 0.38.4
-    react-native-nitro-modules: ^0.29.2
-    release-it: ^17.10.0
-    turbo: ^1.10.7
-    typescript: ^5.8.3
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-    react-native-nitro-modules: "*"
-  languageName: unknown
-  linkType: soft
-
 "react-native-builder-bob@npm:0.38.4":
   version: 0.38.4
   resolution: "react-native-builder-bob@npm:0.38.4"
@@ -13747,6 +13678,75 @@ __metadata:
   checksum: 4e1ffba242c9d4a197a0e9e2c07b54f96d888d8fd22c901573cf7fdf62c5253522c30d8a9806ba37ef319b834bc6bff3dbd54f40fdfeab5bb2ac151b0f6f964b
   languageName: node
   linkType: hard
+
+"react-native-nitro-sound-example@workspace:example":
+  version: 0.0.0-use.local
+  resolution: "react-native-nitro-sound-example@workspace:example"
+  dependencies:
+    "@babel/core": ^7.25.2
+    "@babel/preset-env": ^7.25.3
+    "@babel/runtime": ^7.25.0
+    "@react-native-community/cli": ^20.0.0
+    "@react-native-community/cli-platform-android": ^20.0.0
+    "@react-native-community/cli-platform-ios": ^20.0.0
+    "@react-native-community/slider": ^4.5.7
+    "@react-native/babel-preset": ^0.81.0
+    "@react-native/metro-config": ^0.81.0
+    "@react-native/typescript-config": 0.81.1
+    "@types/react": ^19.1.0
+    babel-loader: ^10.0.0
+    babel-plugin-react-native-web: ^0.20.0
+    html-webpack-plugin: ^5.6.3
+    react: 19.1.0
+    react-dom: 19.1.0
+    react-native: ^0.81.0
+    react-native-builder-bob: ^0.40.12
+    react-native-monorepo-config: ^0.1.9
+    react-native-nitro-modules: ^0.29.2
+    react-native-web: ^0.20.0
+    url-loader: ^4.1.1
+    webpack: ^5.100.2
+    webpack-cli: ^6.0.1
+    webpack-dev-server: ^5.2.2
+  languageName: unknown
+  linkType: soft
+
+"react-native-nitro-sound@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "react-native-nitro-sound@workspace:."
+  dependencies:
+    "@commitlint/config-conventional": ^19.6.0
+    "@eslint/compat": ^1.2.7
+    "@eslint/eslintrc": ^3.3.0
+    "@eslint/js": ^9.22.0
+    "@evilmartians/lefthook": ^1.5.0
+    "@react-native/babel-preset": 0.79.2
+    "@react-native/eslint-config": ^0.78.0
+    "@release-it/conventional-changelog": ^9.0.2
+    "@types/jest": ^29.5.5
+    "@types/react": ^19.0.0
+    commitlint: ^19.6.1
+    del-cli: ^5.1.0
+    eslint: ^9.22.0
+    eslint-config-prettier: ^10.1.1
+    eslint-plugin-prettier: ^5.2.3
+    expo: ^53.0.19
+    jest: ^29.7.0
+    nitro-codegen: ^0.29.2
+    prettier: ^3.0.3
+    react: 19.0.0
+    react-native: 0.79.2
+    react-native-builder-bob: 0.38.4
+    react-native-nitro-modules: ^0.29.2
+    release-it: ^17.10.0
+    turbo: ^1.10.7
+    typescript: ^5.8.3
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-nitro-modules: "*"
+  languageName: unknown
+  linkType: soft
 
 "react-native-web@npm:^0.20.0":
   version: 0.20.0

@@ -18,7 +18,7 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   /**
    * An enum which can be represented as a JavaScript enum (AudioEncoderAndroidType).
@@ -33,18 +33,18 @@ namespace margelo::nitro::audiorecorderplayer {
     VORBIS      SWIFT_NAME(vorbis) = 6,
   } CLOSED_ENUM;
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound
 
 namespace margelo::nitro {
 
   // C++ AudioEncoderAndroidType <> JS AudioEncoderAndroidType (enum)
   template <>
-  struct JSIConverter<margelo::nitro::audiorecorderplayer::AudioEncoderAndroidType> final {
-    static inline margelo::nitro::audiorecorderplayer::AudioEncoderAndroidType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::sound::AudioEncoderAndroidType> final {
+    static inline margelo::nitro::sound::AudioEncoderAndroidType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       int enumValue = JSIConverter<int>::fromJSI(runtime, arg);
-      return static_cast<margelo::nitro::audiorecorderplayer::AudioEncoderAndroidType>(enumValue);
+      return static_cast<margelo::nitro::sound::AudioEncoderAndroidType>(enumValue);
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::audiorecorderplayer::AudioEncoderAndroidType arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::sound::AudioEncoderAndroidType arg) {
       int enumValue = static_cast<int>(arg);
       return JSIConverter<int>::toJSI(runtime, enumValue);
     }

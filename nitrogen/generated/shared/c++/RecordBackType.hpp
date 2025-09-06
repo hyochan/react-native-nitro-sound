@@ -22,7 +22,7 @@
 
 #include <optional>
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   /**
    * A struct which can be represented as a JavaScript object (RecordBackType).
@@ -39,23 +39,23 @@ namespace margelo::nitro::audiorecorderplayer {
     explicit RecordBackType(std::optional<bool> isRecording, double currentPosition, std::optional<double> currentMetering, std::optional<double> recordSecs): isRecording(isRecording), currentPosition(currentPosition), currentMetering(currentMetering), recordSecs(recordSecs) {}
   };
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound
 
 namespace margelo::nitro {
 
   // C++ RecordBackType <> JS RecordBackType (object)
   template <>
-  struct JSIConverter<margelo::nitro::audiorecorderplayer::RecordBackType> final {
-    static inline margelo::nitro::audiorecorderplayer::RecordBackType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::sound::RecordBackType> final {
+    static inline margelo::nitro::sound::RecordBackType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
-      return margelo::nitro::audiorecorderplayer::RecordBackType(
+      return margelo::nitro::sound::RecordBackType(
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, "isRecording")),
         JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, "currentPosition")),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "currentMetering")),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "recordSecs"))
       );
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::audiorecorderplayer::RecordBackType& arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::sound::RecordBackType& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, "isRecording", JSIConverter<std::optional<bool>>::toJSI(runtime, arg.isRecording));
       obj.setProperty(runtime, "currentPosition", JSIConverter<double>::toJSI(runtime, arg.currentPosition));

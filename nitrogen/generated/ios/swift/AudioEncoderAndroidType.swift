@@ -8,7 +8,7 @@
 /**
  * Represents the JS enum `AudioEncoderAndroidType`, backed by a C++ enum.
  */
-public typealias AudioEncoderAndroidType = margelo.nitro.audiorecorderplayer.AudioEncoderAndroidType
+public typealias AudioEncoderAndroidType = margelo.nitro.sound.AudioEncoderAndroidType
 
 public extension AudioEncoderAndroidType {
   /**

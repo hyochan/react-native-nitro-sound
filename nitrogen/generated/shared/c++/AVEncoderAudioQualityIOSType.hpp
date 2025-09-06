@@ -18,7 +18,7 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-namespace margelo::nitro::audiorecorderplayer {
+namespace margelo::nitro::sound {
 
   /**
    * An enum which can be represented as a JavaScript enum (AVEncoderAudioQualityIOSType).
@@ -31,18 +31,18 @@ namespace margelo::nitro::audiorecorderplayer {
     MAX      SWIFT_NAME(max) = 127,
   } CLOSED_ENUM;
 
-} // namespace margelo::nitro::audiorecorderplayer
+} // namespace margelo::nitro::sound
 
 namespace margelo::nitro {
 
   // C++ AVEncoderAudioQualityIOSType <> JS AVEncoderAudioQualityIOSType (enum)
   template <>
-  struct JSIConverter<margelo::nitro::audiorecorderplayer::AVEncoderAudioQualityIOSType> final {
-    static inline margelo::nitro::audiorecorderplayer::AVEncoderAudioQualityIOSType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::sound::AVEncoderAudioQualityIOSType> final {
+    static inline margelo::nitro::sound::AVEncoderAudioQualityIOSType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       int enumValue = JSIConverter<int>::fromJSI(runtime, arg);
-      return static_cast<margelo::nitro::audiorecorderplayer::AVEncoderAudioQualityIOSType>(enumValue);
+      return static_cast<margelo::nitro::sound::AVEncoderAudioQualityIOSType>(enumValue);
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::audiorecorderplayer::AVEncoderAudioQualityIOSType arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::sound::AVEncoderAudioQualityIOSType arg) {
       int enumValue = static_cast<int>(arg);
       return JSIConverter<int>::toJSI(runtime, enumValue);
     }

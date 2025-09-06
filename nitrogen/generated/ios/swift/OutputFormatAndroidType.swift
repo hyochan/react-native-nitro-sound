@@ -8,7 +8,7 @@
 /**
  * Represents the JS enum `OutputFormatAndroidType`, backed by a C++ enum.
  */
-public typealias OutputFormatAndroidType = margelo.nitro.audiorecorderplayer.OutputFormatAndroidType
+public typealias OutputFormatAndroidType = margelo.nitro.sound.OutputFormatAndroidType
 
 public extension OutputFormatAndroidType {
   /**

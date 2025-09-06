@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
-import AudioRecorderPlayer, {
+import Sound, {
   AudioEncoderAndroidType,
   AudioSourceAndroidType,
   AVEncoderAudioQualityIOSType,
@@ -48,9 +48,9 @@ const App = () => {
     return () => {
       // Clean up listeners when component unmounts
       try {
-        AudioRecorderPlayer.removePlayBackListener();
-        AudioRecorderPlayer.removeRecordBackListener();
-        AudioRecorderPlayer.removePlaybackEndListener();
+        Sound.removePlayBackListener();
+        Sound.removeRecordBackListener();
+        Sound.removePlaybackEndListener();
       } catch (error) {
         console.log('Error removing listeners:', error);
       }
@@ -133,7 +133,7 @@ const App = () => {
     // First, test if we can access the module at all
     try {
       console.log('🎤 Testing module access...');
-      const testTime = AudioRecorderPlayer.mmss(120);
+      const testTime = Sound.mmss(120);
       console.log('🎤 Test mmss result:', testTime);
     } catch (error) {
       console.error('🎤 Module access test failed:', error);
@@ -193,11 +193,7 @@ const App = () => {
 
     try {
       console.log('🎤 About to call startRecorder...');
-      const uri = await AudioRecorderPlayer.startRecorder(
-        undefined,
-        audioSet,
-        true
-      );
+      const uri = await Sound.startRecorder(undefined, audioSet, true);
       console.log('🎤 Recording started successfully:', uri);
       setRecordingPath(uri);
       setIsRecording(true);
@@ -205,15 +201,13 @@ const App = () => {
 
       // Set faster update interval for web
       if (Platform.OS === 'web') {
-        AudioRecorderPlayer.setSubscriptionDuration(0.01); // 10ms updates
+        Sound.setSubscriptionDuration(0.01); // 10ms updates
       }
 
-      AudioRecorderPlayer.addRecordBackListener((e: RecordBackType) => {
+      Sound.addRecordBackListener((e: RecordBackType) => {
         console.log('🎤 Recording callback:', e);
         setRecordSecs(Math.floor(e.currentPosition));
-        setRecordTime(
-          AudioRecorderPlayer.mmssss(Math.floor(e.currentPosition))
-        );
+        setRecordTime(Sound.mmssss(Math.floor(e.currentPosition)));
       });
     } catch (error) {
       console.error('🎤 Start record error:', error);
@@ -231,7 +225,7 @@ const App = () => {
 
   const onPauseRecord = async () => {
     try {
-      await AudioRecorderPlayer.pauseRecorder();
+      await Sound.pauseRecorder();
       setIsPaused(true);
     } catch (error) {
       console.error('Pause record error:', error);
@@ -240,7 +234,7 @@ const App = () => {
 
   const onResumeRecord = async () => {
     try {
-      await AudioRecorderPlayer.resumeRecorder();
+      await Sound.resumeRecorder();
       setIsPaused(false);
     } catch (error) {
       console.error('Resume record error:', error);
@@ -251,12 +245,12 @@ const App = () => {
     setIsStopLoading(true);
 
     try {
-      const result = await AudioRecorderPlayer.stopRecorder();
-      AudioRecorderPlayer.removeRecordBackListener();
+      const result = await Sound.stopRecorder();
+      Sound.removeRecordBackListener();
       // Save the actual recorded duration
       setActualRecordedDuration(recordSecs);
       // Update to final precise time
-      const finalTime = AudioRecorderPlayer.mmssss(recordSecs);
+      const finalTime = Sound.mmssss(recordSecs);
       setRecordTime(finalTime);
       // Don't reset time here - keep the recorded time visible
       setIsRecording(false);
@@ -311,11 +305,11 @@ const App = () => {
 
       // Set faster update interval for web
       if (Platform.OS === 'web') {
-        AudioRecorderPlayer.setSubscriptionDuration(0.01); // 10ms updates
+        Sound.setSubscriptionDuration(0.01); // 10ms updates
       }
 
       // Add playback end listener
-      AudioRecorderPlayer.addPlaybackEndListener((e: PlaybackEndType) => {
+      Sound.addPlaybackEndListener((e: PlaybackEndType) => {
         console.log('📱 Playback ended:', e);
         setIsPlaying(false);
         setIsPlaybackPaused(false);
@@ -325,7 +319,7 @@ const App = () => {
         setTotalDuration(e.duration);
       });
 
-      AudioRecorderPlayer.addPlayBackListener((e: PlayBackType) => {
+      Sound.addPlayBackListener((e: PlayBackType) => {
         console.log('📱 Playback callback received:', {
           position: e.currentPosition,
           duration: e.duration,
@@ -339,8 +333,8 @@ const App = () => {
         }
         setTotalDuration(e.duration);
 
-        setPlayTime(AudioRecorderPlayer.mmssss(Math.floor(e.currentPosition)));
-        setDuration(AudioRecorderPlayer.mmssss(Math.floor(e.duration)));
+        setPlayTime(Sound.mmssss(Math.floor(e.currentPosition)));
+        setDuration(Sound.mmssss(Math.floor(e.duration)));
 
         // Check if playback finished (use small threshold for accuracy)
         const threshold = 100; // 100ms threshold
@@ -354,11 +348,11 @@ const App = () => {
           );
 
           // Update to exact duration when playback finishes
-          setPlayTime(AudioRecorderPlayer.mmssss(Math.floor(e.duration)));
-          setDuration(AudioRecorderPlayer.mmssss(Math.floor(e.duration)));
+          setPlayTime(Sound.mmssss(Math.floor(e.duration)));
+          setDuration(Sound.mmssss(Math.floor(e.duration)));
 
           setIsPlaying(false);
-          AudioRecorderPlayer.removePlayBackListener();
+          Sound.removePlayBackListener();
         }
       });
 
@@ -369,7 +363,7 @@ const App = () => {
         : recordingPath === 'recording_in_progress'
           ? undefined
           : recordingPath;
-      const msg = await AudioRecorderPlayer.startPlayer(pathToPlay);
+      const msg = await Sound.startPlayer(pathToPlay);
       console.log('Started playing:', msg);
 
       // Hide loading and show playing after player starts
@@ -377,7 +371,7 @@ const App = () => {
       setIsPlaying(true);
       setIsPlaybackPaused(false);
 
-      const volumeResult = await AudioRecorderPlayer.setVolume(1.0);
+      const volumeResult = await Sound.setVolume(1.0);
       console.log('Volume:', volumeResult);
     } catch (error) {
       console.error('Start play error:', error);
@@ -389,7 +383,7 @@ const App = () => {
 
   const onPausePlay = async () => {
     try {
-      await AudioRecorderPlayer.pausePlayer();
+      await Sound.pausePlayer();
       setIsPlaybackPaused(true);
     } catch (error) {
       console.error('Pause play error:', error);
@@ -398,7 +392,7 @@ const App = () => {
 
   const onResumePlay = async () => {
     try {
-      await AudioRecorderPlayer.resumePlayer();
+      await Sound.resumePlayer();
       setIsPlaybackPaused(false);
     } catch (error) {
       console.error('Resume play error:', error);
@@ -407,8 +401,8 @@ const App = () => {
 
   const onStopPlay = async () => {
     try {
-      await AudioRecorderPlayer.stopPlayer();
-      AudioRecorderPlayer.removePlayBackListener();
+      await Sound.stopPlayer();
+      Sound.removePlayBackListener();
       setPlayTime('00:00:00');
       setDuration('00:00:00');
       setCurrentPosition(0);
@@ -427,7 +421,7 @@ const App = () => {
     if (isPlaying || currentPosition > 0) {
       try {
         setIsSeeking(true);
-        await AudioRecorderPlayer.seekToPlayer(value);
+        await Sound.seekToPlayer(value);
         setCurrentPosition(value);
         console.log('Seeked to:', value);
       } catch (error) {
@@ -440,7 +434,7 @@ const App = () => {
 
   const onVolumeChange = async (value: number) => {
     try {
-      await AudioRecorderPlayer.setVolume(value);
+      await Sound.setVolume(value);
       setVolume(value);
       console.log('Volume set to:', value);
     } catch (error) {
@@ -450,7 +444,7 @@ const App = () => {
 
   const onSpeedChange = async (value: number) => {
     try {
-      await AudioRecorderPlayer.setPlaybackSpeed(value);
+      await Sound.setPlaybackSpeed(value);
       setPlaybackSpeed(value);
       console.log('Playback speed set to:', value);
     } catch (error) {
@@ -489,7 +483,7 @@ const App = () => {
               </Text>
               {actualRecordedDuration > 0 && !isRecording && (
                 <Text style={styles.durationInfo}>
-                  Duration: {AudioRecorderPlayer.mmssss(actualRecordedDuration)}
+                  Duration: {Sound.mmssss(actualRecordedDuration)}
                 </Text>
               )}
             </View>
