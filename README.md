@@ -3,20 +3,48 @@
 <img src="Logotype Primary.png" width="70%" alt="Logo" />
 
 [![yarn Version](http://img.shields.io/npm/v/react-native-nitro-sound.svg?style=flat-square)](https://npmjs.org/package/react-native-nitro-sound)
-[![Downloads](http://img.shields.io/npm/dm/react-native-nitro-sound.svg?style=flat-square)](https://npmjs.org/package/react-native-nitro-sound)
+[![Weekly Downloads](http://img.shields.io/npm/dw/react-native-nitro-sound.svg?style=flat-square)](https://npmjs.org/package/react-native-nitro-sound)
+[![Monthly Downloads](http://img.shields.io/npm/dm/react-native-nitro-sound.svg?style=flat-square)](https://npmjs.org/package/react-native-nitro-sound)
 [![CI](https://github.com/hyochan/react-native-nitro-sound/actions/workflows/ci.yml/badge.svg)](https://github.com/hyochan/react-native-nitro-sound/actions/workflows/ci.yml)
 [![publish-package](https://github.com/hyochan/react-native-nitro-sound/actions/workflows/publish-package.yml/badge.svg)](https://github.com/hyochan/react-native-nitro-sound/actions/workflows/publish-package.yml)
-![License](http://img.shields.io/npm/l/react-native-nitro-sound.svg?style=flat-square)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
+[![MIT License](http://img.shields.io/npm/l/react-native-nitro-sound.svg?style=flat-square)](https://npmjs.org/package/react-native-nitro-sound)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
-[![LICENSE](http://img.shields.io/npm/l/@react-native-seoul/masonry-list.svg?style=flat-square)](https://npmjs.org/package/@react-native-seoul/masonry-list)
 
 [![Platform - iOS](https://img.shields.io/badge/platform-iOS-blue.svg?style=flat-square&logo=apple&logoColor=white)](https://developer.apple.com/ios/)
 [![Platform - Android](https://img.shields.io/badge/platform-Android-green.svg?style=flat-square&logo=android&logoColor=white)](https://developer.android.com/)
 [![Platform - Web](https://img.shields.io/badge/platform-Web-orange.svg?style=flat-square&logo=googlechrome&logoColor=white)](https://reactnative.dev/docs/react-native-web)
 
-## 🎉 React Native Audio Recorder Player is Reborn as React Native Nitro Sound
+## Legacy Package (react-native-audio-recorder-player)
 
-[React Native Audio Recorder Player](https://www.npmjs.com/package/react-native-audio-recorder-player) is now reborn as **React Native Nitro Sound**!
+[![yarn Version](http://img.shields.io/npm/v/react-native-audio-recorder-player.svg?style=flat-square)](https://npmjs.org/package/react-native-audio-recorder-player)
+[![Downloads](http://img.shields.io/npm/dm/react-native-audio-recorder-player.svg?style=flat-square)](https://npmjs.org/package/react-native-audio-recorder-player)
+[![Weekly Downloads](http://img.shields.io/npm/dw/react-native-nitro-sound.svg?style=flat-square)](https://npmjs.org/package/react-native-nitro-sound)
+
+## React Native Nitro Sound 🚀
+
+**React Native Nitro Sound** is a high-performance audio recording and playback library built with [NitroModules](https://github.com/mrousavy/nitro), offering:
+
+- **Zero Bridge Overhead**: Direct native module access for maximum performance
+- **Full Type Safety**: TypeScript definitions generated from native specs
+- **Synchronous Methods**: Where appropriate, for better developer experience
+- **Event Listeners**: Native callbacks with type-safe event payloads
+- **Cross-Platform Code Generation**: Automatic code generation for iOS (Swift) and Android (Kotlin)
+- **Background Processing**: Recording operations now run in background threads to prevent UI blocking, requiring loading state management
+- **Web Platform Support**: Full support for web browsers using Web Audio API and MediaRecorder API
+
+### Requirements
+
+- React Native: >= 0.79 (0.81 recommended)
+- iOS: Deployment Target >= 13.0
+  - Note: With RN 0.81+, build using Xcode >= 16.1 (toolchain requirement; iOS runtime minimum remains 13.0)
+- Android: minSdk >= 24 (JDK 17 recommended; compileSdk 36 recommended)
+- New Architecture: optional (Nitro works on both old and new arch)
+- Expo SDK >= 50 (for Expo users)
+
+## 🎉 React Native Nitro Sound - Reborn from React Native Audio Recorder Player
+
+**React Native Nitro Sound** is the reborn version of [React Native Audio Recorder Player](https://www.npmjs.com/package/react-native-audio-recorder-player)!
 
 For those unfamiliar, this was a beloved library with **40k+ weekly downloads** and **180k+ monthly downloads**. Now, this library embarks on a new journey with [NitroModules](https://github.com/mrousavy/nitro), starting fresh as **react-native-nitro-sound**.
 
@@ -48,29 +76,6 @@ This is one of those projects that brings me joy to work on. If you find it usef
 - 🔧 [NitroModules Documentation](https://github.com/mrousavy/nitro) - Learn about the underlying technology
 - 📝 [Version 3 Release Note](https://medium.com/dooboolab/react-native-audio-player-and-recorder-v3-7697e25cd07)
 - 📰 [Original Blog Post](https://medium.com/@dooboolab/react-native-audio-recorder-and-player-4aa5f26a666)
-
-## What's New in 4.0.0 🚀
-
-### NitroModule Migration
-
-Version 4.0.0 introduces a complete rewrite using [NitroModules](https://github.com/mrousavy/nitro), offering:
-
-- **Zero Bridge Overhead**: Direct native module access for maximum performance
-- **Full Type Safety**: TypeScript definitions generated from native specs
-- **Synchronous Methods**: Where appropriate, for better developer experience
-- **Event Listeners**: Native callbacks with type-safe event payloads
-- **Cross-Platform Code Generation**: Automatic code generation for iOS (Swift) and Android (Kotlin)
-- **Background Processing**: Recording operations now run in background threads to prevent UI blocking, requiring loading state management
-- **Web Platform Support**: Full support for web browsers using Web Audio API and MediaRecorder API
-
-### Requirements
-
-- React Native: >= 0.79 (0.81 recommended)
-- iOS: Deployment Target >= 13.0
-  - Note: With RN 0.81+, build using Xcode >= 16.1 (toolchain requirement; iOS runtime minimum remains 13.0)
-- Android: minSdk >= 24 (JDK 17 recommended; compileSdk 36 recommended)
-- New Architecture: optional (Nitro works on both old and new arch)
-- Expo SDK >= 50 (for Expo users)
 
 ## Migration from react-native-audio-recorder-player
 
