@@ -28,6 +28,7 @@ class SoundWebImpl implements SoundType {
   private currentVolume: number = 1.0;
   private recordingUrl: string | null = null;
   private mediaStream: MediaStream | null = null;
+  private lastSourceUrl: string | null = null;
 
   // Recording methods
   async startRecorder(
@@ -142,24 +143,39 @@ class SoundWebImpl implements SoundType {
     httpHeaders?: Record<string, string>
   ): Promise<string> {
     try {
-      this.audio = new Audio();
-      this.audio.volume = this.currentVolume;
+      // Determine requested URL to play (remote or last recording)
+      let requestedUrl: string | null = null;
+      let createdObjectUrl: string | null = null;
 
       if (uri) {
-        // For remote URLs with headers, we might need to use fetch
         if (httpHeaders && Object.keys(httpHeaders).length > 0) {
           const response = await fetch(uri, { headers: httpHeaders });
           const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          this.audio.src = url;
+          requestedUrl = URL.createObjectURL(blob);
+          createdObjectUrl = requestedUrl;
         } else {
-          this.audio.src = uri;
+          requestedUrl = uri;
         }
       } else if (this.recordingUrl) {
-        this.audio.src = this.recordingUrl;
-      } else {
-        throw new Error('No audio URI provided');
+        requestedUrl = this.recordingUrl;
       }
+
+      // If we already have an audio element and it's paused on the same source, just resume
+      if (this.audio && this.audio.paused) {
+        const currentSrc = this.audio.currentSrc || this.audio.src;
+        if (!requestedUrl || currentSrc === requestedUrl) {
+          await this.audio.play();
+          this.startPlaybackProgress();
+          return currentSrc || requestedUrl || '';
+        }
+      }
+
+      // Create or replace audio element for a (new or same) source
+      this.audio = new Audio();
+      this.audio.volume = this.currentVolume;
+      if (!requestedUrl) throw new Error('No audio URI provided');
+      this.audio.src = requestedUrl;
+      this.lastSourceUrl = requestedUrl;
 
       // Add ended event listener
       this.audio.onended = () => {
@@ -191,7 +207,7 @@ class SoundWebImpl implements SoundType {
       await this.audio.play();
       this.startPlaybackProgress();
 
-      return uri || this.recordingUrl || '';
+      return requestedUrl;
     } catch (error) {
       console.error('Failed to start playback:', error);
       throw new Error(`Failed to start playback: ${error}`);
@@ -430,8 +446,27 @@ class SoundWebImpl implements SoundType {
     }
   }
 }
+// Factory for web: produce multiple independent instances
+export function createSound(): SoundType {
+  return new SoundWebImpl();
+}
 
-// Create singleton instance
-const Sound = new SoundWebImpl();
+// Backward-compatible singleton (legacy API)
+let _singleton: SoundType | null = null;
+const getSingleton = (): SoundType => {
+  if (!_singleton) _singleton = createSound();
+  return _singleton;
+};
+
+const Sound: SoundType = new Proxy({} as SoundType, {
+  get(_target, prop: keyof SoundType) {
+    const inst = getSingleton();
+    const value = (inst as any)[prop];
+    if (typeof value === 'function') return value.bind(inst);
+    return value;
+  },
+}) as SoundType;
 
 export default Sound;
+export { Sound };
+export { useSound } from './useSound';

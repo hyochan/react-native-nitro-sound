@@ -8,6 +8,13 @@
       "command": "${workspaceFolder}/.vscode/ios.sh"
     },
     {
+      "name": "🌐 Web (Webpack Dev Server)",
+      "request": "launch",
+      "type": "node-terminal",
+      "command": "yarn web",
+      "cwd": "${workspaceFolder}/example"
+    },
+    {
       "name": "🤖 Android Emulator",
       "request": "launch",
       "type": "node-terminal",

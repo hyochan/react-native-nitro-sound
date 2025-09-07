@@ -517,12 +517,19 @@ class HybridSound : HybridSoundSpec() {
     override fun setPlaybackSpeed(playbackSpeed: Double): Promise<String> {
         return Promise.parallel {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                mediaPlayer?.let { player ->
-                    player.playbackParams = player.playbackParams.apply {
-                        speed = playbackSpeed.toFloat()
+                val player = mediaPlayer ?: throw Exception("No player instance")
+                try {
+                    val params = try {
+                        player.playbackParams
+                    } catch (_: Exception) {
+                        android.media.PlaybackParams()
                     }
+                    params.speed = playbackSpeed.toFloat()
+                    player.playbackParams = params
                     "Playback speed set to $playbackSpeed"
-                } ?: throw Exception("No player instance")
+                } catch (e: Exception) {
+                    throw e
+                }
             } else {
                 throw Exception("Playback speed is not supported on Android API < 23")
             }

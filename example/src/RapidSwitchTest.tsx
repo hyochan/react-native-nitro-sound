@@ -8,7 +8,8 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import Sound from '../../src';
+import { useEffect, useRef } from 'react';
+import { createSound } from '../../src';
 
 const TEST_AUDIO_URLS = [
   'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
@@ -17,6 +18,7 @@ const TEST_AUDIO_URLS = [
 ];
 
 export const RapidSwitchTest: React.FC = () => {
+  const soundRef = useRef(createSound());
   const [isTestRunning, setIsTestRunning] = useState(false);
   const [testLog, setTestLog] = useState<string[]>([]);
   const [currentTrack, setCurrentTrack] = useState(-1);
@@ -25,6 +27,19 @@ export const RapidSwitchTest: React.FC = () => {
     const timestamp = new Date().toLocaleTimeString();
     setTestLog((prev) => [...prev, `${timestamp}: ${message}`]);
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    const sound = soundRef.current;
+    return () => {
+      try {
+        sound.stopPlayer();
+      } catch {}
+      try {
+        sound.dispose();
+      } catch {}
+    };
+  }, []);
 
   const rapidSwitchTest = async () => {
     setIsTestRunning(true);
@@ -41,7 +56,7 @@ export const RapidSwitchTest: React.FC = () => {
         setCurrentTrack(trackIndex);
 
         try {
-          await Sound.startPlayer(url);
+          await soundRef.current.startPlayer(url);
           addLog(`Playing track ${trackIndex + 1}`);
 
           // Play for a very short time (100-500ms)
@@ -50,7 +65,7 @@ export const RapidSwitchTest: React.FC = () => {
           );
 
           addLog(`Stopping track ${trackIndex + 1}...`);
-          await Sound.stopPlayer();
+          await soundRef.current.stopPlayer();
           addLog(`Stopped track ${trackIndex + 1}`);
 
           // Very short delay between switches (0-100ms)
@@ -74,7 +89,7 @@ export const RapidSwitchTest: React.FC = () => {
       setCurrentTrack(-1);
       // Ensure player is stopped
       try {
-        await Sound.stopPlayer();
+        await soundRef.current.stopPlayer();
       } catch {}
     }
   };
@@ -93,8 +108,8 @@ export const RapidSwitchTest: React.FC = () => {
         addLog(`Quick switch ${i + 1}...`);
 
         try {
-          const startPromise = Sound.startPlayer(url);
-          const stopPromise = Sound.stopPlayer();
+          const startPromise = soundRef.current.startPlayer(url);
+          const stopPromise = soundRef.current.stopPlayer();
 
           await Promise.all([startPromise, stopPromise]).catch((err) => {
             // One might fail, but we continue
@@ -124,7 +139,7 @@ export const RapidSwitchTest: React.FC = () => {
       setIsTestRunning(false);
       // Clean up
       try {
-        await Sound.stopPlayer();
+        await soundRef.current.stopPlayer();
       } catch {}
     }
   };

@@ -14,7 +14,7 @@
     "build:web": "webpack --mode production"
   },
   "dependencies": {
-    "@react-native-community/slider": "^4.5.7",
+    "@react-native-community/slider": "^5.0.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "^0.81.0",

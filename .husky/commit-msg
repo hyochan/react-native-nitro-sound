@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Source Husky shim if available (install may not have run yet)
+if [ -f "$(dirname "$0")/_/husky.sh" ]; then
+  . "$(dirname "$0")/_/husky.sh"
+fi
+
+npx --no -- commitlint --edit "$1"
+

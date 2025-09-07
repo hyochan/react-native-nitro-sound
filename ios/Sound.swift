@@ -19,6 +19,7 @@ class HybridSound: HybridSoundSpec {
     private var playbackEndListener: ((PlaybackEndType) -> Void)?
     
     private var subscriptionDuration: TimeInterval = 0.06
+    private var playbackRate: Double = 1.0 // default 1x
     private var recordingSession: AVAudioSession?
     
     // MARK: - Recording Methods
@@ -438,6 +439,8 @@ class HybridSound: HybridSoundSpec {
                         print("🎵 ✅ File exists, creating AVAudioPlayer...")
                         
                         self.audioPlayer = try AVAudioPlayer(contentsOf: url)
+                        self.ensurePlayerDelegate()
+                        self.audioPlayer?.delegate = self.playerDelegateProxy
                         
                         guard let player = self.audioPlayer else {
                             promise.reject(withError: RuntimeError.error(withMessage: "Failed to create audio player"))
@@ -445,6 +448,8 @@ class HybridSound: HybridSoundSpec {
                         }
                         
                         player.volume = 1.0
+                        player.enableRate = true
+                        player.rate = Float(self.playbackRate)
                         player.prepareToPlay()
                         
                         // Play on main queue
@@ -517,6 +522,8 @@ class HybridSound: HybridSoundSpec {
         let promise = Promise<String>()
         
         if let player = self.audioPlayer {
+            player.enableRate = true
+            player.rate = Float(self.playbackRate)
             player.play()
             self.startPlayTimer()
             promise.resolve(withResult: "Player resumed")
@@ -563,12 +570,18 @@ class HybridSound: HybridSoundSpec {
     public func setPlaybackSpeed(playbackSpeed: Double) throws -> Promise<String> {
         let promise = Promise<String>()
         
+        // Persist desired rate for future players/resume
+        self.playbackRate = playbackSpeed
+        
         if let player = self.audioPlayer {
-            player.enableRate = true
-            player.rate = Float(playbackSpeed)
+            DispatchQueue.main.async {
+                player.enableRate = true
+                player.rate = Float(playbackSpeed)
+            }
             promise.resolve(withResult: "Playback speed set to \(playbackSpeed)")
         } else {
-            promise.reject(withError: RuntimeError.error(withMessage: "No player instance"))
+            // No active player; apply on next start/resume
+            promise.resolve(withResult: "Playback speed stored (no active player)")
         }
         
         return promise
@@ -729,8 +742,14 @@ class HybridSound: HybridSoundSpec {
         do {
             let data = try Data(contentsOf: audioURL)
             self.audioPlayer = try AVAudioPlayer(data: data)
-            self.audioPlayer?.prepareToPlay()
-            self.audioPlayer?.play()
+            self.ensurePlayerDelegate()
+            self.audioPlayer?.delegate = self.playerDelegateProxy
+            if let player = self.audioPlayer {
+                player.enableRate = true
+                player.rate = Float(self.playbackRate)
+                player.prepareToPlay()
+                player.play()
+            }
             
             self.startPlayTimer()
             promise.resolve(withResult: url)
@@ -879,5 +898,42 @@ class HybridSound: HybridSoundSpec {
         self.playTimer?.invalidate()
         self.playTimer = nil
     }
-    
+
+    // MARK: - AVAudioPlayerDelegate via proxy
+    private class AudioPlayerDelegateProxy: NSObject, AVAudioPlayerDelegate {
+        weak var owner: HybridSound?
+        init(owner: HybridSound) { self.owner = owner }
+
+        func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+            print("🎵 AVAudioPlayer finished playing. success=\(flag)")
+            guard let owner = owner else { return }
+            let finalDurationMs = player.duration * 1000
+            if let listener = owner.playBackListener {
+                let finalPlayBack = PlayBackType(
+                    isMuted: false,
+                    duration: finalDurationMs,
+                    currentPosition: finalDurationMs
+                )
+                listener(finalPlayBack)
+            }
+            if let endListener = owner.playbackEndListener {
+                let endEvent = PlaybackEndType(
+                    duration: finalDurationMs,
+                    currentPosition: finalDurationMs
+                )
+                endListener(endEvent)
+            }
+            owner.stopPlayTimer()
+        }
+
+        func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+            print("🎵 AVAudioPlayer decode error: \(String(describing: error))")
+        }
+    }
+
+    private var playerDelegateProxy: AudioPlayerDelegateProxy?
+    private func ensurePlayerDelegate() {
+        if playerDelegateProxy == nil { playerDelegateProxy = AudioPlayerDelegateProxy(owner: self) }
+        else { playerDelegateProxy?.owner = self }
+    }
 }

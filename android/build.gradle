@@ -7,7 +7,6 @@ def reactNativeArchitectures() {
   return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
-apply plugin: "com.facebook.react"
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
@@ -41,24 +40,12 @@ android {
     }
   }
 
+  // Do not exclude RN/Hermes JNI libs from the library AAR —
+  // let the app control final packaging to avoid missing/duplicate symbols.
   packagingOptions {
     excludes = [
             "META-INF",
-            "META-INF/**",
-            "**/libc++_shared.so",
-            "**/libfbjni.so",
-            "**/libjsi.so",
-            "**/libfolly_json.so",
-            "**/libfolly_runtime.so",
-            "**/libglog.so",
-            "**/libhermes.so",
-            "**/libhermes-executor-debug.so",
-            "**/libhermes_executor.so",
-            "**/libreactnative.so",
-            "**/libreactnativejni.so",
-            "**/libturbomodulejsijni.so",
-            "**/libreact_nativemodule_core.so",
-            "**/libjscexecutor.so"
+            "META-INF/**"
     ]
   }
 
@@ -105,4 +92,3 @@ dependencies {
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
   implementation project(":react-native-nitro-modules")
 }
-

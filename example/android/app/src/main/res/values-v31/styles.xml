@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Android 12+ splash configuration -->
+    <!-- App theme (no splash background) -->
     <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <!-- Keep existing background for pre-draw & pre-12 fallback -->
-        <item name="android:windowBackground">@drawable/launch_background</item>
+        <!-- Keep clean; Splash handled by LaunchTheme/SplashActivity -->
+    </style>
+
+    <!-- Android 12+ system splash for SplashActivity -->
+    <style name="LaunchTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- Fallback background while system splash is active -->
+        <item name="android:windowBackground">@color/splash_background</item>
         <!-- System splashscreen on API 31+ -->
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/launch</item>
         <item name="android:windowSplashScreenBackground">@color/splash_background</item>
@@ -11,4 +16,3 @@
         <item name="android:windowSplashScreenAnimationDuration">200</item>
     </style>
 </resources>
-

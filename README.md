@@ -13,7 +13,7 @@
 [![Platform - Android](https://img.shields.io/badge/platform-Android-green.svg?style=flat-square&logo=android&logoColor=white)](https://developer.android.com/)
 [![Platform - Web](https://img.shields.io/badge/platform-Web-orange.svg?style=flat-square&logo=googlechrome&logoColor=white)](https://reactnative.dev/docs/react-native-web)
 
-<img src="Logo Primary.png" width="70%" alt="Logo" />
+<img src="https://github.com/user-attachments/assets/81ce7b7b-0b7d-413b-8a26-505372349ecb" width="70%" alt="Logo" />
 
 ## Legacy Package (react-native-audio-recorder-player)
 
@@ -69,7 +69,9 @@ This is one of those projects that brings me joy to work on. If you find it usef
 
 ## Preview
 
-<img src="https://github.com/user-attachments/assets/2c88f580-4e2b-43f3-a177-bf19d2d40fd5" width=800 alt="Preview"/>
+<img src="https://github.com/user-attachments/assets/02545c15-f41d-4186-be79-2a13fd67ccb2" width=800 alt="Screenshot"/>
+
+<img src="https://github.com/user-attachments/assets/6d8a5a80-cd31-450f-b410-9b8f42ae8d03" width=800 alt="Screenshot2"/>
 
 ## Documentation & Resources
 
@@ -354,6 +356,67 @@ const setSpeed = async (speed: number) => {
   await Sound.setPlaybackSpeed(speed); // 0.5 - 2.0
 };
 ```
+
+### Modern API: Multiple Instances
+
+```tsx
+import { createSound } from 'react-native-nitro-sound';
+
+// Create independent instances (recorder/player per instance)
+const soundA = createSound();
+const soundB = createSound();
+
+await soundA.startPlayer('https://example.com/a.mp3');
+await soundB.startPlayer('https://example.com/b.mp3');
+
+// Control them independently
+await soundA.pausePlayer();
+await soundB.setVolume(0.5);
+
+// Clean up when done
+soundA.dispose();
+soundB.dispose();
+```
+
+### React Hook API
+
+```tsx
+import { useSound } from 'react-native-nitro-sound';
+
+export function Player() {
+  const {
+    sound,
+    state,
+    startPlayer,
+    pausePlayer,
+    resumePlayer,
+    stopPlayer,
+    seekToPlayer,
+    mmssss,
+  } = useSound({
+    subscriptionDuration: 0.05, // 50ms updates
+  });
+
+  return (
+    <View>
+      <Text>
+        {mmssss(Math.floor(state.currentPosition))} /{' '}
+        {mmssss(Math.floor(state.duration))}
+      </Text>
+      <Button
+        title="Play"
+        onPress={() => startPlayer('https://example.com/audio.mp3')}
+      />
+      <Button title="Pause" onPress={pausePlayer} />
+      <Button title="Resume" onPress={resumePlayer} />
+      <Button title="Stop" onPress={stopPlayer} />
+      <Button title="Seek 10s" onPress={() => seekToPlayer(10_000)} />
+    </View>
+  );
+}
+```
+
+> Note: The default export remains a singleton for backward compatibility. Prefer `createSound()` and `useSound()` for new code and multiple instances.
 
 ### Audio Configuration
 

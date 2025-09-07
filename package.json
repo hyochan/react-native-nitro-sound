@@ -42,7 +42,7 @@
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
-    "prepare": "npx tsx scripts/check-nitro-versions.ts && bob build && yarn nitrogen",
+    "prepare": "husky install && npx tsx scripts/check-nitro-versions.ts && bob build && yarn nitrogen",
     "nitrogen": "npx nitro-codegen",
     "release": "release-it --only-version",
     "web": "yarn workspace react-native-nitro-sound-example web",
@@ -70,6 +70,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
     "@eslint/compat": "^1.2.7",
     "@eslint/eslintrc": "^3.3.0",
@@ -93,6 +94,7 @@
     "react-native": "0.79.2",
     "react-native-builder-bob": "0.38.4",
     "react-native-nitro-modules": "^0.29.3",
+    "husky": "^9.1.6",
     "release-it": "^17.10.0",
     "turbo": "^1.10.7",
     "typescript": "^5.8.3"
@@ -173,5 +175,8 @@
     "languages": "kotlin-swift",
     "type": "nitro-module",
     "version": "0.51.1"
+  },
+  "dependencies": {
+    "@react-native-community/slider": "^5.0.1"
   }
 }

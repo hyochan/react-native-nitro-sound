@@ -17,11 +17,5 @@ module.exports = {
         android: {},
       },
     },
-    // Exclude slider from autolinking to prevent conflicts
-    '@react-native-community/slider': {
-      platforms: {
-        android: null, // Disable Android platform
-      },
-    },
   },
 };
