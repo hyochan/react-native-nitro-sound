@@ -61,9 +61,12 @@ module.exports = {
     ],
     alias: {
       // Force a single React/DOM instance from the example app to avoid hook errors
-      react: path.resolve(__dirname, 'node_modules/react'),
+      'react': path.resolve(__dirname, 'node_modules/react'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
-      'react/jsx-runtime': path.resolve(__dirname, 'node_modules/react/jsx-runtime.js'),
+      'react/jsx-runtime': path.resolve(
+        __dirname,
+        'node_modules/react/jsx-runtime.js'
+      ),
       'react-native$': 'react-native-web',
       'react-native-nitro-modules': path.resolve(
         __dirname,

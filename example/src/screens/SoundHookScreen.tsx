@@ -179,10 +179,24 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
               <Text style={styles.btnTxt}>Start</Text>
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.btn, (isRecordLoading || !isRecording) && styles.btnDisabled]} onPress={pauseRecorder} disabled={isRecordLoading || !isRecording}>
+          <TouchableOpacity
+            style={[
+              styles.btn,
+              (isRecordLoading || !isRecording) && styles.btnDisabled,
+            ]}
+            onPress={pauseRecorder}
+            disabled={isRecordLoading || !isRecording}
+          >
             <Text style={styles.btnTxt}>Pause</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.btn, (isRecordLoading || !isRecording) && styles.btnDisabled]} onPress={resumeRecorder} disabled={isRecordLoading || !isRecording}>
+          <TouchableOpacity
+            style={[
+              styles.btn,
+              (isRecordLoading || !isRecording) && styles.btnDisabled,
+            ]}
+            onPress={resumeRecorder}
+            disabled={isRecordLoading || !isRecording}
+          >
             <Text style={styles.btnTxt}>Resume</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -192,16 +206,24 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
           >
             <View style={styles.btnContent}>
               {isStopLoading && (
-                <ActivityIndicator size="small" color="#fff" style={styles.spinner} />
+                <ActivityIndicator
+                  size="small"
+                  color="#fff"
+                  style={styles.spinner}
+                />
               )}
-              <Text style={styles.btnTxt}>{isStopLoading ? 'Stopping...' : 'Stop'}</Text>
+              <Text style={styles.btnTxt}>
+                {isStopLoading ? 'Stopping...' : 'Stop'}
+              </Text>
             </View>
           </TouchableOpacity>
         </View>
         <Text style={styles.small}>
           Recording: {isRecording ? 'Yes' : 'No'}
         </Text>
-        <Text style={styles.small}>Record Time: {mmssss(Math.floor(recordPosition))}</Text>
+        <Text style={styles.small}>
+          Record Time: {mmssss(Math.floor(recordPosition))}
+        </Text>
 
         <View style={styles.sep} />
         <Text style={styles.sectionTitle}>Player</Text>
@@ -222,7 +244,11 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
             <View
               style={[
                 styles.androidProgressFill,
-                { width: `${(playbackPosition / Math.max(1, duration)) * 100}%` },
+                {
+                  width: `${
+                    (playbackPosition / Math.max(1, duration)) * 100
+                  }%`,
+                },
               ]}
             />
           </View>
@@ -235,7 +261,11 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
           >
             {isPlayLoading ? (
               <View style={styles.btnContent}>
-                <ActivityIndicator size="small" color="#fff" style={styles.spinner} />
+                <ActivityIndicator
+                  size="small"
+                  color="#fff"
+                  style={styles.spinner}
+                />
                 <Text style={styles.btnTxt}>Loading...</Text>
               </View>
             ) : (
@@ -245,7 +275,10 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
           <TouchableOpacity
             style={[styles.btn, (isPlayLoading || !isPlaying) && styles.btnDisabled]}
             onPress={async () => {
-              try { await pausePlayer(); setIsPlaying(false); } catch {}
+              try {
+                await pausePlayer();
+                setIsPlaying(false);
+              } catch {}
             }}
             disabled={isPlayLoading || !isPlaying}
           >
@@ -254,7 +287,10 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
           <TouchableOpacity
             style={[styles.btn, (isPlayLoading || isPlaying) && styles.btnDisabled]}
             onPress={async () => {
-              try { await resumePlayer(); setIsPlaying(true); } catch {}
+              try {
+                await resumePlayer();
+                setIsPlaying(true);
+              } catch {}
             }}
             disabled={isPlayLoading || isPlaying}
           >
@@ -263,7 +299,11 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
           <TouchableOpacity
             style={[styles.btn, (isPlayLoading || (!isPlaying && playbackPosition === 0)) && styles.btnDisabled]}
             onPress={async () => {
-              try { await stopPlayer(); } finally { setIsPlaying(false); }
+              try {
+                await stopPlayer();
+              } finally {
+                setIsPlaying(false);
+              }
             }}
             disabled={isPlayLoading || (!isPlaying && playbackPosition === 0)}
           >
@@ -327,12 +367,13 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   btnDisabled: { opacity: 0.6 },
-  btnContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  btnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   spinner: { marginRight: 6 },
   btnTxt: { color: 'white' },
-  btnDisabled: { opacity: 0.6 },
-  btnContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  spinner: { marginRight: 6 },
   small: { fontSize: 12, color: '#555', marginBottom: 6 },
   sep: { height: 1, backgroundColor: '#eee', marginVertical: 16 },
   slider: { width: '100%', height: 40 },

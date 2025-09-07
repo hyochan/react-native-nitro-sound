@@ -158,7 +158,11 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
           >
             {isRecordLoading ? (
               <View style={styles.btnContent}>
-                <ActivityIndicator size="small" color="#fff" style={styles.spinner} />
+                <ActivityIndicator
+                  size="small"
+                  color="#fff"
+                  style={styles.spinner}
+                />
                 <Text style={styles.btnTxt}>{loadingMessage}</Text>
               </View>
             ) : (
@@ -186,9 +190,15 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
           >
             <View style={styles.btnContent}>
               {isStopLoading && (
-                <ActivityIndicator size="small" color="#fff" style={styles.spinner} />
+                <ActivityIndicator
+                  size="small"
+                  color="#fff"
+                  style={styles.spinner}
+                />
               )}
-              <Text style={styles.btnTxt}>{isStopLoading ? 'Stopping...' : 'Stop'}</Text>
+              <Text style={styles.btnTxt}>
+                {isStopLoading ? 'Stopping...' : 'Stop'}
+              </Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -216,7 +226,11 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
             <View
               style={[
                 styles.androidProgressFill,
-                { width: `${(playbackPosition / Math.max(1, duration)) * 100}%` },
+                {
+                  width: `${
+                    (playbackPosition / Math.max(1, duration)) * 100
+                  }%`,
+                },
               ]}
             />
           </View>
@@ -229,7 +243,11 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
           >
             {isPlayLoading ? (
               <View style={styles.btnContent}>
-                <ActivityIndicator size="small" color="#fff" style={styles.spinner} />
+                <ActivityIndicator
+                  size="small"
+                  color="#fff"
+                  style={styles.spinner}
+                />
                 <Text style={styles.btnTxt}>Loading...</Text>
               </View>
             ) : (
@@ -238,20 +256,34 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.btn, (isPlayLoading || !isPlaying) && styles.btnDisabled]}
-            onPress={async () => { try { await soundRef.current.pausePlayer(); setIsPlaying(false); } catch {} }}
+            onPress={async () => {
+              try {
+                await soundRef.current.pausePlayer();
+                setIsPlaying(false);
+              } catch {}
+            }}
             disabled={isPlayLoading || !isPlaying}
           >
             <Text style={styles.btnTxt}>Pause</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.btn, (isPlayLoading || isPlaying) && styles.btnDisabled]}
-            onPress={async () => { try { await soundRef.current.resumePlayer(); setIsPlaying(true); } catch {} }}
+            onPress={async () => {
+              try {
+                await soundRef.current.resumePlayer();
+                setIsPlaying(true);
+              } catch {}
+            }}
             disabled={isPlayLoading || isPlaying}
           >
             <Text style={styles.btnTxt}>Resume</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.btn, (isPlayLoading || (!isPlaying && playbackPosition === 0)) && styles.btnDisabled]}
+            style={[
+              styles.btn,
+              (isPlayLoading || (!isPlaying && playbackPosition === 0)) &&
+                styles.btnDisabled,
+            ]}
             onPress={onStopPlay}
             disabled={isPlayLoading || (!isPlaying && playbackPosition === 0)}
           >
@@ -323,10 +355,11 @@ const styles = StyleSheet.create({
   },
   btnTxt: { color: 'white' },
   btnDisabled: { opacity: 0.6 },
-  btnContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  spinner: { marginRight: 6 },
-  btnDisabled: { opacity: 0.6 },
-  btnContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  btnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   spinner: { marginRight: 6 },
   small: { fontSize: 12, color: '#555', marginBottom: 6 },
   sep: { height: 1, backgroundColor: '#eee', marginVertical: 16 },

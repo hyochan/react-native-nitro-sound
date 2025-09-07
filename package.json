@@ -41,6 +41,7 @@
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "lint:fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
     "prepare": "husky install && npx tsx scripts/check-nitro-versions.ts && bob build && yarn nitrogen",
     "nitrogen": "npx nitro-codegen",

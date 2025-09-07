@@ -28,7 +28,6 @@ class SoundWebImpl implements SoundType {
   private currentVolume: number = 1.0;
   private recordingUrl: string | null = null;
   private mediaStream: MediaStream | null = null;
-  private lastSourceUrl: string | null = null;
 
   // Recording methods
   async startRecorder(
@@ -145,14 +144,12 @@ class SoundWebImpl implements SoundType {
     try {
       // Determine requested URL to play (remote or last recording)
       let requestedUrl: string | null = null;
-      let createdObjectUrl: string | null = null;
 
       if (uri) {
         if (httpHeaders && Object.keys(httpHeaders).length > 0) {
           const response = await fetch(uri, { headers: httpHeaders });
           const blob = await response.blob();
           requestedUrl = URL.createObjectURL(blob);
-          createdObjectUrl = requestedUrl;
         } else {
           requestedUrl = uri;
         }
@@ -175,7 +172,6 @@ class SoundWebImpl implements SoundType {
       this.audio.volume = this.currentVolume;
       if (!requestedUrl) throw new Error('No audio URI provided');
       this.audio.src = requestedUrl;
-      this.lastSourceUrl = requestedUrl;
 
       // Add ended event listener
       this.audio.onended = () => {

@@ -1,0 +1,7 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running lint --fix and typecheck..."
+yarn -s lint:fix || exit 1
+yarn -s typecheck || exit 1
+

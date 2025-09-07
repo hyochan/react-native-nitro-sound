@@ -134,10 +134,24 @@ export function SoundHookStatesScreen({ onBack }: { onBack: () => void }) {
               <Text style={styles.btnTxt}>Start</Text>
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.btn, (isRecordLoading || !state.isRecording) && styles.btnDisabled]} onPress={pauseRecorder} disabled={isRecordLoading || !state.isRecording}>
+          <TouchableOpacity
+            style={[
+              styles.btn,
+              (isRecordLoading || !state.isRecording) && styles.btnDisabled,
+            ]}
+            onPress={pauseRecorder}
+            disabled={isRecordLoading || !state.isRecording}
+          >
             <Text style={styles.btnTxt}>Pause</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.btn, (isRecordLoading || !state.isRecording) && styles.btnDisabled]} onPress={resumeRecorder} disabled={isRecordLoading || !state.isRecording}>
+          <TouchableOpacity
+            style={[
+              styles.btn,
+              (isRecordLoading || !state.isRecording) && styles.btnDisabled,
+            ]}
+            onPress={resumeRecorder}
+            disabled={isRecordLoading || !state.isRecording}
+          >
             <Text style={styles.btnTxt}>Resume</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -159,9 +173,15 @@ export function SoundHookStatesScreen({ onBack }: { onBack: () => void }) {
           >
             <View style={styles.btnContent}>
               {isStopLoading && (
-                <ActivityIndicator size="small" color="#fff" style={styles.spinner} />
+                <ActivityIndicator
+                  size="small"
+                  color="#fff"
+                  style={styles.spinner}
+                />
               )}
-              <Text style={styles.btnTxt}>{isStopLoading ? 'Stopping...' : 'Stop'}</Text>
+              <Text style={styles.btnTxt}>
+                {isStopLoading ? 'Stopping...' : 'Stop'}
+              </Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -199,13 +219,20 @@ export function SoundHookStatesScreen({ onBack }: { onBack: () => void }) {
         )}
         <View style={styles.row}>
           <TouchableOpacity
-            style={[styles.btn, (isPlayLoading || state.isPlaying) && styles.btnDisabled]}
+            style={[
+              styles.btn,
+              (isPlayLoading || state.isPlaying) && styles.btnDisabled,
+            ]}
             onPress={onStartPlay}
             disabled={isPlayLoading || state.isPlaying}
           >
             {isPlayLoading ? (
               <View style={styles.btnContent}>
-                <ActivityIndicator size="small" color="#fff" style={styles.spinner} />
+                <ActivityIndicator
+                  size="small"
+                  color="#fff"
+                  style={styles.spinner}
+                />
                 <Text style={styles.btnTxt}>Loading...</Text>
               </View>
             ) : (
@@ -213,23 +240,37 @@ export function SoundHookStatesScreen({ onBack }: { onBack: () => void }) {
             )}
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.btn, (isPlayLoading || !state.isPlaying) && styles.btnDisabled]}
+            style={[
+              styles.btn,
+              (isPlayLoading || !state.isPlaying) && styles.btnDisabled,
+            ]}
             onPress={pausePlayer}
             disabled={isPlayLoading || !state.isPlaying}
           >
             <Text style={styles.btnTxt}>Pause</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.btn, (isPlayLoading || state.isPlaying) && styles.btnDisabled]}
+            style={[
+              styles.btn,
+              (isPlayLoading || state.isPlaying) && styles.btnDisabled,
+            ]}
             onPress={resumePlayer}
             disabled={isPlayLoading || state.isPlaying}
           >
             <Text style={styles.btnTxt}>Resume</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.btn, (isPlayLoading || (!state.isPlaying && (state.playback.position || 0) === 0)) && styles.btnDisabled]}
+            style={[
+              styles.btn,
+              (isPlayLoading ||
+                (!state.isPlaying && (state.playback.position || 0) === 0)) &&
+                styles.btnDisabled,
+            ]}
             onPress={stopPlayer}
-            disabled={isPlayLoading || (!state.isPlaying && (state.playback.position || 0) === 0)}
+            disabled={
+              isPlayLoading ||
+              (!state.isPlaying && (state.playback.position || 0) === 0)
+            }
           >
             <Text style={styles.btnTxt}>Stop</Text>
           </TouchableOpacity>
@@ -292,10 +333,11 @@ const styles = StyleSheet.create({
   },
   btnTxt: { color: 'white' },
   btnDisabled: { opacity: 0.6 },
-  btnContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  spinner: { marginRight: 6 },
-  btnDisabled: { opacity: 0.6 },
-  btnContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  btnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   spinner: { marginRight: 6 },
   small: { fontSize: 12, color: '#555', marginBottom: 6 },
   sep: { height: 1, backgroundColor: '#eee', marginVertical: 16 },
