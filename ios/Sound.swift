@@ -162,6 +162,51 @@ class HybridSound: HybridSoundSpec {
                         print("🎙️ Recording attempt \(recordAttempts)/\(maxAttempts)")
                         
                         func configureAndStartRecording() {
+                            // Check if session is still valid and not hijacked right before recording
+                            let currentCategory = audioSession.category
+                            let currentMode = audioSession.mode
+                            
+                            // Check if session is corrupted (empty category/mode)
+                            if currentCategory.rawValue.isEmpty || currentMode.rawValue.isEmpty {
+                                print("🎙️ ⚠️ Audio session is corrupted, attempting to recover...")
+                                // Try to recover the session
+                                do {
+                                    // Get a fresh session instance
+                                    let freshSession = AVAudioSession.sharedInstance()
+                                    try freshSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
+                                    try freshSession.setActive(true, options: [])
+                                    print("🎙️ ✅ Audio session recovered successfully")
+                                } catch {
+                                    print("🎙️ ❌ Failed to recover audio session: \(error)")
+                                }
+                            } else if currentCategory != .playAndRecord {
+                                print("🎙️ ⚠️ Session still hijacked before recording attempt: \(currentCategory)")
+                                // Force immediate session takeover
+                                do {
+                                    try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
+                                    try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+                                    try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+                                    print("🎙️ ✅ Forced immediate session takeover")
+                                } catch {
+                                    print("🎙️ ❌ Failed immediate session takeover: \(error)")
+                                }
+                            }
+                            
+                            // If session was changed, recreate the recorder to ensure compatibility
+                            if currentCategory != .playAndRecord || recordAttempts > 1 {
+                                print("🎙️ ⚠️ Session was changed, recreating recorder for compatibility...")
+                                do {
+                                    // Recreate the recorder with current session state
+                                    let settings = self.getAudioSettings(audioSets: audioSets)
+                                    self.audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)
+                                    self.audioRecorder?.isMeteringEnabled = meteringEnabled ?? false
+                                    let prepared = self.audioRecorder?.prepareToRecord() ?? false
+                                    print("🎙️ ✅ Recorder recreated and prepared: \(prepared)")
+                                } catch {
+                                    print("🎙️ ❌ Failed to recreate recorder: \(error)")
+                                }
+                            }
+                            
                             let started = self.audioRecorder?.record() ?? false
                             print("🎙️ Recording started: \(started)")
                             
