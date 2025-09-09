@@ -47,31 +47,21 @@ android {
   // in consuming apps (e.g., libjsi.so, libreactnative.so). These are
   // provided by React Native itself and should not be packaged here.
   packagingOptions {
-    // Keep META-INF cleanup
-    excludes = [
-            "META-INF",
-            "META-INF/**"
-    ]
-
-    // Exclude transitive JNI libs that RN/app provides
-    // Support both legacy and new AGP DSLs
-    if (hasProperty('jniLibs')) {
-      jniLibs {
-        excludes += [
-                "**/libjsi.so",
-                "**/libreactnative.so",
-                "**/libfbjni.so",
-                "**/libc++_shared.so",
-                "**/libNitroModules.so"
-        ]
-      }
-    } else {
-      // Fallback for older AGP versions
-      exclude("**/libjsi.so")
-      exclude("**/libreactnative.so")
-      exclude("**/libfbjni.so")
-      exclude("**/libc++_shared.so")
-      exclude("**/libNitroModules.so")
+    // New AGP DSL: configure resources + jniLibs explicitly
+    resources {
+      excludes += [
+              "META-INF",
+              "META-INF/**"
+      ]
+    }
+    jniLibs {
+      excludes += [
+              "**/libjsi.so",
+              "**/libreactnative.so",
+              "**/libfbjni.so",
+              "**/libc++_shared.so",
+              "**/libNitroModules.so"
+      ]
     }
   }
 
