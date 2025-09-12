@@ -195,46 +195,26 @@ class HybridSound : HybridSoundSpec() {
 
                 // Apply sane defaults based on AudioQuality when explicit values are missing
                 // Default to HIGH if not provided
-                val audioQuality = audioSets?.AudioQuality ?: AudioQualityType.MEDIUM
+                val audioQuality = audioSets?.AudioQuality ?: AudioQualityType.HIGH
 
-                // Audio Sampling Rate
-                run {
-                    val srExplicit = audioSets?.AudioSamplingRate
-                    val srDefault = when (audioQuality) {
-                        AudioQualityType.LOW -> 22050
-                        AudioQualityType.MEDIUM -> 44100
-                        AudioQualityType.HIGH -> 48000
-                        else -> null
-                    }
-                    val srFinal = (srExplicit?.toInt()) ?: srDefault
-                    srFinal?.let { setAudioSamplingRate(it) }
-                }
+                // Define quality presets to avoid repetition
+                data class QualitySettings(val samplingRate: Int, val channels: Int, val bitrate: Int)
+                val presets = mapOf(
+                    AudioQualityType.LOW to QualitySettings(22050, 1, 64000),
+                    AudioQualityType.MEDIUM to QualitySettings(44100, 1, 128000),
+                    AudioQualityType.HIGH to QualitySettings(48000, 2, 192000)
+                )
+                val defaults = presets[audioQuality]
 
-                // Audio Channels
-                run {
-                    val chExplicit = audioSets?.AudioChannels
-                    val chDefault = when (audioQuality) {
-                        AudioQualityType.LOW -> 1
-                        AudioQualityType.MEDIUM -> 1
-                        AudioQualityType.HIGH -> 2
-                        else -> null
-                    }
-                    val chFinal = (chExplicit?.toInt()) ?: chDefault
-                    chFinal?.let { setAudioChannels(it) }
-                }
+                // Apply settings with explicit overrides taking precedence
+                val samplingRate = audioSets?.AudioSamplingRate?.toInt() ?: defaults?.samplingRate
+                samplingRate?.let { setAudioSamplingRate(it) }
 
-                // Audio Encoding Bitrate
-                run {
-                    val brExplicit = audioSets?.AudioEncodingBitRate
-                    val brDefault = when (audioQuality) {
-                        AudioQualityType.LOW -> 64000
-                        AudioQualityType.MEDIUM -> 128000
-                        AudioQualityType.HIGH -> 192000
-                        else -> null
-                    }
-                    val brFinal = (brExplicit?.toInt()) ?: brDefault
-                    brFinal?.let { setAudioEncodingBitRate(it) }
-                }
+                val channels = audioSets?.AudioChannels?.toInt() ?: defaults?.channels
+                channels?.let { setAudioChannels(it) }
+
+                val bitrate = audioSets?.AudioEncodingBitRate?.toInt() ?: defaults?.bitrate
+                bitrate?.let { setAudioEncodingBitRate(it) }
 
                 // Set output file
                 setOutputFile(filePath)
