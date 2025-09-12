@@ -6,7 +6,21 @@ export * from './specs/Sound.nitro';
 // Factory: create a new HybridObject instance per call
 export function createSound(): SoundType {
   try {
-    return NitroModules.createHybridObject<SoundType>('Sound');
+    const inst = NitroModules.createHybridObject<SoundType>('Sound');
+
+    // Proxy to bind methods to the instance
+    const proxy = new Proxy(inst as SoundType, {
+      get(target, prop: keyof SoundType) {
+        const value = (target as any)[prop];
+
+        if (typeof value === 'function') {
+          return value.bind(target);
+        }
+        return value;
+      },
+    });
+
+    return proxy as SoundType;
   } catch (error) {
     console.error('Failed to create Sound HybridObject:', error);
     throw new Error(`Failed to create Sound HybridObject: ${error}`);

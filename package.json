@@ -1,6 +1,6 @@
 {
   "name": "react-native-nitro-sound",
-  "version": "0.2.2",
+  "version": "0.2.3-rc.1",
   "description": "React Native Sound Module 🔥 by Nitro",
   "homepage": "https://github.com/hyochan/react-native-nitro-sound",
   "main": "./lib/module/index.js",

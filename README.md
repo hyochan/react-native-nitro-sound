@@ -434,6 +434,11 @@ const audioSet: AudioSet = {
   // Android Settings
   AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
   AudioSourceAndroid: AudioSourceAndroidType.MIC,
+  // Common audio settings (apply on Android as well)
+  // Tip: prefer these for consistent quality
+  AudioSamplingRate: 44100,
+  AudioEncodingBitRate: 128000,
+  AudioChannels: 1,
 };
 
 const meteringEnabled = true; // Enable audio metering
@@ -444,6 +449,24 @@ const uri = await Sound.startRecorder(
   meteringEnabled
 );
 ```
+
+> Note: Legacy Android-specific keys like `AudioSamplingRateAndroid`,
+> `AudioEncodingBitRateAndroid`, and `AudioChannelsAndroid` are no longer
+> supported. Use the common keys `AudioSamplingRate`, `AudioEncodingBitRate`,
+> and `AudioChannels`.
+
+### Android Defaults via AudioQuality
+
+On Android, when specific numeric values are not provided, the library applies sensible defaults based on `AudioQuality`.
+
+- `low`: `22050 Hz`, `64 kbps`, `mono`
+- `medium`: `44100 Hz`, `128 kbps`, `mono`
+- `high`: `48000 Hz`, `192 kbps`, `stereo` (default when `AudioQuality` is omitted)
+
+Notes:
+
+- If `AudioQuality` is not provided, the recorder defaults to `high`.
+- You can still override any of `AudioSamplingRate`, `AudioEncodingBitRate`, or `AudioChannels` explicitly; explicit values take precedence over `AudioQuality` defaults.
 
 ## Default Path
 

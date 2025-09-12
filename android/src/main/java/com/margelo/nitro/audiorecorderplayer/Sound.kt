@@ -193,19 +193,47 @@ class HybridSound : HybridSoundSpec() {
                 }
                 setAudioEncoder(audioEncoder)
 
-                // Set audio sampling rate
-                audioSets?.AudioSamplingRate?.let {
-                    setAudioSamplingRate(it.toInt())
+                // Apply sane defaults based on AudioQuality when explicit values are missing
+                // Default to HIGH if not provided
+                val audioQuality = audioSets?.AudioQuality ?: AudioQualityType.MEDIUM
+
+                // Audio Sampling Rate
+                run {
+                    val srExplicit = audioSets?.AudioSamplingRate
+                    val srDefault = when (audioQuality) {
+                        AudioQualityType.LOW -> 22050
+                        AudioQualityType.MEDIUM -> 44100
+                        AudioQualityType.HIGH -> 48000
+                        else -> null
+                    }
+                    val srFinal = (srExplicit?.toInt()) ?: srDefault
+                    srFinal?.let { setAudioSamplingRate(it) }
                 }
 
-                // Set audio channels
-                audioSets?.AudioChannels?.let {
-                    setAudioChannels(it.toInt())
+                // Audio Channels
+                run {
+                    val chExplicit = audioSets?.AudioChannels
+                    val chDefault = when (audioQuality) {
+                        AudioQualityType.LOW -> 1
+                        AudioQualityType.MEDIUM -> 1
+                        AudioQualityType.HIGH -> 2
+                        else -> null
+                    }
+                    val chFinal = (chExplicit?.toInt()) ?: chDefault
+                    chFinal?.let { setAudioChannels(it) }
                 }
 
-                // Set audio encoding bit rate
-                audioSets?.AudioEncodingBitRate?.let {
-                    setAudioEncodingBitRate(it.toInt())
+                // Audio Encoding Bitrate
+                run {
+                    val brExplicit = audioSets?.AudioEncodingBitRate
+                    val brDefault = when (audioQuality) {
+                        AudioQualityType.LOW -> 64000
+                        AudioQualityType.MEDIUM -> 128000
+                        AudioQualityType.HIGH -> 192000
+                        else -> null
+                    }
+                    val brFinal = (brExplicit?.toInt()) ?: brDefault
+                    brFinal?.let { setAudioEncodingBitRate(it) }
                 }
 
                 // Set output file
