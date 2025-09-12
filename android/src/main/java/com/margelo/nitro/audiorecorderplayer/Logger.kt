@@ -1,6 +1,7 @@
 package com.margelo.nitro.audiorecorderplayer
 
 import android.util.Log
+import com.margelo.nitro.sound.BuildConfig
 
 /**
  * Simple logger that only logs in Debug builds.
