@@ -10,27 +10,26 @@ object Logger {
   private const val TAG = "NitroSound"
 
   @JvmStatic fun d(message: String, tr: Throwable? = null) {
-    if (BuildConfig.DEBUG) {
-      if (tr != null) Log.d(TAG, message, tr) else Log.d(TAG, message)
-    }
+    log(Log.DEBUG, message, tr)
   }
 
   @JvmStatic fun i(message: String, tr: Throwable? = null) {
-    if (BuildConfig.DEBUG) {
-      if (tr != null) Log.i(TAG, message, tr) else Log.i(TAG, message)
-    }
+    log(Log.INFO, message, tr)
   }
 
   @JvmStatic fun w(message: String, tr: Throwable? = null) {
-    if (BuildConfig.DEBUG) {
-      if (tr != null) Log.w(TAG, message, tr) else Log.w(TAG, message)
-    }
+    log(Log.WARN, message, tr)
   }
 
   @JvmStatic fun e(message: String, tr: Throwable? = null) {
-    if (BuildConfig.DEBUG) {
-      if (tr != null) Log.e(TAG, message, tr) else Log.e(TAG, message)
-    }
+    log(Log.ERROR, message, tr)
+  }
+
+  private fun log(priority: Int, message: String, tr: Throwable?) {
+    if (!BuildConfig.DEBUG) return
+    val fullMessage = if (tr != null) {
+      "$message\n${'$'}{Log.getStackTraceString(tr)}"
+    } else message
+    Log.println(priority, TAG, fullMessage)
   }
 }
-
