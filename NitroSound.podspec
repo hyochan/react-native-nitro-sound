@@ -28,6 +28,11 @@ Pod::Spec.new do |s|
   s.pod_target_xcconfig = {
     "SWIFT_VERSION" => "5.0",
     "SWIFT_ACTIVE_COMPILATION_CONDITIONS" => "$(inherited)",
+    # Enable library evolution to avoid certain Swift 6 IRGen issues
+    "BUILD_LIBRARY_FOR_DISTRIBUTION" => "YES",
+    "DEFINES_MODULE" => "YES",
+    # Favor whole-module to avoid per-file IRGen edge-cases
+    "SWIFT_COMPILATION_MODE" => "wholemodule",
     "HEADER_SEARCH_PATHS" => "$(inherited) ${PODS_ROOT}/RCT-Folly",
     "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_MOBILE=1 FOLLY_USE_LIBCPP=1 FOLLY_CFG_NO_COROUTINES",
     "OTHER_CPLUSPLUSFLAGS" => "$(inherited) #{folly_compiler_flags}",

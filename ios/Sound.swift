@@ -2,7 +2,7 @@ import Foundation
 import AVFoundation
 import NitroModules
 
-class HybridSound: HybridSoundSpec {
+final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     // Small delay to ensure the audio session is fully active before recording starts
     private let audioSessionActivationDelay: TimeInterval = 0.1
     private var audioRecorder: AVAudioRecorder?
@@ -841,7 +841,8 @@ class HybridSound: HybridSoundSpec {
                 recordSecs: currentTime
             )
             
-            print("🎙️ Timer callback: calling recordBackListener with data: \(recordBack)")
+            // Avoid interpolating RecordBackType directly to prevent Swift IRGen issues on Swift 6
+            print("🎙️ Timer callback: calling recordBackListener (time=\(currentTime)ms, metering=\(currentMetering))")
             
             if let listener = self.recordBackListener {
                 print("🎙️ Timer callback: recordBackListener exists, calling it")
