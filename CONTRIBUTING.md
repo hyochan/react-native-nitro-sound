@@ -97,3 +97,17 @@ array.forEach((e) => {
 
 - Space before `(` and after `)`.
 - **If you find code that does not fit in the coding convention, do not ever try to fix code that is not related to your purpose.**
+
+### Logging
+
+Use the following module-provided logging approaches during development. Both are silent in Release/production builds.
+
+- iOS
+  - Preferred: call `print(...)` as usual inside this module. We provide `ios/Logging.swift` which overrides `print` only in non-DEBUG builds, so all prints are automatically suppressed in Release while remaining visible in Debug.
+  - Scope: this override affects only this module’s sources; it does not change app-level logging.
+
+- Android
+  - Preferred: use `Logger` helper instead of `Log.*`.
+    - File: `android/src/main/java/com/margelo/nitro/audiorecorderplayer/Logger.kt`
+    - APIs: `Logger.d(...)`, `Logger.i(...)`, `Logger.w(...)`, `Logger.e(...)`
+  - Behavior: internally gated by `BuildConfig.DEBUG`, so logs print in Debug and are silent in Release. Avoid using `Log.*` directly to keep Release builds quiet.
