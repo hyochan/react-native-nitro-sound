@@ -871,11 +871,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     }
 
     private func stopRecordTimer() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.recordTimer?.invalidate()
-            self.recordTimer = nil
-        }
+        stopTimer(for: \.recordTimer)
     }
 
     private func startPlayTimer() {
@@ -967,10 +963,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     }
 
     private func stopPlayTimer() {
+        stopTimer(for: \.playTimer)
+    }
+
+    private func stopTimer(for keyPath: ReferenceWritableKeyPath<HybridSound, Timer?>) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            self.playTimer?.invalidate()
-            self.playTimer = nil
+            self[keyPath: keyPath]?.invalidate()
+            self[keyPath: keyPath] = nil
         }
     }
 
