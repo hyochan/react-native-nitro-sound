@@ -946,10 +946,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     }
 
     private func stopTimer(for keyPath: ReferenceWritableKeyPath<HybridSound, Timer?>) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
+        if Thread.isMainThread {
             self[keyPath: keyPath]?.invalidate()
             self[keyPath: keyPath] = nil
+        } else {
+            DispatchQueue.main.sync {
+                self[keyPath: keyPath]?.invalidate()
+                self[keyPath: keyPath] = nil
+            }
         }
     }
 
@@ -981,6 +985,11 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     }
 
     // MARK: - AVAudioPlayerDelegate via proxy
+    deinit {
+        recordTimer?.invalidate()
+        playTimer?.invalidate()
+    }
+
     private class AudioPlayerDelegateProxy: NSObject, AVAudioPlayerDelegate {
         weak var owner: HybridSound?
         init(owner: HybridSound) { self.owner = owner }
