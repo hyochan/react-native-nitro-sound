@@ -17,6 +17,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     private var recordBackListener: ((RecordBackType) -> Void)?
     private var playBackListener: ((PlayBackType) -> Void)?
     private var playbackEndListener: ((PlaybackEndType) -> Void)?
+    private var didEmitPlaybackEnd = false
 
     private var subscriptionDuration: TimeInterval = 0.06
     private var playbackRate: Double = 1.0 // default 1x
@@ -882,6 +883,8 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             print("🎵 Current thread: \(Thread.current)")
             print("🎵 Is main thread: \(Thread.isMainThread)")
 
+            self.didEmitPlaybackEnd = false
+
             self.playTimer = Timer.scheduledTimer(withTimeInterval: self.subscriptionDuration, repeats: true) { [weak self] timer in
                 print("🎵 ===== TIMER CALLBACK FIRED =====")
                 guard let self = self else {
@@ -902,23 +905,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
                     // Send final callback if duration is available
                     if player.duration > 0 {
-                        let finalPlayBack = PlayBackType(
-                            isMuted: false,
-                            duration: player.duration * 1000,
-                            currentPosition: player.duration * 1000
-                        )
-                        print("🎵 Sending final callback before stopping")
-                        listener(finalPlayBack)
-
-                        // Send playback end event
-                        if let endListener = self.playbackEndListener {
-                            let endEvent = PlaybackEndType(
-                                duration: player.duration * 1000,
-                                currentPosition: player.duration * 1000
-                            )
-                            print("🎵 Sending playback end event")
-                            endListener(endEvent)
-                        }
+                        self.emitPlaybackEndEvents(durationMs: player.duration * 1000, includePlaybackUpdate: true)
                     }
 
                     self.stopPlayTimer()
@@ -943,15 +930,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 if duration > 0 && currentTime >= (duration - threshold) {
                     print("🎵 Play timer callback: playback finished by position")
 
-                    // Send playback end event
-                    if let endListener = self.playbackEndListener {
-                        let endEvent = PlaybackEndType(
-                            duration: duration,
-                            currentPosition: duration
-                        )
-                        print("🎵 Sending playback end event (threshold)")
-                        endListener(endEvent)
-                    }
+                    self.emitPlaybackEndEvents(durationMs: duration, includePlaybackUpdate: true)
 
                     self.stopPlayTimer()
                     return
@@ -974,6 +953,33 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         }
     }
 
+    private func emitPlaybackEndEvents(durationMs: Double, includePlaybackUpdate: Bool) {
+        guard !self.didEmitPlaybackEnd else {
+            print("🎵 Playback end already emitted, skipping duplicate")
+            return
+        }
+        self.didEmitPlaybackEnd = true
+
+        if includePlaybackUpdate, let listener = self.playBackListener {
+            let finalPlayBack = PlayBackType(
+                isMuted: false,
+                duration: durationMs,
+                currentPosition: durationMs
+            )
+            print("🎵 Emitting final playback update at \(durationMs)ms")
+            listener(finalPlayBack)
+        }
+
+        if let endListener = self.playbackEndListener {
+            let endEvent = PlaybackEndType(
+                duration: durationMs,
+                currentPosition: durationMs
+            )
+            print("🎵 Emitting playback end event at \(durationMs)ms")
+            endListener(endEvent)
+        }
+    }
+
     // MARK: - AVAudioPlayerDelegate via proxy
     private class AudioPlayerDelegateProxy: NSObject, AVAudioPlayerDelegate {
         weak var owner: HybridSound?
@@ -983,21 +989,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             print("🎵 AVAudioPlayer finished playing. success=\(flag)")
             guard let owner = owner else { return }
             let finalDurationMs = player.duration * 1000
-            if let listener = owner.playBackListener {
-                let finalPlayBack = PlayBackType(
-                    isMuted: false,
-                    duration: finalDurationMs,
-                    currentPosition: finalDurationMs
-                )
-                listener(finalPlayBack)
-            }
-            if let endListener = owner.playbackEndListener {
-                let endEvent = PlaybackEndType(
-                    duration: finalDurationMs,
-                    currentPosition: finalDurationMs
-                )
-                endListener(endEvent)
-            }
+            owner.emitPlaybackEndEvents(durationMs: finalDurationMs, includePlaybackUpdate: true)
             owner.stopPlayTimer()
         }
 
