@@ -7,6 +7,7 @@
 
 import Foundation
 import AVFoundation
+import UserNotifications
 
 @objc(RNAudioRecorderPlayer)
 class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
@@ -230,7 +231,7 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     }
     
     // Then modify the segment addition in handleAudioSessionInterruption
-    @objc 
+    @objc
     func handleAudioSessionInterruption(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
             let interruptionType = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt else {
@@ -256,6 +257,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
             
             // When interruption begins, save the current segment and update independent timing
             if audioRecorder != nil && audioRecorder.isRecording {
+                // Send local notification to inform user
+                showInterruptionNotification()
                 
                 // Update our independent timing
                 if isRecordingActive, let startTime = recordingStartTime {
@@ -299,16 +302,20 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
                 audioRecorder.stop()
                 // The completion handler will be called by audioRecorderDidFinishRecording
             }
-            
+
             pauseRecorder { _ in } rejecter: { _, _, _ in }
             break
             
         case AVAudioSession.InterruptionType.ended.rawValue:
             // Clear interruption handling state when interruption ends
             isHandlingInterruption = false
-            
-            guard let option = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { 
-                return 
+
+            // Remove the interruption notification since we're resuming
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["recording_interruption"])
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["recording_interruption"])
+
+            guard let option = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else {
+                return
             }
             
             // Only attempt resume if we have the shouldResume flag and aren't already resuming
@@ -1145,5 +1152,28 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     ) -> Void {
         // Call the new method with returnSegments = false for backward compatibility
         stopRecorder(returnSegments: false, resolve: resolve, rejecter: reject)
+    }
+
+    // Show local notification when recording is interrupted
+    func showInterruptionNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "Craft Paused (audio interrupted)"
+        content.body = "Waiting to resume..."
+        content.sound = .default
+        content.categoryIdentifier = "RECORDING_INTERRUPTION"
+
+        // Create the request with immediate trigger
+        let request = UNNotificationRequest(
+            identifier: "recording_interruption",
+            content: content,
+            trigger: nil  // nil trigger means immediate delivery
+        )
+
+        // Schedule the notification
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Error showing interruption notification: \(error)")
+            }
+        }
     }
 }
