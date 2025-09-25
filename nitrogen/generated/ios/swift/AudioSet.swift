@@ -18,26 +18,8 @@ public extension AudioSet {
   /**
    * Create a new instance of `AudioSet`.
    */
-  init(AudioSourceAndroid: AudioSourceAndroidType?, OutputFormatAndroid: OutputFormatAndroidType?, AudioEncoderAndroid: AudioEncoderAndroidType?, AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType?, AVModeIOS: AVModeIOSOption?, AVEncodingOptionIOS: AVEncodingOption?, AVFormatIDKeyIOS: AVEncodingOption?, AVNumberOfChannelsKeyIOS: Double?, AVLinearPCMBitDepthKeyIOS: AVLinearPCMBitDepthKeyIOSType?, AVLinearPCMIsBigEndianKeyIOS: Bool?, AVLinearPCMIsFloatKeyIOS: Bool?, AVLinearPCMIsNonInterleavedIOS: Bool?, AVSampleRateKeyIOS: Double?, AudioQuality: AudioQualityType?, AudioChannels: Double?, AudioSamplingRate: Double?, AudioEncodingBitRate: Double?, IncludeBase64: Bool?) {
-    self.init({ () -> bridge.std__optional_AudioSourceAndroidType_ in
-      if let __unwrappedValue = AudioSourceAndroid {
-        return bridge.create_std__optional_AudioSourceAndroidType_(__unwrappedValue)
-      } else {
-        return .init()
-      }
-    }(), { () -> bridge.std__optional_OutputFormatAndroidType_ in
-      if let __unwrappedValue = OutputFormatAndroid {
-        return bridge.create_std__optional_OutputFormatAndroidType_(__unwrappedValue)
-      } else {
-        return .init()
-      }
-    }(), { () -> bridge.std__optional_AudioEncoderAndroidType_ in
-      if let __unwrappedValue = AudioEncoderAndroid {
-        return bridge.create_std__optional_AudioEncoderAndroidType_(__unwrappedValue)
-      } else {
-        return .init()
-      }
-    }(), { () -> bridge.std__optional_AVEncoderAudioQualityIOSType_ in
+  init(AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType?, AVModeIOS: AVModeIOSOption?, AVEncodingOptionIOS: AVEncodingOption?, AVFormatIDKeyIOS: AVEncodingOption?, AVNumberOfChannelsKeyIOS: Double?, AVLinearPCMBitDepthKeyIOS: AVLinearPCMBitDepthKeyIOSType?, AVLinearPCMIsBigEndianKeyIOS: Bool?, AVLinearPCMIsFloatKeyIOS: Bool?, AVLinearPCMIsNonInterleavedIOS: Bool?, AVSampleRateKeyIOS: Double?, AudioSourceAndroid: AudioSourceAndroidType?, OutputFormatAndroid: OutputFormatAndroidType?, AudioEncoderAndroid: AudioEncoderAndroidType?, AudioQuality: AudioQualityType?, AudioChannels: Double?, AudioSamplingRate: Double?, AudioEncodingBitRate: Double?, IncludeBase64: Bool?) {
+    self.init({ () -> bridge.std__optional_AVEncoderAudioQualityIOSType_ in
       if let __unwrappedValue = AVEncoderAudioQualityKeyIOS {
         return bridge.create_std__optional_AVEncoderAudioQualityIOSType_(__unwrappedValue)
       } else {
@@ -97,6 +79,24 @@ public extension AudioSet {
       } else {
         return .init()
       }
+    }(), { () -> bridge.std__optional_AudioSourceAndroidType_ in
+      if let __unwrappedValue = AudioSourceAndroid {
+        return bridge.create_std__optional_AudioSourceAndroidType_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_OutputFormatAndroidType_ in
+      if let __unwrappedValue = OutputFormatAndroid {
+        return bridge.create_std__optional_OutputFormatAndroidType_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_AudioEncoderAndroidType_ in
+      if let __unwrappedValue = AudioEncoderAndroid {
+        return bridge.create_std__optional_AudioEncoderAndroidType_(__unwrappedValue)
+      } else {
+        return .init()
+      }
     }(), { () -> bridge.std__optional_AudioQualityType_ in
       if let __unwrappedValue = AudioQuality {
         return bridge.create_std__optional_AudioQualityType_(__unwrappedValue)
@@ -130,57 +130,6 @@ public extension AudioSet {
     }())
   }
 
-  var AudioSourceAndroid: AudioSourceAndroidType? {
-    @inline(__always)
-    get {
-      return self.__AudioSourceAndroid.has_value() ? self.__AudioSourceAndroid.pointee : nil
-    }
-    @inline(__always)
-    set {
-      self.__AudioSourceAndroid = { () -> bridge.std__optional_AudioSourceAndroidType_ in
-        if let __unwrappedValue = newValue {
-          return bridge.create_std__optional_AudioSourceAndroidType_(__unwrappedValue)
-        } else {
-          return .init()
-        }
-      }()
-    }
-  }
-  
-  var OutputFormatAndroid: OutputFormatAndroidType? {
-    @inline(__always)
-    get {
-      return self.__OutputFormatAndroid.has_value() ? self.__OutputFormatAndroid.pointee : nil
-    }
-    @inline(__always)
-    set {
-      self.__OutputFormatAndroid = { () -> bridge.std__optional_OutputFormatAndroidType_ in
-        if let __unwrappedValue = newValue {
-          return bridge.create_std__optional_OutputFormatAndroidType_(__unwrappedValue)
-        } else {
-          return .init()
-        }
-      }()
-    }
-  }
-  
-  var AudioEncoderAndroid: AudioEncoderAndroidType? {
-    @inline(__always)
-    get {
-      return self.__AudioEncoderAndroid.has_value() ? self.__AudioEncoderAndroid.pointee : nil
-    }
-    @inline(__always)
-    set {
-      self.__AudioEncoderAndroid = { () -> bridge.std__optional_AudioEncoderAndroidType_ in
-        if let __unwrappedValue = newValue {
-          return bridge.create_std__optional_AudioEncoderAndroidType_(__unwrappedValue)
-        } else {
-          return .init()
-        }
-      }()
-    }
-  }
-  
   var AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType? {
     @inline(__always)
     get {
@@ -344,6 +293,57 @@ public extension AudioSet {
       self.__AVSampleRateKeyIOS = { () -> bridge.std__optional_double_ in
         if let __unwrappedValue = newValue {
           return bridge.create_std__optional_double_(__unwrappedValue)
+        } else {
+          return .init()
+        }
+      }()
+    }
+  }
+  
+  var AudioSourceAndroid: AudioSourceAndroidType? {
+    @inline(__always)
+    get {
+      return self.__AudioSourceAndroid.has_value() ? self.__AudioSourceAndroid.pointee : nil
+    }
+    @inline(__always)
+    set {
+      self.__AudioSourceAndroid = { () -> bridge.std__optional_AudioSourceAndroidType_ in
+        if let __unwrappedValue = newValue {
+          return bridge.create_std__optional_AudioSourceAndroidType_(__unwrappedValue)
+        } else {
+          return .init()
+        }
+      }()
+    }
+  }
+  
+  var OutputFormatAndroid: OutputFormatAndroidType? {
+    @inline(__always)
+    get {
+      return self.__OutputFormatAndroid.has_value() ? self.__OutputFormatAndroid.pointee : nil
+    }
+    @inline(__always)
+    set {
+      self.__OutputFormatAndroid = { () -> bridge.std__optional_OutputFormatAndroidType_ in
+        if let __unwrappedValue = newValue {
+          return bridge.create_std__optional_OutputFormatAndroidType_(__unwrappedValue)
+        } else {
+          return .init()
+        }
+      }()
+    }
+  }
+  
+  var AudioEncoderAndroid: AudioEncoderAndroidType? {
+    @inline(__always)
+    get {
+      return self.__AudioEncoderAndroid.has_value() ? self.__AudioEncoderAndroid.pointee : nil
+    }
+    @inline(__always)
+    set {
+      self.__AudioEncoderAndroid = { () -> bridge.std__optional_AudioEncoderAndroidType_ in
+        if let __unwrappedValue = newValue {
+          return bridge.create_std__optional_AudioEncoderAndroidType_(__unwrappedValue)
         } else {
           return .init()
         }

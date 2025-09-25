@@ -14,12 +14,6 @@ namespace NitroSound { class HybridSoundSpec_cxx; }
 
 // Forward declaration of `AudioSet` to properly resolve imports.
 namespace margelo::nitro::sound { struct AudioSet; }
-// Forward declaration of `AudioSourceAndroidType` to properly resolve imports.
-namespace margelo::nitro::sound { enum class AudioSourceAndroidType; }
-// Forward declaration of `OutputFormatAndroidType` to properly resolve imports.
-namespace margelo::nitro::sound { enum class OutputFormatAndroidType; }
-// Forward declaration of `AudioEncoderAndroidType` to properly resolve imports.
-namespace margelo::nitro::sound { enum class AudioEncoderAndroidType; }
 // Forward declaration of `AVEncoderAudioQualityIOSType` to properly resolve imports.
 namespace margelo::nitro::sound { enum class AVEncoderAudioQualityIOSType; }
 // Forward declaration of `AVModeIOSOption` to properly resolve imports.
@@ -28,6 +22,12 @@ namespace margelo::nitro::sound { enum class AVModeIOSOption; }
 namespace margelo::nitro::sound { enum class AVEncodingOption; }
 // Forward declaration of `AVLinearPCMBitDepthKeyIOSType` to properly resolve imports.
 namespace margelo::nitro::sound { enum class AVLinearPCMBitDepthKeyIOSType; }
+// Forward declaration of `AudioSourceAndroidType` to properly resolve imports.
+namespace margelo::nitro::sound { enum class AudioSourceAndroidType; }
+// Forward declaration of `OutputFormatAndroidType` to properly resolve imports.
+namespace margelo::nitro::sound { enum class OutputFormatAndroidType; }
+// Forward declaration of `AudioEncoderAndroidType` to properly resolve imports.
+namespace margelo::nitro::sound { enum class AudioEncoderAndroidType; }
 // Forward declaration of `AudioQualityType` to properly resolve imports.
 namespace margelo::nitro::sound { enum class AudioQualityType; }
 // Forward declaration of `RecordBackType` to properly resolve imports.
@@ -41,13 +41,13 @@ namespace margelo::nitro::sound { struct PlaybackEndType; }
 #include <NitroModules/Promise.hpp>
 #include <optional>
 #include "AudioSet.hpp"
-#include "AudioSourceAndroidType.hpp"
-#include "OutputFormatAndroidType.hpp"
-#include "AudioEncoderAndroidType.hpp"
 #include "AVEncoderAudioQualityIOSType.hpp"
 #include "AVModeIOSOption.hpp"
 #include "AVEncodingOption.hpp"
 #include "AVLinearPCMBitDepthKeyIOSType.hpp"
+#include "AudioSourceAndroidType.hpp"
+#include "OutputFormatAndroidType.hpp"
+#include "AudioEncoderAndroidType.hpp"
 #include "AudioQualityType.hpp"
 #include <unordered_map>
 #include "RecordBackType.hpp"

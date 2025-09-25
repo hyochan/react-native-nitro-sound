@@ -47,12 +47,6 @@ namespace margelo::nitro::sound {
     [[nodiscard]]
     AudioSet toCpp() const {
       static const auto clazz = javaClassStatic();
-      static const auto fieldAudioSourceAndroid = clazz->getField<JAudioSourceAndroidType>("AudioSourceAndroid");
-      jni::local_ref<JAudioSourceAndroidType> AudioSourceAndroid = this->getFieldValue(fieldAudioSourceAndroid);
-      static const auto fieldOutputFormatAndroid = clazz->getField<JOutputFormatAndroidType>("OutputFormatAndroid");
-      jni::local_ref<JOutputFormatAndroidType> OutputFormatAndroid = this->getFieldValue(fieldOutputFormatAndroid);
-      static const auto fieldAudioEncoderAndroid = clazz->getField<JAudioEncoderAndroidType>("AudioEncoderAndroid");
-      jni::local_ref<JAudioEncoderAndroidType> AudioEncoderAndroid = this->getFieldValue(fieldAudioEncoderAndroid);
       static const auto fieldAVEncoderAudioQualityKeyIOS = clazz->getField<JAVEncoderAudioQualityIOSType>("AVEncoderAudioQualityKeyIOS");
       jni::local_ref<JAVEncoderAudioQualityIOSType> AVEncoderAudioQualityKeyIOS = this->getFieldValue(fieldAVEncoderAudioQualityKeyIOS);
       static const auto fieldAVModeIOS = clazz->getField<JAVModeIOSOption>("AVModeIOS");
@@ -73,6 +67,12 @@ namespace margelo::nitro::sound {
       jni::local_ref<jni::JBoolean> AVLinearPCMIsNonInterleavedIOS = this->getFieldValue(fieldAVLinearPCMIsNonInterleavedIOS);
       static const auto fieldAVSampleRateKeyIOS = clazz->getField<jni::JDouble>("AVSampleRateKeyIOS");
       jni::local_ref<jni::JDouble> AVSampleRateKeyIOS = this->getFieldValue(fieldAVSampleRateKeyIOS);
+      static const auto fieldAudioSourceAndroid = clazz->getField<JAudioSourceAndroidType>("AudioSourceAndroid");
+      jni::local_ref<JAudioSourceAndroidType> AudioSourceAndroid = this->getFieldValue(fieldAudioSourceAndroid);
+      static const auto fieldOutputFormatAndroid = clazz->getField<JOutputFormatAndroidType>("OutputFormatAndroid");
+      jni::local_ref<JOutputFormatAndroidType> OutputFormatAndroid = this->getFieldValue(fieldOutputFormatAndroid);
+      static const auto fieldAudioEncoderAndroid = clazz->getField<JAudioEncoderAndroidType>("AudioEncoderAndroid");
+      jni::local_ref<JAudioEncoderAndroidType> AudioEncoderAndroid = this->getFieldValue(fieldAudioEncoderAndroid);
       static const auto fieldAudioQuality = clazz->getField<JAudioQualityType>("AudioQuality");
       jni::local_ref<JAudioQualityType> AudioQuality = this->getFieldValue(fieldAudioQuality);
       static const auto fieldAudioChannels = clazz->getField<jni::JDouble>("AudioChannels");
@@ -84,9 +84,6 @@ namespace margelo::nitro::sound {
       static const auto fieldIncludeBase64 = clazz->getField<jni::JBoolean>("IncludeBase64");
       jni::local_ref<jni::JBoolean> IncludeBase64 = this->getFieldValue(fieldIncludeBase64);
       return AudioSet(
-        AudioSourceAndroid != nullptr ? std::make_optional(AudioSourceAndroid->toCpp()) : std::nullopt,
-        OutputFormatAndroid != nullptr ? std::make_optional(OutputFormatAndroid->toCpp()) : std::nullopt,
-        AudioEncoderAndroid != nullptr ? std::make_optional(AudioEncoderAndroid->toCpp()) : std::nullopt,
         AVEncoderAudioQualityKeyIOS != nullptr ? std::make_optional(AVEncoderAudioQualityKeyIOS->toCpp()) : std::nullopt,
         AVModeIOS != nullptr ? std::make_optional(AVModeIOS->toCpp()) : std::nullopt,
         AVEncodingOptionIOS != nullptr ? std::make_optional(AVEncodingOptionIOS->toCpp()) : std::nullopt,
@@ -97,6 +94,9 @@ namespace margelo::nitro::sound {
         AVLinearPCMIsFloatKeyIOS != nullptr ? std::make_optional(static_cast<bool>(AVLinearPCMIsFloatKeyIOS->value())) : std::nullopt,
         AVLinearPCMIsNonInterleavedIOS != nullptr ? std::make_optional(static_cast<bool>(AVLinearPCMIsNonInterleavedIOS->value())) : std::nullopt,
         AVSampleRateKeyIOS != nullptr ? std::make_optional(AVSampleRateKeyIOS->value()) : std::nullopt,
+        AudioSourceAndroid != nullptr ? std::make_optional(AudioSourceAndroid->toCpp()) : std::nullopt,
+        OutputFormatAndroid != nullptr ? std::make_optional(OutputFormatAndroid->toCpp()) : std::nullopt,
+        AudioEncoderAndroid != nullptr ? std::make_optional(AudioEncoderAndroid->toCpp()) : std::nullopt,
         AudioQuality != nullptr ? std::make_optional(AudioQuality->toCpp()) : std::nullopt,
         AudioChannels != nullptr ? std::make_optional(AudioChannels->value()) : std::nullopt,
         AudioSamplingRate != nullptr ? std::make_optional(AudioSamplingRate->value()) : std::nullopt,
@@ -112,9 +112,6 @@ namespace margelo::nitro::sound {
     [[maybe_unused]]
     static jni::local_ref<JAudioSet::javaobject> fromCpp(const AudioSet& value) {
       return newInstance(
-        value.AudioSourceAndroid.has_value() ? JAudioSourceAndroidType::fromCpp(value.AudioSourceAndroid.value()) : nullptr,
-        value.OutputFormatAndroid.has_value() ? JOutputFormatAndroidType::fromCpp(value.OutputFormatAndroid.value()) : nullptr,
-        value.AudioEncoderAndroid.has_value() ? JAudioEncoderAndroidType::fromCpp(value.AudioEncoderAndroid.value()) : nullptr,
         value.AVEncoderAudioQualityKeyIOS.has_value() ? JAVEncoderAudioQualityIOSType::fromCpp(value.AVEncoderAudioQualityKeyIOS.value()) : nullptr,
         value.AVModeIOS.has_value() ? JAVModeIOSOption::fromCpp(value.AVModeIOS.value()) : nullptr,
         value.AVEncodingOptionIOS.has_value() ? JAVEncodingOption::fromCpp(value.AVEncodingOptionIOS.value()) : nullptr,
@@ -125,6 +122,9 @@ namespace margelo::nitro::sound {
         value.AVLinearPCMIsFloatKeyIOS.has_value() ? jni::JBoolean::valueOf(value.AVLinearPCMIsFloatKeyIOS.value()) : nullptr,
         value.AVLinearPCMIsNonInterleavedIOS.has_value() ? jni::JBoolean::valueOf(value.AVLinearPCMIsNonInterleavedIOS.value()) : nullptr,
         value.AVSampleRateKeyIOS.has_value() ? jni::JDouble::valueOf(value.AVSampleRateKeyIOS.value()) : nullptr,
+        value.AudioSourceAndroid.has_value() ? JAudioSourceAndroidType::fromCpp(value.AudioSourceAndroid.value()) : nullptr,
+        value.OutputFormatAndroid.has_value() ? JOutputFormatAndroidType::fromCpp(value.OutputFormatAndroid.value()) : nullptr,
+        value.AudioEncoderAndroid.has_value() ? JAudioEncoderAndroidType::fromCpp(value.AudioEncoderAndroid.value()) : nullptr,
         value.AudioQuality.has_value() ? JAudioQualityType::fromCpp(value.AudioQuality.value()) : nullptr,
         value.AudioChannels.has_value() ? jni::JDouble::valueOf(value.AudioChannels.value()) : nullptr,
         value.AudioSamplingRate.has_value() ? jni::JDouble::valueOf(value.AudioSamplingRate.value()) : nullptr,

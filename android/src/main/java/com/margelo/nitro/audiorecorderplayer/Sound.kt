@@ -95,7 +95,7 @@ class HybridSound : HybridSoundSpec() {
       // For audio metering
       this.meteringEnabled = enableMetering ?: false
 
-        // Sanitize audioSets to ignore iOS-specific fields on Android to prevent crashes
+                // Sanitize audioSets to ignore iOS-specific fields on Android to prevent crashes
         val sanitizedAudioSets = audioSets?.copy(
             AVEncoderAudioQualityKeyIOS = null,
             AVModeIOS = null,

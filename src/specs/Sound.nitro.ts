@@ -84,13 +84,8 @@ export enum AVLinearPCMBitDepthKeyIOSType {
 export type AudioQualityType = 'low' | 'medium' | 'high';
 
 // Interfaces
-export interface AudioSet {
-  // Android settings
-  AudioSourceAndroid?: AudioSourceAndroidType;
-  OutputFormatAndroid?: OutputFormatAndroidType;
-  AudioEncoderAndroid?: AudioEncoderAndroidType;
-
-  // iOS settings
+// Platform-specific audio settings
+export interface IOSAudioSet {
   AVEncoderAudioQualityKeyIOS?: AVEncoderAudioQualityIOSType;
   AVModeIOS?: AVModeIOSOption;
   AVEncodingOptionIOS?: AVEncodingOption;
@@ -101,14 +96,26 @@ export interface AudioSet {
   AVLinearPCMIsFloatKeyIOS?: boolean;
   AVLinearPCMIsNonInterleavedIOS?: boolean;
   AVSampleRateKeyIOS?: number;
+}
 
-  // Common settings
+export interface AndroidAudioSet {
+  AudioSourceAndroid?: AudioSourceAndroidType;
+  OutputFormatAndroid?: OutputFormatAndroidType;
+  AudioEncoderAndroid?: AudioEncoderAndroidType;
+}
+
+export interface CommonAudioSet {
   AudioQuality?: AudioQualityType;
   AudioChannels?: number;
   AudioSamplingRate?: number;
   AudioEncodingBitRate?: number;
   IncludeBase64?: boolean;
 }
+
+export interface AudioSet
+  extends IOSAudioSet,
+    AndroidAudioSet,
+    CommonAudioSet {}
 
 export interface RecordBackType {
   isRecording?: boolean;

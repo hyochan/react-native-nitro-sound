@@ -30,26 +30,11 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         
         // Sanitize audioSets to ignore Android-specific fields on iOS to prevent crashes
         let sanitizedAudioSets = audioSets.map { original in
-            AudioSet(
-                AudioSourceAndroid: nil,
-                OutputFormatAndroid: nil,
-                AudioEncoderAndroid: nil,
-                AVEncoderAudioQualityKeyIOS: original.AVEncoderAudioQualityKeyIOS,
-                AVModeIOS: original.AVModeIOS,
-                AVEncodingOptionIOS: original.AVEncodingOptionIOS,
-                AVFormatIDKeyIOS: original.AVFormatIDKeyIOS,
-                AVNumberOfChannelsKeyIOS: original.AVNumberOfChannelsKeyIOS,
-                AVLinearPCMBitDepthKeyIOS: original.AVLinearPCMBitDepthKeyIOS,
-                AVLinearPCMIsBigEndianKeyIOS: original.AVLinearPCMIsBigEndianKeyIOS,
-                AVLinearPCMIsFloatKeyIOS: original.AVLinearPCMIsFloatKeyIOS,
-                AVLinearPCMIsNonInterleavedIOS: original.AVLinearPCMIsNonInterleavedIOS,
-                AVSampleRateKeyIOS: original.AVSampleRateKeyIOS,
-                AudioQuality: original.AudioQuality,
-                AudioChannels: original.AudioChannels,
-                AudioSamplingRate: original.AudioSamplingRate,
-                AudioEncodingBitRate: original.AudioEncodingBitRate,
-                IncludeBase64: original.IncludeBase64
-            )
+            var sanitized = original
+            sanitized.AudioSourceAndroid = nil
+            sanitized.OutputFormatAndroid = nil
+            sanitized.AudioEncoderAndroid = nil
+            return sanitized
         }
         
         // Return immediately to prevent UI blocking

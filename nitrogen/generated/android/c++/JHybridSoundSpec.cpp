@@ -9,12 +9,6 @@
 
 // Forward declaration of `AudioSet` to properly resolve imports.
 namespace margelo::nitro::sound { struct AudioSet; }
-// Forward declaration of `AudioSourceAndroidType` to properly resolve imports.
-namespace margelo::nitro::sound { enum class AudioSourceAndroidType; }
-// Forward declaration of `OutputFormatAndroidType` to properly resolve imports.
-namespace margelo::nitro::sound { enum class OutputFormatAndroidType; }
-// Forward declaration of `AudioEncoderAndroidType` to properly resolve imports.
-namespace margelo::nitro::sound { enum class AudioEncoderAndroidType; }
 // Forward declaration of `AVEncoderAudioQualityIOSType` to properly resolve imports.
 namespace margelo::nitro::sound { enum class AVEncoderAudioQualityIOSType; }
 // Forward declaration of `AVModeIOSOption` to properly resolve imports.
@@ -23,6 +17,12 @@ namespace margelo::nitro::sound { enum class AVModeIOSOption; }
 namespace margelo::nitro::sound { enum class AVEncodingOption; }
 // Forward declaration of `AVLinearPCMBitDepthKeyIOSType` to properly resolve imports.
 namespace margelo::nitro::sound { enum class AVLinearPCMBitDepthKeyIOSType; }
+// Forward declaration of `AudioSourceAndroidType` to properly resolve imports.
+namespace margelo::nitro::sound { enum class AudioSourceAndroidType; }
+// Forward declaration of `OutputFormatAndroidType` to properly resolve imports.
+namespace margelo::nitro::sound { enum class OutputFormatAndroidType; }
+// Forward declaration of `AudioEncoderAndroidType` to properly resolve imports.
+namespace margelo::nitro::sound { enum class AudioEncoderAndroidType; }
 // Forward declaration of `AudioQualityType` to properly resolve imports.
 namespace margelo::nitro::sound { enum class AudioQualityType; }
 // Forward declaration of `RecordBackType` to properly resolve imports.
@@ -38,12 +38,6 @@ namespace margelo::nitro::sound { struct PlaybackEndType; }
 #include <optional>
 #include "AudioSet.hpp"
 #include "JAudioSet.hpp"
-#include "AudioSourceAndroidType.hpp"
-#include "JAudioSourceAndroidType.hpp"
-#include "OutputFormatAndroidType.hpp"
-#include "JOutputFormatAndroidType.hpp"
-#include "AudioEncoderAndroidType.hpp"
-#include "JAudioEncoderAndroidType.hpp"
 #include "AVEncoderAudioQualityIOSType.hpp"
 #include "JAVEncoderAudioQualityIOSType.hpp"
 #include "AVModeIOSOption.hpp"
@@ -52,6 +46,12 @@ namespace margelo::nitro::sound { struct PlaybackEndType; }
 #include "JAVEncodingOption.hpp"
 #include "AVLinearPCMBitDepthKeyIOSType.hpp"
 #include "JAVLinearPCMBitDepthKeyIOSType.hpp"
+#include "AudioSourceAndroidType.hpp"
+#include "JAudioSourceAndroidType.hpp"
+#include "OutputFormatAndroidType.hpp"
+#include "JOutputFormatAndroidType.hpp"
+#include "AudioEncoderAndroidType.hpp"
+#include "JAudioEncoderAndroidType.hpp"
 #include "AudioQualityType.hpp"
 #include "JAudioQualityType.hpp"
 #include <unordered_map>

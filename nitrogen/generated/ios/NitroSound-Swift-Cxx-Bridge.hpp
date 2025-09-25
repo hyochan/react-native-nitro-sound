@@ -140,51 +140,6 @@ namespace margelo::nitro::sound::bridge::swift {
     return *optional;
   }
   
-  // pragma MARK: std::optional<AudioSourceAndroidType>
-  /**
-   * Specialized version of `std::optional<AudioSourceAndroidType>`.
-   */
-  using std__optional_AudioSourceAndroidType_ = std::optional<AudioSourceAndroidType>;
-  inline std::optional<AudioSourceAndroidType> create_std__optional_AudioSourceAndroidType_(const AudioSourceAndroidType& value) noexcept {
-    return std::optional<AudioSourceAndroidType>(value);
-  }
-  inline bool has_value_std__optional_AudioSourceAndroidType_(const std::optional<AudioSourceAndroidType>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline AudioSourceAndroidType get_std__optional_AudioSourceAndroidType_(const std::optional<AudioSourceAndroidType>& optional) noexcept {
-    return *optional;
-  }
-  
-  // pragma MARK: std::optional<OutputFormatAndroidType>
-  /**
-   * Specialized version of `std::optional<OutputFormatAndroidType>`.
-   */
-  using std__optional_OutputFormatAndroidType_ = std::optional<OutputFormatAndroidType>;
-  inline std::optional<OutputFormatAndroidType> create_std__optional_OutputFormatAndroidType_(const OutputFormatAndroidType& value) noexcept {
-    return std::optional<OutputFormatAndroidType>(value);
-  }
-  inline bool has_value_std__optional_OutputFormatAndroidType_(const std::optional<OutputFormatAndroidType>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline OutputFormatAndroidType get_std__optional_OutputFormatAndroidType_(const std::optional<OutputFormatAndroidType>& optional) noexcept {
-    return *optional;
-  }
-  
-  // pragma MARK: std::optional<AudioEncoderAndroidType>
-  /**
-   * Specialized version of `std::optional<AudioEncoderAndroidType>`.
-   */
-  using std__optional_AudioEncoderAndroidType_ = std::optional<AudioEncoderAndroidType>;
-  inline std::optional<AudioEncoderAndroidType> create_std__optional_AudioEncoderAndroidType_(const AudioEncoderAndroidType& value) noexcept {
-    return std::optional<AudioEncoderAndroidType>(value);
-  }
-  inline bool has_value_std__optional_AudioEncoderAndroidType_(const std::optional<AudioEncoderAndroidType>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline AudioEncoderAndroidType get_std__optional_AudioEncoderAndroidType_(const std::optional<AudioEncoderAndroidType>& optional) noexcept {
-    return *optional;
-  }
-  
   // pragma MARK: std::optional<AVEncoderAudioQualityIOSType>
   /**
    * Specialized version of `std::optional<AVEncoderAudioQualityIOSType>`.
@@ -272,6 +227,51 @@ namespace margelo::nitro::sound::bridge::swift {
     return optional.has_value();
   }
   inline bool get_std__optional_bool_(const std::optional<bool>& optional) noexcept {
+    return *optional;
+  }
+  
+  // pragma MARK: std::optional<AudioSourceAndroidType>
+  /**
+   * Specialized version of `std::optional<AudioSourceAndroidType>`.
+   */
+  using std__optional_AudioSourceAndroidType_ = std::optional<AudioSourceAndroidType>;
+  inline std::optional<AudioSourceAndroidType> create_std__optional_AudioSourceAndroidType_(const AudioSourceAndroidType& value) noexcept {
+    return std::optional<AudioSourceAndroidType>(value);
+  }
+  inline bool has_value_std__optional_AudioSourceAndroidType_(const std::optional<AudioSourceAndroidType>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline AudioSourceAndroidType get_std__optional_AudioSourceAndroidType_(const std::optional<AudioSourceAndroidType>& optional) noexcept {
+    return *optional;
+  }
+  
+  // pragma MARK: std::optional<OutputFormatAndroidType>
+  /**
+   * Specialized version of `std::optional<OutputFormatAndroidType>`.
+   */
+  using std__optional_OutputFormatAndroidType_ = std::optional<OutputFormatAndroidType>;
+  inline std::optional<OutputFormatAndroidType> create_std__optional_OutputFormatAndroidType_(const OutputFormatAndroidType& value) noexcept {
+    return std::optional<OutputFormatAndroidType>(value);
+  }
+  inline bool has_value_std__optional_OutputFormatAndroidType_(const std::optional<OutputFormatAndroidType>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline OutputFormatAndroidType get_std__optional_OutputFormatAndroidType_(const std::optional<OutputFormatAndroidType>& optional) noexcept {
+    return *optional;
+  }
+  
+  // pragma MARK: std::optional<AudioEncoderAndroidType>
+  /**
+   * Specialized version of `std::optional<AudioEncoderAndroidType>`.
+   */
+  using std__optional_AudioEncoderAndroidType_ = std::optional<AudioEncoderAndroidType>;
+  inline std::optional<AudioEncoderAndroidType> create_std__optional_AudioEncoderAndroidType_(const AudioEncoderAndroidType& value) noexcept {
+    return std::optional<AudioEncoderAndroidType>(value);
+  }
+  inline bool has_value_std__optional_AudioEncoderAndroidType_(const std::optional<AudioEncoderAndroidType>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline AudioEncoderAndroidType get_std__optional_AudioEncoderAndroidType_(const std::optional<AudioEncoderAndroidType>& optional) noexcept {
     return *optional;
   }
   

@@ -23,15 +23,6 @@ data class AudioSet
   constructor(
     @DoNotStrip
     @Keep
-    val AudioSourceAndroid: AudioSourceAndroidType?,
-    @DoNotStrip
-    @Keep
-    val OutputFormatAndroid: OutputFormatAndroidType?,
-    @DoNotStrip
-    @Keep
-    val AudioEncoderAndroid: AudioEncoderAndroidType?,
-    @DoNotStrip
-    @Keep
     val AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType?,
     @DoNotStrip
     @Keep
@@ -60,6 +51,15 @@ data class AudioSet
     @DoNotStrip
     @Keep
     val AVSampleRateKeyIOS: Double?,
+    @DoNotStrip
+    @Keep
+    val AudioSourceAndroid: AudioSourceAndroidType?,
+    @DoNotStrip
+    @Keep
+    val OutputFormatAndroid: OutputFormatAndroidType?,
+    @DoNotStrip
+    @Keep
+    val AudioEncoderAndroid: AudioEncoderAndroidType?,
     @DoNotStrip
     @Keep
     val AudioQuality: AudioQualityType?,
