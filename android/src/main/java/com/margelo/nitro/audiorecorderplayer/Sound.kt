@@ -95,6 +95,20 @@ class HybridSound : HybridSoundSpec() {
       // For audio metering
       this.meteringEnabled = enableMetering ?: false
 
+        // Sanitize audioSets to ignore iOS-specific fields on Android to prevent crashes
+        val sanitizedAudioSets = audioSets?.copy(
+            AVEncoderAudioQualityKeyIOS = null,
+            AVModeIOS = null,
+            AVEncodingOptionIOS = null,
+            AVFormatIDKeyIOS = null,
+            AVNumberOfChannelsKeyIOS = null,
+            AVLinearPCMBitDepthKeyIOS = null,
+            AVLinearPCMIsBigEndianKeyIOS = null,
+            AVLinearPCMIsFloatKeyIOS = null,
+            AVLinearPCMIsNonInterleavedIOS = null,
+            AVSampleRateKeyIOS = null
+        )
+
         // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -115,7 +129,7 @@ class HybridSound : HybridSoundSpec() {
                 MediaRecorder()
             }.apply {
                 // Set audio source
-                val audioSource = when (audioSets?.AudioSourceAndroid) {
+                val audioSource = when (sanitizedAudioSets?.AudioSourceAndroid) {
                     AudioSourceAndroidType.DEFAULT -> MediaRecorder.AudioSource.DEFAULT
                     AudioSourceAndroidType.MIC -> MediaRecorder.AudioSource.MIC
                     AudioSourceAndroidType.VOICE_UPLINK -> MediaRecorder.AudioSource.VOICE_UPLINK
@@ -141,7 +155,7 @@ class HybridSound : HybridSoundSpec() {
                 setAudioSource(audioSource)
 
                 // Set output format
-                val outputFormat = when (audioSets?.OutputFormatAndroid) {
+                val outputFormat = when (sanitizedAudioSets?.OutputFormatAndroid) {
                     OutputFormatAndroidType.DEFAULT -> MediaRecorder.OutputFormat.DEFAULT
                     OutputFormatAndroidType.THREE_GPP -> MediaRecorder.OutputFormat.THREE_GPP
                     OutputFormatAndroidType.MPEG_4 -> MediaRecorder.OutputFormat.MPEG_4
@@ -169,7 +183,7 @@ class HybridSound : HybridSoundSpec() {
                 setOutputFormat(outputFormat)
 
                 // Set audio encoder
-                val audioEncoder = when (audioSets?.AudioEncoderAndroid) {
+                val audioEncoder = when (sanitizedAudioSets?.AudioEncoderAndroid) {
                     AudioEncoderAndroidType.DEFAULT -> MediaRecorder.AudioEncoder.DEFAULT
                     AudioEncoderAndroidType.AMR_NB -> MediaRecorder.AudioEncoder.AMR_NB
                     AudioEncoderAndroidType.AMR_WB -> MediaRecorder.AudioEncoder.AMR_WB
@@ -195,7 +209,7 @@ class HybridSound : HybridSoundSpec() {
 
                 // Apply sane defaults based on AudioQuality when explicit values are missing
                 // Default to HIGH if not provided
-                val audioQuality = audioSets?.AudioQuality ?: AudioQualityType.HIGH
+                val audioQuality = sanitizedAudioSets?.AudioQuality ?: AudioQualityType.HIGH
 
                 // Define quality presets to avoid repetition
                 data class QualitySettings(val samplingRate: Int, val channels: Int, val bitrate: Int)
@@ -207,13 +221,13 @@ class HybridSound : HybridSoundSpec() {
                 val defaults = presets[audioQuality]
 
                 // Apply settings with explicit overrides taking precedence
-                val samplingRate = audioSets?.AudioSamplingRate?.toInt() ?: defaults?.samplingRate
+                val samplingRate = sanitizedAudioSets?.AudioSamplingRate?.toInt() ?: defaults?.samplingRate
                 samplingRate?.let { setAudioSamplingRate(it) }
 
-                val channels = audioSets?.AudioChannels?.toInt() ?: defaults?.channels
+                val channels = sanitizedAudioSets?.AudioChannels?.toInt() ?: defaults?.channels
                 channels?.let { setAudioChannels(it) }
 
-                val bitrate = audioSets?.AudioEncodingBitRate?.toInt() ?: defaults?.bitrate
+                val bitrate = sanitizedAudioSets?.AudioEncodingBitRate?.toInt() ?: defaults?.bitrate
                 bitrate?.let { setAudioEncodingBitRate(it) }
 
                 // Set output file

@@ -27,7 +27,31 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
     public func startRecorder(uri: String?, audioSets: AudioSet?, meteringEnabled: Bool?) throws -> Promise<String> {
         let promise = Promise<String>()
-
+        
+        // Sanitize audioSets to ignore Android-specific fields on iOS to prevent crashes
+        let sanitizedAudioSets = audioSets.map { original in
+            AudioSet(
+                AudioSourceAndroid: nil,
+                OutputFormatAndroid: nil,
+                AudioEncoderAndroid: nil,
+                AVEncoderAudioQualityKeyIOS: original.AVEncoderAudioQualityKeyIOS,
+                AVModeIOS: original.AVModeIOS,
+                AVEncodingOptionIOS: original.AVEncodingOptionIOS,
+                AVFormatIDKeyIOS: original.AVFormatIDKeyIOS,
+                AVNumberOfChannelsKeyIOS: original.AVNumberOfChannelsKeyIOS,
+                AVLinearPCMBitDepthKeyIOS: original.AVLinearPCMBitDepthKeyIOS,
+                AVLinearPCMIsBigEndianKeyIOS: original.AVLinearPCMIsBigEndianKeyIOS,
+                AVLinearPCMIsFloatKeyIOS: original.AVLinearPCMIsFloatKeyIOS,
+                AVLinearPCMIsNonInterleavedIOS: original.AVLinearPCMIsNonInterleavedIOS,
+                AVSampleRateKeyIOS: original.AVSampleRateKeyIOS,
+                AudioQuality: original.AudioQuality,
+                AudioChannels: original.AudioChannels,
+                AudioSamplingRate: original.AudioSamplingRate,
+                AudioEncodingBitRate: original.AudioEncodingBitRate,
+                IncludeBase64: original.IncludeBase64
+            )
+        }
+        
         // Return immediately to prevent UI blocking
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else {
@@ -40,7 +64,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 self.recordingSession = AVAudioSession.sharedInstance()
 
                 // Apply AVModeIOS if provided
-                let sessionMode = audioSets?.AVModeIOS.map(self.getAudioSessionMode) ?? .default
+                let sessionMode = sanitizedAudioSets?.AVModeIOS.map(self.getAudioSessionMode) ?? .default
 
                 try self.recordingSession?.setCategory(.playAndRecord,
                                                      mode: sessionMode,
@@ -56,7 +80,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                     if allowed {
                         // Continue in background
                         DispatchQueue.global(qos: .userInitiated).async {
-                            self.setupAndStartRecording(uri: uri, audioSets: audioSets, meteringEnabled: meteringEnabled, promise: promise)
+                            self.setupAndStartRecording(uri: uri, audioSets: sanitizedAudioSets, meteringEnabled: meteringEnabled, promise: promise)
                         }
                     } else {
                         promise.reject(withError: RuntimeError.error(withMessage: "Recording permission denied. Please enable microphone access in Settings."))

@@ -424,16 +424,26 @@ export function Player() {
 
 ### Audio Configuration
 
+The library automatically detects the platform and applies the appropriate settings. Use platform-specific properties (with `IOS` or `Android` suffixes) for fine-grained control, or use common properties for cross-platform consistency.
+
+#### iOS Configuration
+
 ```typescript
 const audioSet: AudioSet = {
-  // iOS Settings
+  // iOS-specific settings
   AVSampleRateKeyIOS: 44100,
   AVFormatIDKeyIOS: AVEncodingOption.aac,
   AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
   AVNumberOfChannelsKeyIOS: 2,
   AVModeIOS: 'measurement', // Available options: 'gameChatAudio', 'measurement', 'moviePlayback', 'spokenAudio', 'videoChat', 'videoRecording', 'voiceChat', 'voicePrompt'
+};
+```
 
-  // Android Settings
+#### Android Configuration
+
+```typescript
+const audioSet: AudioSet = {
+  // Android-specific settings
   AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
   AudioSourceAndroid: AudioSourceAndroidType.MIC,
   // Common audio settings (apply on Android as well)
@@ -442,7 +452,22 @@ const audioSet: AudioSet = {
   AudioEncodingBitRate: 128000,
   AudioChannels: 1,
 };
+```
 
+#### Cross-Platform Configuration
+
+For consistent settings across platforms, use common properties that work on both iOS and Android:
+
+```typescript
+const audioSet: AudioSet = {
+  // Common settings automatically applied to the appropriate platform
+  AudioSamplingRate: 44100,
+  AudioEncodingBitRate: 128000,
+  AudioChannels: 1,
+};
+```
+
+```typescript
 const meteringEnabled = true; // Enable audio metering
 
 const uri = await Sound.startRecorder(
