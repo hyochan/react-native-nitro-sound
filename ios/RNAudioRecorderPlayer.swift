@@ -354,7 +354,11 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
         rejecter reject: @escaping RCTPromiseRejectBlock
     ) -> Void {
         do {
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [AVAudioSession.CategoryOptions.defaultToSpeaker, AVAudioSession.CategoryOptions.allowBluetooth])
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [
+                AVAudioSession.CategoryOptions.defaultToSpeaker,
+                AVAudioSession.CategoryOptions.allowBluetooth,
+                AVAudioSession.CategoryOptions.mixWithOthers,
+            ])
             try audioSession.setActive(true)
         } catch {
             reject("RNAudioPlayerRecorder", "Failed to play", nil)
