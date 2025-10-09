@@ -56,5 +56,7 @@ def add_nitrogen_files(spec)
     "SWIFT_OBJC_INTEROP_MODE" => "objcxx",
     # Enables stricter modular headers
     "DEFINES_MODULE" => "YES",
+    # Add header search paths for generated files
+    "HEADER_SEARCH_PATHS" => "$(inherited) \"${PODS_TARGET_SRCROOT}/nitrogen/generated/shared/c++\" \"${PODS_TARGET_SRCROOT}/nitrogen/generated/ios\"",
   })
 end
