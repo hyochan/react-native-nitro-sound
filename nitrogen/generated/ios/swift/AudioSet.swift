@@ -235,7 +235,14 @@ public extension AudioSet {
   var AVLinearPCMIsBigEndianKeyIOS: Bool? {
     @inline(__always)
     get {
-      return self.__AVLinearPCMIsBigEndianKeyIOS.value
+      return { () -> Bool? in
+        if bridge.has_value_std__optional_bool_(self.__AVLinearPCMIsBigEndianKeyIOS) {
+          let __unwrapped = bridge.get_std__optional_bool_(self.__AVLinearPCMIsBigEndianKeyIOS)
+          return __unwrapped
+        } else {
+          return nil
+        }
+      }()
     }
     @inline(__always)
     set {
@@ -252,7 +259,14 @@ public extension AudioSet {
   var AVLinearPCMIsFloatKeyIOS: Bool? {
     @inline(__always)
     get {
-      return self.__AVLinearPCMIsFloatKeyIOS.value
+      return { () -> Bool? in
+        if bridge.has_value_std__optional_bool_(self.__AVLinearPCMIsFloatKeyIOS) {
+          let __unwrapped = bridge.get_std__optional_bool_(self.__AVLinearPCMIsFloatKeyIOS)
+          return __unwrapped
+        } else {
+          return nil
+        }
+      }()
     }
     @inline(__always)
     set {
@@ -269,7 +283,14 @@ public extension AudioSet {
   var AVLinearPCMIsNonInterleavedIOS: Bool? {
     @inline(__always)
     get {
-      return self.__AVLinearPCMIsNonInterleavedIOS.value
+      return { () -> Bool? in
+        if bridge.has_value_std__optional_bool_(self.__AVLinearPCMIsNonInterleavedIOS) {
+          let __unwrapped = bridge.get_std__optional_bool_(self.__AVLinearPCMIsNonInterleavedIOS)
+          return __unwrapped
+        } else {
+          return nil
+        }
+      }()
     }
     @inline(__always)
     set {
@@ -422,7 +443,14 @@ public extension AudioSet {
   var IncludeBase64: Bool? {
     @inline(__always)
     get {
-      return self.__IncludeBase64.value
+      return { () -> Bool? in
+        if bridge.has_value_std__optional_bool_(self.__IncludeBase64) {
+          let __unwrapped = bridge.get_std__optional_bool_(self.__IncludeBase64)
+          return __unwrapped
+        } else {
+          return nil
+        }
+      }()
     }
     @inline(__always)
     set {

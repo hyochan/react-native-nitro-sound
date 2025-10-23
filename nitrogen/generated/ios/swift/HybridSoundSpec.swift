@@ -7,6 +7,7 @@
 
 import Foundation
 import NitroModules
+import NitroModules
 
 /// See ``HybridSoundSpec``
 public protocol HybridSoundSpec_protocol: HybridObject {

@@ -9,7 +9,6 @@ package com.margelo.nitro.sound
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
-import com.margelo.nitro.core.*
 
 
 /**
@@ -17,22 +16,30 @@ import com.margelo.nitro.core.*
  */
 @DoNotStrip
 @Keep
-data class RecordBackType
+data class RecordBackType(
   @DoNotStrip
   @Keep
-  constructor(
+  val isRecording: Boolean?,
+  @DoNotStrip
+  @Keep
+  val currentPosition: Double,
+  @DoNotStrip
+  @Keep
+  val currentMetering: Double?,
+  @DoNotStrip
+  @Keep
+  val recordSecs: Double?
+) {
+  private companion object {
+    /**
+     * Constructor called from C++
+     */
     @DoNotStrip
     @Keep
-    val isRecording: Boolean?,
-    @DoNotStrip
-    @Keep
-    val currentPosition: Double,
-    @DoNotStrip
-    @Keep
-    val currentMetering: Double?,
-    @DoNotStrip
-    @Keep
-    val recordSecs: Double?
-  ) {
-  /* main constructor */
+    @Suppress("unused")
+    @JvmStatic
+    private fun fromCpp(isRecording: Boolean?, currentPosition: Double, currentMetering: Double?, recordSecs: Double?): RecordBackType {
+      return RecordBackType(isRecording, currentPosition, currentMetering, recordSecs)
+    }
+  }
 }

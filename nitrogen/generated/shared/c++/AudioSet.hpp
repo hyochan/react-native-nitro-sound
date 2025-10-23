@@ -17,6 +17,11 @@
 #else
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
+#if __has_include(<NitroModules/JSIHelpers.hpp>)
+#include <NitroModules/JSIHelpers.hpp>
+#else
+#error NitroModules cannot be found! Are you sure you installed NitroModules properly?
+#endif
 
 // Forward declaration of `AVEncoderAudioQualityIOSType` to properly resolve imports.
 namespace margelo::nitro::sound { enum class AVEncoderAudioQualityIOSType; }
@@ -133,6 +138,9 @@ namespace margelo::nitro {
         return false;
       }
       jsi::Object obj = value.getObject(runtime);
+      if (!nitro::isPlainObject(runtime, obj)) {
+        return false;
+      }
       if (!JSIConverter<std::optional<margelo::nitro::sound::AVEncoderAudioQualityIOSType>>::canConvert(runtime, obj.getProperty(runtime, "AVEncoderAudioQualityKeyIOS"))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::sound::AVModeIOSOption>>::canConvert(runtime, obj.getProperty(runtime, "AVModeIOS"))) return false;
       if (!JSIConverter<std::optional<margelo::nitro::sound::AVEncodingOption>>::canConvert(runtime, obj.getProperty(runtime, "AVEncodingOptionIOS"))) return false;

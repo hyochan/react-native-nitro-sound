@@ -20,6 +20,9 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Verify dependencies
+        run: yarn install --immutable
+
       - name: Lint files
         run: yarn lint
 
@@ -35,6 +38,9 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Verify dependencies
+        run: yarn install --immutable
+
       - name: Run unit tests
         run: yarn test --maxWorkers=2 --coverage
 
@@ -46,6 +52,9 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+
+      - name: Verify dependencies
+        run: yarn install --immutable
 
       - name: Build package
         run: yarn prepare

@@ -9,7 +9,6 @@ package com.margelo.nitro.sound
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
-import com.margelo.nitro.core.*
 
 
 /**
@@ -17,64 +16,72 @@ import com.margelo.nitro.core.*
  */
 @DoNotStrip
 @Keep
-data class AudioSet
+data class AudioSet(
   @DoNotStrip
   @Keep
-  constructor(
+  val AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType?,
+  @DoNotStrip
+  @Keep
+  val AVModeIOS: AVModeIOSOption?,
+  @DoNotStrip
+  @Keep
+  val AVEncodingOptionIOS: AVEncodingOption?,
+  @DoNotStrip
+  @Keep
+  val AVFormatIDKeyIOS: AVEncodingOption?,
+  @DoNotStrip
+  @Keep
+  val AVNumberOfChannelsKeyIOS: Double?,
+  @DoNotStrip
+  @Keep
+  val AVLinearPCMBitDepthKeyIOS: AVLinearPCMBitDepthKeyIOSType?,
+  @DoNotStrip
+  @Keep
+  val AVLinearPCMIsBigEndianKeyIOS: Boolean?,
+  @DoNotStrip
+  @Keep
+  val AVLinearPCMIsFloatKeyIOS: Boolean?,
+  @DoNotStrip
+  @Keep
+  val AVLinearPCMIsNonInterleavedIOS: Boolean?,
+  @DoNotStrip
+  @Keep
+  val AVSampleRateKeyIOS: Double?,
+  @DoNotStrip
+  @Keep
+  val AudioSourceAndroid: AudioSourceAndroidType?,
+  @DoNotStrip
+  @Keep
+  val OutputFormatAndroid: OutputFormatAndroidType?,
+  @DoNotStrip
+  @Keep
+  val AudioEncoderAndroid: AudioEncoderAndroidType?,
+  @DoNotStrip
+  @Keep
+  val AudioQuality: AudioQualityType?,
+  @DoNotStrip
+  @Keep
+  val AudioChannels: Double?,
+  @DoNotStrip
+  @Keep
+  val AudioSamplingRate: Double?,
+  @DoNotStrip
+  @Keep
+  val AudioEncodingBitRate: Double?,
+  @DoNotStrip
+  @Keep
+  val IncludeBase64: Boolean?
+) {
+  private companion object {
+    /**
+     * Constructor called from C++
+     */
     @DoNotStrip
     @Keep
-    val AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType?,
-    @DoNotStrip
-    @Keep
-    val AVModeIOS: AVModeIOSOption?,
-    @DoNotStrip
-    @Keep
-    val AVEncodingOptionIOS: AVEncodingOption?,
-    @DoNotStrip
-    @Keep
-    val AVFormatIDKeyIOS: AVEncodingOption?,
-    @DoNotStrip
-    @Keep
-    val AVNumberOfChannelsKeyIOS: Double?,
-    @DoNotStrip
-    @Keep
-    val AVLinearPCMBitDepthKeyIOS: AVLinearPCMBitDepthKeyIOSType?,
-    @DoNotStrip
-    @Keep
-    val AVLinearPCMIsBigEndianKeyIOS: Boolean?,
-    @DoNotStrip
-    @Keep
-    val AVLinearPCMIsFloatKeyIOS: Boolean?,
-    @DoNotStrip
-    @Keep
-    val AVLinearPCMIsNonInterleavedIOS: Boolean?,
-    @DoNotStrip
-    @Keep
-    val AVSampleRateKeyIOS: Double?,
-    @DoNotStrip
-    @Keep
-    val AudioSourceAndroid: AudioSourceAndroidType?,
-    @DoNotStrip
-    @Keep
-    val OutputFormatAndroid: OutputFormatAndroidType?,
-    @DoNotStrip
-    @Keep
-    val AudioEncoderAndroid: AudioEncoderAndroidType?,
-    @DoNotStrip
-    @Keep
-    val AudioQuality: AudioQualityType?,
-    @DoNotStrip
-    @Keep
-    val AudioChannels: Double?,
-    @DoNotStrip
-    @Keep
-    val AudioSamplingRate: Double?,
-    @DoNotStrip
-    @Keep
-    val AudioEncodingBitRate: Double?,
-    @DoNotStrip
-    @Keep
-    val IncludeBase64: Boolean?
-  ) {
-  /* main constructor */
+    @Suppress("unused")
+    @JvmStatic
+    private fun fromCpp(AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType?, AVModeIOS: AVModeIOSOption?, AVEncodingOptionIOS: AVEncodingOption?, AVFormatIDKeyIOS: AVEncodingOption?, AVNumberOfChannelsKeyIOS: Double?, AVLinearPCMBitDepthKeyIOS: AVLinearPCMBitDepthKeyIOSType?, AVLinearPCMIsBigEndianKeyIOS: Boolean?, AVLinearPCMIsFloatKeyIOS: Boolean?, AVLinearPCMIsNonInterleavedIOS: Boolean?, AVSampleRateKeyIOS: Double?, AudioSourceAndroid: AudioSourceAndroidType?, OutputFormatAndroid: OutputFormatAndroidType?, AudioEncoderAndroid: AudioEncoderAndroidType?, AudioQuality: AudioQualityType?, AudioChannels: Double?, AudioSamplingRate: Double?, AudioEncodingBitRate: Double?, IncludeBase64: Boolean?): AudioSet {
+      return AudioSet(AVEncoderAudioQualityKeyIOS, AVModeIOS, AVEncodingOptionIOS, AVFormatIDKeyIOS, AVNumberOfChannelsKeyIOS, AVLinearPCMBitDepthKeyIOS, AVLinearPCMIsBigEndianKeyIOS, AVLinearPCMIsFloatKeyIOS, AVLinearPCMIsNonInterleavedIOS, AVSampleRateKeyIOS, AudioSourceAndroid, OutputFormatAndroid, AudioEncoderAndroid, AudioQuality, AudioChannels, AudioSamplingRate, AudioEncodingBitRate, IncludeBase64)
+    }
+  }
 }

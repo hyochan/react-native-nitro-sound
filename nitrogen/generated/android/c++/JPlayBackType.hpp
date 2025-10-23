@@ -50,7 +50,11 @@ namespace margelo::nitro::sound {
      */
     [[maybe_unused]]
     static jni::local_ref<JPlayBackType::javaobject> fromCpp(const PlayBackType& value) {
-      return newInstance(
+      using JSignature = JPlayBackType(jni::alias_ref<jni::JBoolean>, double, double);
+      static const auto clazz = javaClassStatic();
+      static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
+      return create(
+        clazz,
         value.isMuted.has_value() ? jni::JBoolean::valueOf(value.isMuted.value()) : nullptr,
         value.duration,
         value.currentPosition

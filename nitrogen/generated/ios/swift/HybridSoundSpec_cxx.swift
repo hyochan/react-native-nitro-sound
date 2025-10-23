@@ -7,6 +7,7 @@
 
 import Foundation
 import NitroModules
+import NitroModules
 
 /**
  * A class implementation that bridges HybridSoundSpec over to C++.
@@ -119,14 +120,14 @@ open class HybridSoundSpec_cxx {
         } else {
           return nil
         }
-      }(), audioSets: { () -> AudioSet? in
-        if bridge.has_value_std__optional_AudioSet_(audioSets) {
-          let __unwrapped = bridge.get_std__optional_AudioSet_(audioSets)
+      }(), audioSets: audioSets.value, meteringEnabled: { () -> Bool? in
+        if bridge.has_value_std__optional_bool_(meteringEnabled) {
+          let __unwrapped = bridge.get_std__optional_bool_(meteringEnabled)
           return __unwrapped
         } else {
           return nil
         }
-      }(), meteringEnabled: meteringEnabled.value)
+      }())
       let __resultCpp = { () -> bridge.std__shared_ptr_Promise_std__string__ in
         let __promise = bridge.create_std__shared_ptr_Promise_std__string__()
         let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__string__(__promise)
