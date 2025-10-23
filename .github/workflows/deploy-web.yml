@@ -26,7 +26,10 @@ jobs:
           yarn -v
 
       - name: Install dependencies (workspace root)
-        run: yarn install
+        run: yarn install --immutable
+
+      - name: Build library
+        run: yarn prepare
 
       - name: Build example web
         run: yarn workspace react-native-nitro-sound-example build:web

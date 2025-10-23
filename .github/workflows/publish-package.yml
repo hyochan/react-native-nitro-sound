@@ -1,13 +1,11 @@
 name: publish-package
 
 on:
-  release:
-    types: [created]
   workflow_dispatch:
     inputs:
       version:
-        description: 'Package version (e.g., 1.2.3) - leave empty to use package.json version'
-        required: false
+        description: 'Package version (e.g., 0.2.9)'
+        required: true
         type: string
       tag:
         description: 'NPM tag (latest, beta, next, etc.)'
@@ -16,43 +14,67 @@ on:
         type: string
 
 jobs:
-  build:
+  test:
+    name: Run Tests
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish Package
+    needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
     - uses: actions/checkout@v4
-    
+      with:
+        fetch-depth: 0
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: 20
         cache: yarn
-    
+
     - name: Install dependencies
-      run: yarn install --frozen-lockfile
-    
-    - name: Update version if specified
-      if: ${{ github.event.inputs.version != '' }}
+      run: yarn install --immutable
+
+    - name: Update version
       run: |
         npm version ${{ github.event.inputs.version }} --no-git-tag-version
         echo "Updated package.json to version ${{ github.event.inputs.version }}"
-    
+
     - name: Generate NitroModule bindings
       run: yarn nitrogen
-    
+
     - name: Build package
       run: yarn prepare
+
+    - name: Commit version bump
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add package.json
+        git commit -m "chore: release ${{ github.event.inputs.version }}"
+        git push
+
+    - name: Create tag
+      run: |
+        git tag v${{ github.event.inputs.version }}
+        git push origin v${{ github.event.inputs.version }}
+
+    - name: Create GitHub Release
+      run: |
+        gh release create v${{ github.event.inputs.version }} \
+          --title "v${{ github.event.inputs.version }}" \
+          --generate-notes
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Configure npm for publishing
       run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
-    - name: Publish with tag
-      if: ${{ github.event.inputs.tag != '' }}
+    - name: Publish to NPM
       run: npm publish --tag ${{ github.event.inputs.tag }}
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        
-    - name: Publish (default)
-      if: ${{ github.event.inputs.tag == '' }}
-      run: npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

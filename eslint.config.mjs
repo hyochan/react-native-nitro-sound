@@ -35,7 +35,13 @@ export default defineConfig([
   {
     ignores: [
       'node_modules/',
-      'lib/'
+      'lib/',
+      'nitrogen/',
+      'example/dist/',
+      'example/android/',
+      'example/ios/',
+      'android/',
+      'ios/',
     ],
   },
 ]);

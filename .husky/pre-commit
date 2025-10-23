@@ -1,5 +1,17 @@
 #!/bin/sh
 
-echo "Running lint --fix and typecheck..."
-yarn lint:fix || exit 1
+# Get list of staged files (only .js, .ts, .tsx files)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|jsx|ts|tsx)$' || true)
+
+if [ -n "$STAGED_FILES" ]; then
+  echo "Running lint on staged files..."
+  echo "$STAGED_FILES" | xargs yarn eslint --fix || exit 1
+
+  # Re-add files that may have been fixed
+  echo "$STAGED_FILES" | xargs git add
+else
+  echo "No staged JS/TS files to lint"
+fi
+
+echo "Running typecheck..."
 yarn typecheck || exit 1

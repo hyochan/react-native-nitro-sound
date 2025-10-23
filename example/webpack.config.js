@@ -15,6 +15,7 @@ const babelLoaderConfiguration = {
     path.resolve(appDirectory, 'index.web.js'),
     path.resolve(appDirectory, 'src'),
     path.resolve(appDirectory, '../src'),
+    path.resolve(appDirectory, '../lib'),
     ...compileNodeModules,
   ],
   use: {
@@ -25,6 +26,9 @@ const babelLoaderConfiguration = {
       presets: ['@react-native/babel-preset'],
       plugins: ['react-native-web'],
     },
+  },
+  resolve: {
+    fullySpecified: false,
   },
 };
 
