@@ -111,7 +111,11 @@ namespace margelo::nitro::sound {
      */
     [[maybe_unused]]
     static jni::local_ref<JAudioSet::javaobject> fromCpp(const AudioSet& value) {
-      return newInstance(
+      using JSignature = JAudioSet(jni::alias_ref<JAVEncoderAudioQualityIOSType>, jni::alias_ref<JAVModeIOSOption>, jni::alias_ref<JAVEncodingOption>, jni::alias_ref<JAVEncodingOption>, jni::alias_ref<jni::JDouble>, jni::alias_ref<JAVLinearPCMBitDepthKeyIOSType>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JDouble>, jni::alias_ref<JAudioSourceAndroidType>, jni::alias_ref<JOutputFormatAndroidType>, jni::alias_ref<JAudioEncoderAndroidType>, jni::alias_ref<JAudioQualityType>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JBoolean>);
+      static const auto clazz = javaClassStatic();
+      static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
+      return create(
+        clazz,
         value.AVEncoderAudioQualityKeyIOS.has_value() ? JAVEncoderAudioQualityIOSType::fromCpp(value.AVEncoderAudioQualityKeyIOS.value()) : nullptr,
         value.AVModeIOS.has_value() ? JAVModeIOSOption::fromCpp(value.AVModeIOS.value()) : nullptr,
         value.AVEncodingOptionIOS.has_value() ? JAVEncodingOption::fromCpp(value.AVEncodingOptionIOS.value()) : nullptr,

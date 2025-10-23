@@ -31,7 +31,14 @@ public extension PlayBackType {
   var isMuted: Bool? {
     @inline(__always)
     get {
-      return self.__isMuted.value
+      return { () -> Bool? in
+        if bridge.has_value_std__optional_bool_(self.__isMuted) {
+          let __unwrapped = bridge.get_std__optional_bool_(self.__isMuted)
+          return __unwrapped
+        } else {
+          return nil
+        }
+      }()
     }
     @inline(__always)
     set {

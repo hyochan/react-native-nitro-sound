@@ -43,7 +43,14 @@ public extension RecordBackType {
   var isRecording: Bool? {
     @inline(__always)
     get {
-      return self.__isRecording.value
+      return { () -> Bool? in
+        if bridge.has_value_std__optional_bool_(self.__isRecording) {
+          let __unwrapped = bridge.get_std__optional_bool_(self.__isRecording)
+          return __unwrapped
+        } else {
+          return nil
+        }
+      }()
     }
     @inline(__always)
     set {

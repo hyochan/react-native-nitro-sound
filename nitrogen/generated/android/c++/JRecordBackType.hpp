@@ -53,7 +53,11 @@ namespace margelo::nitro::sound {
      */
     [[maybe_unused]]
     static jni::local_ref<JRecordBackType::javaobject> fromCpp(const RecordBackType& value) {
-      return newInstance(
+      using JSignature = JRecordBackType(jni::alias_ref<jni::JBoolean>, double, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>);
+      static const auto clazz = javaClassStatic();
+      static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
+      return create(
+        clazz,
         value.isRecording.has_value() ? jni::JBoolean::valueOf(value.isRecording.value()) : nullptr,
         value.currentPosition,
         value.currentMetering.has_value() ? jni::JDouble::valueOf(value.currentMetering.value()) : nullptr,
