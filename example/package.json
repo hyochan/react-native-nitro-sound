@@ -18,7 +18,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "^0.81.0",
-    "react-native-nitro-modules": "^0.29.6",
+    "react-native-nitro-modules": "^0.31.1",
     "react-native-video": "^6.16.1",
     "react-native-web": "^0.20.0"
   },
