@@ -1,13 +1,6 @@
 name: Setup
 description: Setup Node.js and install dependencies
 
-inputs:
-  cache-key-prefix:
-    description: Cache key prefix for Yarn dependencies
-    required: false
-    # Update cache by upgrading version below.
-    default: yarn-v2
-
 runs:
   using: composite
   steps:
@@ -15,22 +8,9 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version-file: .nvmrc
-
-    - name: Restore dependencies
-      id: yarn-cache
-      uses: actions/cache/restore@v4
-      with:
-        path: |
-          **/node_modules
-          .yarn/install-state.gz
-          .yarn/cache
-        key: ${{ runner.os }}-${{ inputs.cache-key-prefix }}-${{ hashFiles('yarn.lock') }}-${{ hashFiles('**/package.json', '!node_modules/**') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ inputs.cache-key-prefix }}-${{ hashFiles('yarn.lock') }}
-          ${{ runner.os }}-${{ inputs.cache-key-prefix }}-
+        cache: 'yarn'
 
     - name: Install dependencies
-      if: steps.yarn-cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
         set -e
@@ -38,13 +18,3 @@ runs:
           echo "Immutable install failed — updating lockfile (CI-only)" &&
           yarn install --mode=update-lockfile
         )
-
-    - name: Cache dependencies
-      if: steps.yarn-cache.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
-      with:
-        path: |
-          **/node_modules
-          .yarn/install-state.gz
-          .yarn/cache
-        key: ${{ steps.yarn-cache.outputs.cache-primary-key }}
