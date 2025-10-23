@@ -17,7 +17,7 @@ import {
   AudioEncoderAndroidType,
   AudioSourceAndroidType,
   AVEncoderAudioQualityIOSType,
-} from '../../../src';
+} from 'react-native-nitro-sound';
 
 export function CompatibilityScreen({ onBack }: { onBack: () => void }) {
   const [mountVideo, setMountVideo] = useState(true);

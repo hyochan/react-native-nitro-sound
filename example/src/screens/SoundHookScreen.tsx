@@ -16,7 +16,7 @@ import {
   AudioEncoderAndroidType,
   AudioSourceAndroidType,
   AVEncoderAudioQualityIOSType,
-} from '../../../src';
+} from 'react-native-nitro-sound';
 
 export function SoundHookScreen({ onBack }: { onBack: () => void }) {
   const [recordingPath, setRecordingPath] = useState('');

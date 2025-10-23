@@ -16,7 +16,7 @@ import {
   AudioEncoderAndroidType,
   AudioSourceAndroidType,
   AVEncoderAudioQualityIOSType,
-} from '../../../src';
+} from 'react-native-nitro-sound';
 
 export function SoundScreen({ onBack }: { onBack: () => void }) {
   const soundRef = useRef(createSound());
