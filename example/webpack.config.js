@@ -75,6 +75,10 @@ module.exports = {
         __dirname,
         'node_modules/react-native-nitro-modules/lib/module/index.web.js'
       ),
+      'react-native-nitro-sound': path.resolve(
+        __dirname,
+        '../lib/module/index.web.js'
+      ),
     },
   },
   plugins: [
