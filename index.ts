@@ -132,6 +132,7 @@ export interface AudioSet {
   AVLinearPCMIsFloatKeyIOS?: boolean;
   AVLinearPCMIsNonInterleavedIOS?: boolean;
   AVEncoderBitRateKeyIOS?: number;
+  AVAllowBluetoothInputIOS?: boolean;
   OutputFormatAndroid?: OutputFormatAndroidType;
   AudioEncoderAndroid?: AudioEncoderAndroidType;
   AudioEncodingBitRateAndroid?: number;

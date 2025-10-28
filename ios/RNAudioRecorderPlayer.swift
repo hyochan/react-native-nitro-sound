@@ -252,8 +252,17 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
         updateAudioFileURL(path: path, format: avFormat)
         let avMode = avMode(fromString: audioSets["AVModeIOS"] as? String ?? "default") ?? .default
+        
+        // Configure audio session options
+        var categoryOptions: AVAudioSession.CategoryOptions = [.defaultToSpeaker]
+        // Check if Bluetooth input should be allowed (defaults to true for backward compatibility)
+        let allowBluetoothInput = audioSets["AVAllowBluetoothInputIOS"] as? Bool ?? true
+        if allowBluetoothInput {
+            categoryOptions.insert(.allowBluetooth)
+        }
+        
         do {
-            try audioSession.setCategory(.playAndRecord, mode: avMode, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setCategory(.playAndRecord, mode: avMode, options: categoryOptions)
             try audioSession.setActive(true)
         } catch {
             return completion(.failure(.audioSessionError(error)))
