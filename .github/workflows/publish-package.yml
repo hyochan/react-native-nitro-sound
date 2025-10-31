@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      packages: write
+      id-token: write  # Required for OIDC trusted publishing
     steps:
     - uses: actions/checkout@v4
       with:
@@ -35,6 +35,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 20
+        registry-url: 'https://registry.npmjs.org'
         cache: yarn
 
     - name: Install dependencies
@@ -71,10 +72,5 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Configure npm for publishing
-      run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-
     - name: Publish to NPM
-      run: npm publish --tag ${{ github.event.inputs.tag }}
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: npm publish --provenance --access public --tag ${{ github.event.inputs.tag }}
