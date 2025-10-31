@@ -46,6 +46,16 @@ enum RecorderError: LocalizedError {
 
 @objc(RNAudioRecorderPlayer)
 class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
+    // MARK: - Constants
+    
+    /// Delay before resuming recording after an audio interruption ends.
+    /// This workaround is necessary because some SDKs (e.g., Twilio) erroneously call
+    /// `setActive(false)` shortly after the interruption ends (~100ms observed in logs).
+    /// The delay ensures the audio session is fully stabilized before reactivation.
+    private let interruptionRecoveryDelay: TimeInterval = 0.5
+    
+    // MARK: - Properties
+    
     var audioSession: AVAudioSession = .sharedInstance()
     var subscriptionDuration: Double = 0.5
     var audioFileURL: URL?
@@ -60,6 +70,8 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     var accumulatedRecordingDuration: Double = 0
     // Used to keep track of the total recording duration, accounting for pausing and resuming
     var lastResumeTime: Double?
+    // Track if we were recording when an interruption began
+    var wasRecordingBeforeInterruption: Bool = false
 
     // Player
     var pausedPlayTime: CMTime?
@@ -203,27 +215,45 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     // handle interrupt events
     @objc
     func handleAudioSessionInterruption(_ notification: Notification) {
-        guard let userInfo = notification.userInfo,
-            let interruptionType = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt else {
-            return
-        }
+        guard
+            let userInfo = notification.userInfo,
+            let interruptionType = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt
+        else { return }
 
         switch interruptionType {
         case AVAudioSession.InterruptionType.began.rawValue:
+            // Capture whether we had an active recording so we can decide to resume later
+            wasRecordingBeforeInterruption = currentAudioRecorder?.isRecording ?? false
+            guard wasRecordingBeforeInterruption else { break }
+
             do {
                 try pauseCurrentRecording()
                 sendEvent(withName: "rn-recording-state", body: ["state": "interrupted"])
-            } catch { 
+            } catch {
                 // We don't expect it to fail to pause the recording
             }
             break
         case AVAudioSession.InterruptionType.ended.rawValue:
-            do {
-                try resumeCurrentRecording()
-                sendEvent(withName: "rn-recording-state", body: ["state": "recording"])
-            } catch {
+            // Only send events if we were recording before the interruption
+            guard wasRecordingBeforeInterruption else { break }
+
+            // Only attempt to resume if the system indicates it is allowed
+            let options = AVAudioSession.InterruptionOptions(rawValue: userInfo[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0)
+            if options.contains(.shouldResume) {
+                // Delay before resuming to avoid conflicts with third-party SDKs that may
+                // deactivate the audio session shortly after the interruption ends (looking at you, Twilio)
+                DispatchQueue.main.asyncAfter(deadline: .now() + interruptionRecoveryDelay) {
+                    do {
+                        try self.resumeCurrentRecording()
+                        self.sendEvent(withName: "rn-recording-state", body: ["state": "recording"])
+                    } catch {
+                        self.sendEvent(withName: "rn-recording-state", body: ["state": "paused"])
+                    }
+                }
+            } else {
                 sendEvent(withName: "rn-recording-state", body: ["state": "paused"])
             }
+            wasRecordingBeforeInterruption = false
             break
         default:
             break
@@ -252,16 +282,17 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
         updateAudioFileURL(path: path, format: avFormat)
         let avMode = avMode(fromString: audioSets["AVModeIOS"] as? String ?? "default") ?? .default
-        
+
         // Configure audio session options
-        var categoryOptions: AVAudioSession.CategoryOptions = [.defaultToSpeaker]
+        var categoryOptions: AVAudioSession.CategoryOptions = [.defaultToSpeaker, .mixWithOthers]
         // Check if Bluetooth input should be allowed (defaults to true for backward compatibility)
         let allowBluetoothInput = audioSets["AVAllowBluetoothInputIOS"] as? Bool ?? true
         if allowBluetoothInput {
             categoryOptions.insert(.allowBluetooth)
         }
-        
+
         do {
+            try audioSession.setPrefersNoInterruptionsFromSystemAlerts(true)
             try audioSession.setCategory(.playAndRecord, mode: avMode, options: categoryOptions)
             try audioSession.setActive(true)
         } catch {
@@ -296,7 +327,20 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
 
     private func resumeCurrentRecording() throws {
         guard let currentAudioRecorder else { throw RecorderError.notRecording }
-        guard currentAudioRecorder.record() else { throw RecorderError.failedToResumeRecording }
+
+        // Reactivate session
+        do {
+            try audioSession.setActive(true)
+        } catch {
+            print("[RNAudioRecorderPlayer] Failed to reactivate audio session: \(error.localizedDescription)")
+            throw RecorderError.audioSessionError(error)
+        }
+
+        // Resume recording
+        if currentAudioRecorder.record() == false {
+            print("[RNAudioRecorderPlayer] Failed to resume recording")
+            throw RecorderError.failedToResumeRecording
+        }
 
         self.recordingDidResume()
         if (self.recordTimer == nil) {
@@ -326,6 +370,9 @@ class RNAudioRecorderPlayer: RCTEventEmitter, AVAudioRecorderDelegate {
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         if !flag {
             print("Failed to stop recorder")
+            // Clean up state
+            self.currentAudioRecorder = nil
+            self.recordTimer = nil
         }
     }
 
