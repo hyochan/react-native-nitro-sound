@@ -1,76 +1,98 @@
-name: publish-package
+name: Deploy (manual)
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Package version (e.g., 0.2.9)'
+        description: 'Choose version bump type'
         required: true
-        type: string
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
       tag:
-        description: 'NPM tag (latest, beta, next, etc.)'
+        description: 'npm dist-tag to publish under'
+        required: true
+        default: latest
+        type: choice
+        options:
+          - latest
+          - next
+      create_release:
+        description: 'Also create a GitHub Release from the tag'
         required: false
-        default: 'latest'
-        type: string
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  id-token: write # Required for OIDC trusted publishing
 
 jobs:
-  test:
-    name: Run Tests
+  # Pre-release validation
+  validate:
+    name: Validate
     uses: ./.github/workflows/ci.yml
 
-  publish:
-    name: Publish Package
-    needs: test
+  deploy:
+    needs: [validate]
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write  # Required for OIDC trusted publishing
+
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        registry-url: 'https://registry.npmjs.org'
-        cache: yarn
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          registry-url: 'https://registry.npmjs.org'
 
-    - name: Install dependencies
-      run: yarn install --immutable
+      - name: Install dependencies
+        run: yarn install --immutable
 
-    - name: Update version
-      run: |
-        npm version ${{ github.event.inputs.version }} --no-git-tag-version
-        echo "Updated package.json to version ${{ github.event.inputs.version }}"
+      - name: Configure Git user
+        run: |
+          git config user.name "react-native-nitro-sound bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: Build package
-      run: yarn prepare
+      - name: Bump version and tag
+        id: bump
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          npm version "$INPUT_VERSION" --tag-version-prefix="" -m "chore(release): %s"
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
-    - name: Commit version bump
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add package.json
-        git commit -m "chore: release ${{ github.event.inputs.version }}" || echo "No changes to commit"
+      - name: Prepare package (build + codegen)
+        run: yarn prepare
 
-    - name: Push version bump
-      run: git push
+      - name: Push commit and tags
+        run: |
+          git push --follow-tags
 
-    - name: Create and push tag
-      run: |
-        git tag v${{ github.event.inputs.version }}
-        git push origin v${{ github.event.inputs.version }}
+      - name: Ensure npm CLI v11.5.1 or later (required for OIDC)
+        run: npm install -g npm@latest
 
-    - name: Create GitHub Release
-      run: |
-        gh release create v${{ github.event.inputs.version }} \
-          --title "v${{ github.event.inputs.version }}" \
-          --generate-notes
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish to npm with OIDC trusted publishing
+        run: |
+          if [ "${{ github.event.inputs.tag }}" = "latest" ]; then
+            npm publish --access public --provenance
+          else
+            npm publish --tag ${{ github.event.inputs.tag }} --access public --provenance
+          fi
 
-    - name: Publish to NPM
-      run: npm publish --provenance --access public --tag ${{ github.event.inputs.tag }}
+      - name: Create GitHub Release
+        if: ${{ github.event.inputs.create_release == 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.version }}
+          name: ${{ steps.bump.outputs.version }}
+          draft: false
+          prerelease: ${{ github.event.inputs.tag != 'latest' }}
+          generate_release_notes: true
