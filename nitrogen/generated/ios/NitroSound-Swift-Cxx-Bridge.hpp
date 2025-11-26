@@ -98,7 +98,7 @@ namespace margelo::nitro::sound::bridge::swift {
   private:
     std::unique_ptr<std::function<void(const std::string& /* result */)>> _function;
   } SWIFT_NONCOPYABLE;
-  Func_void_std__string create_Func_void_std__string(void* NON_NULL swiftClosureWrapper) noexcept;
+  Func_void_std__string create_Func_void_std__string(void* _Nonnull swiftClosureWrapper) noexcept;
   inline Func_void_std__string_Wrapper wrap_Func_void_std__string(Func_void_std__string value) noexcept {
     return Func_void_std__string_Wrapper(std::move(value));
   }
@@ -120,7 +120,7 @@ namespace margelo::nitro::sound::bridge::swift {
   private:
     std::unique_ptr<std::function<void(const std::exception_ptr& /* error */)>> _function;
   } SWIFT_NONCOPYABLE;
-  Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* NON_NULL swiftClosureWrapper) noexcept;
+  Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* _Nonnull swiftClosureWrapper) noexcept;
   inline Func_void_std__exception_ptr_Wrapper wrap_Func_void_std__exception_ptr(Func_void_std__exception_ptr value) noexcept {
     return Func_void_std__exception_ptr_Wrapper(std::move(value));
   }
@@ -362,7 +362,7 @@ namespace margelo::nitro::sound::bridge::swift {
   private:
     std::unique_ptr<std::function<void(const RecordBackType& /* recordingMeta */)>> _function;
   } SWIFT_NONCOPYABLE;
-  Func_void_RecordBackType create_Func_void_RecordBackType(void* NON_NULL swiftClosureWrapper) noexcept;
+  Func_void_RecordBackType create_Func_void_RecordBackType(void* _Nonnull swiftClosureWrapper) noexcept;
   inline Func_void_RecordBackType_Wrapper wrap_Func_void_RecordBackType(Func_void_RecordBackType value) noexcept {
     return Func_void_RecordBackType_Wrapper(std::move(value));
   }
@@ -384,7 +384,7 @@ namespace margelo::nitro::sound::bridge::swift {
   private:
     std::unique_ptr<std::function<void(const PlayBackType& /* playbackMeta */)>> _function;
   } SWIFT_NONCOPYABLE;
-  Func_void_PlayBackType create_Func_void_PlayBackType(void* NON_NULL swiftClosureWrapper) noexcept;
+  Func_void_PlayBackType create_Func_void_PlayBackType(void* _Nonnull swiftClosureWrapper) noexcept;
   inline Func_void_PlayBackType_Wrapper wrap_Func_void_PlayBackType(Func_void_PlayBackType value) noexcept {
     return Func_void_PlayBackType_Wrapper(std::move(value));
   }
@@ -406,7 +406,7 @@ namespace margelo::nitro::sound::bridge::swift {
   private:
     std::unique_ptr<std::function<void(const PlaybackEndType& /* playbackEndMeta */)>> _function;
   } SWIFT_NONCOPYABLE;
-  Func_void_PlaybackEndType create_Func_void_PlaybackEndType(void* NON_NULL swiftClosureWrapper) noexcept;
+  Func_void_PlaybackEndType create_Func_void_PlaybackEndType(void* _Nonnull swiftClosureWrapper) noexcept;
   inline Func_void_PlaybackEndType_Wrapper wrap_Func_void_PlaybackEndType(Func_void_PlaybackEndType value) noexcept {
     return Func_void_PlaybackEndType_Wrapper(std::move(value));
   }
@@ -416,8 +416,8 @@ namespace margelo::nitro::sound::bridge::swift {
    * Specialized version of `std::shared_ptr<HybridSoundSpec>`.
    */
   using std__shared_ptr_HybridSoundSpec_ = std::shared_ptr<HybridSoundSpec>;
-  std::shared_ptr<HybridSoundSpec> create_std__shared_ptr_HybridSoundSpec_(void* NON_NULL swiftUnsafePointer) noexcept;
-  void* NON_NULL get_std__shared_ptr_HybridSoundSpec_(std__shared_ptr_HybridSoundSpec_ cppType);
+  std::shared_ptr<HybridSoundSpec> create_std__shared_ptr_HybridSoundSpec_(void* _Nonnull swiftUnsafePointer) noexcept;
+  void* _Nonnull get_std__shared_ptr_HybridSoundSpec_(std__shared_ptr_HybridSoundSpec_ cppType);
   
   // pragma MARK: std::weak_ptr<HybridSoundSpec>
   using std__weak_ptr_HybridSoundSpec_ = std::weak_ptr<HybridSoundSpec>;

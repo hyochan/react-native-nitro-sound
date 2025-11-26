@@ -3,6 +3,20 @@ import AVFoundation
 import NitroModules
 
 final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
+    // MARK: - Audio Quality Presets (matching Android implementation)
+    private struct QualitySettings {
+        let samplingRate: Int
+        let channels: Int
+        let bitrate: Int
+        let encoderQuality: AVAudioQuality
+    }
+
+    private static let qualityPresets: [AudioQualityType: QualitySettings] = [
+        .low: QualitySettings(samplingRate: 22050, channels: 1, bitrate: 64000, encoderQuality: .low),
+        .medium: QualitySettings(samplingRate: 44100, channels: 1, bitrate: 128000, encoderQuality: .medium),
+        .high: QualitySettings(samplingRate: 48000, channels: 2, bitrate: 192000, encoderQuality: .high)
+    ]
+
     // Small delay to ensure the audio session is fully active before recording starts
     private let audioSessionActivationDelay: TimeInterval = 0.1
     private var audioRecorder: AVAudioRecorder?
@@ -708,24 +722,43 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     private func getAudioSettings(audioSets: AudioSet?) -> [String: Any] {
         var settings: [String: Any] = [:]
 
-        // Default settings
-        settings[AVFormatIDKey] = Int(kAudioFormatMPEG4AAC)
-        settings[AVSampleRateKey] = 44100
-        settings[AVNumberOfChannelsKey] = 2
-        settings[AVEncoderAudioQualityKey] = AVAudioQuality.high.rawValue
+        // Default to HIGH quality if not specified
+        let audioQuality = audioSets?.AudioQuality ?? .high
+        let defaults = Self.qualityPresets[audioQuality] ?? Self.qualityPresets[.high]!
 
-        // Apply custom settings
+        // Apply default settings based on AudioQuality
+        settings[AVFormatIDKey] = Int(kAudioFormatMPEG4AAC)
+        settings[AVSampleRateKey] = defaults.samplingRate
+        settings[AVNumberOfChannelsKey] = defaults.channels
+        settings[AVEncoderBitRateKey] = defaults.bitrate
+        settings[AVEncoderAudioQualityKey] = defaults.encoderQuality.rawValue
+
+        // Apply custom settings with explicit overrides taking precedence
         if let audioSets = audioSets {
+            // iOS-specific settings take highest priority
             if let sampleRate = audioSets.AVSampleRateKeyIOS {
                 settings[AVSampleRateKey] = sampleRate
+            } else if let audioSamplingRate = audioSets.AudioSamplingRate {
+                // Fall back to cross-platform setting
+                settings[AVSampleRateKey] = Int(audioSamplingRate)
             }
+
             if let channels = audioSets.AVNumberOfChannelsKeyIOS {
                 settings[AVNumberOfChannelsKey] = Int(channels)
+            } else if let audioChannels = audioSets.AudioChannels {
+                // Fall back to cross-platform setting
+                settings[AVNumberOfChannelsKey] = Int(audioChannels)
             }
+
+            if let bitRate = audioSets.AudioEncodingBitRate {
+                settings[AVEncoderBitRateKey] = Int(bitRate)
+            }
+
             if let quality = audioSets.AVEncoderAudioQualityKeyIOS {
-                let audioQuality = mapToAVAudioQuality(quality)
-                settings[AVEncoderAudioQualityKey] = audioQuality
+                let mappedQuality = mapToAVAudioQuality(quality)
+                settings[AVEncoderAudioQualityKey] = mappedQuality
             }
+
             if let format = audioSets.AVFormatIDKeyIOS {
                 settings[AVFormatIDKey] = getAudioFormatID(from: format)
             }
