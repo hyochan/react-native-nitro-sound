@@ -3,6 +3,20 @@ import AVFoundation
 import NitroModules
 
 final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
+    // MARK: - Audio Quality Presets (matching Android implementation)
+    private struct QualitySettings {
+        let samplingRate: Int
+        let channels: Int
+        let bitrate: Int
+        let encoderQuality: AVAudioQuality
+    }
+
+    private static let qualityPresets: [AudioQualityType: QualitySettings] = [
+        .low: QualitySettings(samplingRate: 22050, channels: 1, bitrate: 64000, encoderQuality: .low),
+        .medium: QualitySettings(samplingRate: 44100, channels: 1, bitrate: 128000, encoderQuality: .medium),
+        .high: QualitySettings(samplingRate: 48000, channels: 2, bitrate: 192000, encoderQuality: .high)
+    ]
+
     // Small delay to ensure the audio session is fully active before recording starts
     private let audioSessionActivationDelay: TimeInterval = 0.1
     private var audioRecorder: AVAudioRecorder?
@@ -708,28 +722,16 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     private func getAudioSettings(audioSets: AudioSet?) -> [String: Any] {
         var settings: [String: Any] = [:]
 
-        // Define quality presets (matching Android implementation)
-        struct QualitySettings {
-            let samplingRate: Int
-            let channels: Int
-            let bitrate: Int
-        }
-        let presets: [AudioQualityType: QualitySettings] = [
-            .low: QualitySettings(samplingRate: 22050, channels: 1, bitrate: 64000),
-            .medium: QualitySettings(samplingRate: 44100, channels: 1, bitrate: 128000),
-            .high: QualitySettings(samplingRate: 48000, channels: 2, bitrate: 192000)
-        ]
-
         // Default to HIGH quality if not specified
         let audioQuality = audioSets?.AudioQuality ?? .high
-        let defaults = presets[audioQuality] ?? presets[.high]!
+        let defaults = Self.qualityPresets[audioQuality] ?? Self.qualityPresets[.high]!
 
         // Apply default settings based on AudioQuality
         settings[AVFormatIDKey] = Int(kAudioFormatMPEG4AAC)
         settings[AVSampleRateKey] = defaults.samplingRate
         settings[AVNumberOfChannelsKey] = defaults.channels
         settings[AVEncoderBitRateKey] = defaults.bitrate
-        settings[AVEncoderAudioQualityKey] = AVAudioQuality.high.rawValue
+        settings[AVEncoderAudioQualityKey] = defaults.encoderQuality.rawValue
 
         // Apply custom settings with explicit overrides taking precedence
         if let audioSets = audioSets {
