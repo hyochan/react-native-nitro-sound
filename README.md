@@ -13,6 +13,8 @@
 [![Platform - Android](https://img.shields.io/badge/platform-Android-green.svg?style=flat-square&logo=android&logoColor=white)](https://developer.android.com/)
 [![Platform - Web](https://img.shields.io/badge/platform-Web-orange.svg?style=flat-square&logo=googlechrome&logoColor=white)](https://reactnative.dev/docs/react-native-web)
 
+[![GreatFrontEnd](greatfrontend-js.gif)](https://www.greatfrontend.com?fpr=hyo73&fp_sid=rnsound)
+
 > ℹ️ **Swift 6 build warning**: If Xcode shows `function type mismatch … has_value` errors (see [#718](https://github.com/hyochan/react-native-nitro-sound/issues/718)), upgrade to Xcode 16.4 or newer. The workaround and cleanup steps are documented in the [FAQ](docs/FAQ.md#swift-6-compile-error-function-type-mismatch--has_value-718).
 
 <img src="https://github.com/user-attachments/assets/81ce7b7b-0b7d-413b-8a26-505372349ecb" width="70%" alt="Logo" />
@@ -37,11 +39,12 @@
 
 ### Requirements
 
-- React Native: >= 0.79 (0.81 recommended)
+- React Native: >= 0.79 (0.82 recommended)
 - iOS: Deployment Target >= 13.0
   - Note: With RN 0.81+, build using Xcode >= 16.1 (toolchain requirement; iOS runtime minimum remains 13.0)
 - Android: minSdk >= 24 (JDK 17 recommended; compileSdk 36 recommended)
-- New Architecture: optional (Nitro works on both old and new arch)
+  - Note: RN 0.82+ requires Gradle 9.0+
+- New Architecture: optional (Nitro works on both old and new arch; RN 0.82+ is New Architecture only)
 - Expo SDK >= 50 (for Expo users)
 
 ## 🎉 React Native Nitro Sound - Reborn from React Native Audio Recorder Player
