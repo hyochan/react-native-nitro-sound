@@ -72,6 +72,8 @@ data class AudioSet(
   @Keep
   val IncludeBase64: Boolean?
 ) {
+  /* primary constructor */
+
   private companion object {
     /**
      * Constructor called from C++

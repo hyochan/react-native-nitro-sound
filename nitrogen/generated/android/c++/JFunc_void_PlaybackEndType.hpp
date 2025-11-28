@@ -12,6 +12,7 @@
 
 #include "PlaybackEndType.hpp"
 #include <functional>
+#include <NitroModules/JNICallable.hpp>
 #include "JPlaybackEndType.hpp"
 
 namespace margelo::nitro::sound {
@@ -39,7 +40,7 @@ namespace margelo::nitro::sound {
   /**
    * An implementation of Func_void_PlaybackEndType that is backed by a C++ implementation (using `std::function<...>`)
    */
-  struct JFunc_void_PlaybackEndType_cxx final: public jni::HybridClass<JFunc_void_PlaybackEndType_cxx, JFunc_void_PlaybackEndType> {
+  class JFunc_void_PlaybackEndType_cxx final: public jni::HybridClass<JFunc_void_PlaybackEndType_cxx, JFunc_void_PlaybackEndType> {
   public:
     static jni::local_ref<JFunc_void_PlaybackEndType::javaobject> fromCpp(const std::function<void(const PlaybackEndType& /* playbackEndMeta */)>& func) {
       return JFunc_void_PlaybackEndType_cxx::newObjectCxxArgs(func);

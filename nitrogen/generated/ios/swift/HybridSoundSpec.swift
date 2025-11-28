@@ -7,7 +7,6 @@
 
 import Foundation
 import NitroModules
-import NitroModules
 
 /// See ``HybridSoundSpec``
 public protocol HybridSoundSpec_protocol: HybridObject {
@@ -35,6 +34,13 @@ public protocol HybridSoundSpec_protocol: HybridObject {
   func removePlaybackEndListener() throws -> Void
   func mmss(secs: Double) throws -> String
   func mmssss(milisecs: Double) throws -> String
+}
+
+public extension HybridSoundSpec_protocol {
+  /// Default implementation of ``HybridObject.toString``
+  func toString() -> String {
+    return "[HybridObject Sound]"
+  }
 }
 
 /// See ``HybridSoundSpec``

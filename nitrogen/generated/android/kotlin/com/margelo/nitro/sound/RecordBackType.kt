@@ -30,6 +30,8 @@ data class RecordBackType(
   @Keep
   val recordSecs: Double?
 ) {
+  /* primary constructor */
+
   private companion object {
     /**
      * Constructor called from C++

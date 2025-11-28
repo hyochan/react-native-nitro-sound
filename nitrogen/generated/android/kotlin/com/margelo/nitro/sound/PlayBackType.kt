@@ -27,6 +27,8 @@ data class PlayBackType(
   @Keep
   val currentPosition: Double
 ) {
+  /* primary constructor */
+
   private companion object {
     /**
      * Constructor called from C++
