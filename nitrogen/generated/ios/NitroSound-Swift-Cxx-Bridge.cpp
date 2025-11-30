@@ -10,11 +10,12 @@
 // Include C++ implementation defined types
 #include "HybridSoundSpecSwift.hpp"
 #include "NitroSound-Swift-Cxx-Umbrella.hpp"
+#include <NitroModules/NitroDefines.hpp>
 
 namespace margelo::nitro::sound::bridge::swift {
 
   // pragma MARK: std::function<void(const std::string& /* result */)>
-  Func_void_std__string create_Func_void_std__string(void* _Nonnull swiftClosureWrapper) noexcept {
+  Func_void_std__string create_Func_void_std__string(void* NON_NULL swiftClosureWrapper) noexcept {
     auto swiftClosure = NitroSound::Func_void_std__string::fromUnsafe(swiftClosureWrapper);
     return [swiftClosure = std::move(swiftClosure)](const std::string& result) mutable -> void {
       swiftClosure.call(result);
@@ -22,7 +23,7 @@ namespace margelo::nitro::sound::bridge::swift {
   }
   
   // pragma MARK: std::function<void(const std::exception_ptr& /* error */)>
-  Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* _Nonnull swiftClosureWrapper) noexcept {
+  Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* NON_NULL swiftClosureWrapper) noexcept {
     auto swiftClosure = NitroSound::Func_void_std__exception_ptr::fromUnsafe(swiftClosureWrapper);
     return [swiftClosure = std::move(swiftClosure)](const std::exception_ptr& error) mutable -> void {
       swiftClosure.call(error);
@@ -30,7 +31,7 @@ namespace margelo::nitro::sound::bridge::swift {
   }
   
   // pragma MARK: std::function<void(const RecordBackType& /* recordingMeta */)>
-  Func_void_RecordBackType create_Func_void_RecordBackType(void* _Nonnull swiftClosureWrapper) noexcept {
+  Func_void_RecordBackType create_Func_void_RecordBackType(void* NON_NULL swiftClosureWrapper) noexcept {
     auto swiftClosure = NitroSound::Func_void_RecordBackType::fromUnsafe(swiftClosureWrapper);
     return [swiftClosure = std::move(swiftClosure)](const RecordBackType& recordingMeta) mutable -> void {
       swiftClosure.call(recordingMeta);
@@ -38,7 +39,7 @@ namespace margelo::nitro::sound::bridge::swift {
   }
   
   // pragma MARK: std::function<void(const PlayBackType& /* playbackMeta */)>
-  Func_void_PlayBackType create_Func_void_PlayBackType(void* _Nonnull swiftClosureWrapper) noexcept {
+  Func_void_PlayBackType create_Func_void_PlayBackType(void* NON_NULL swiftClosureWrapper) noexcept {
     auto swiftClosure = NitroSound::Func_void_PlayBackType::fromUnsafe(swiftClosureWrapper);
     return [swiftClosure = std::move(swiftClosure)](const PlayBackType& playbackMeta) mutable -> void {
       swiftClosure.call(playbackMeta);
@@ -46,7 +47,7 @@ namespace margelo::nitro::sound::bridge::swift {
   }
   
   // pragma MARK: std::function<void(const PlaybackEndType& /* playbackEndMeta */)>
-  Func_void_PlaybackEndType create_Func_void_PlaybackEndType(void* _Nonnull swiftClosureWrapper) noexcept {
+  Func_void_PlaybackEndType create_Func_void_PlaybackEndType(void* NON_NULL swiftClosureWrapper) noexcept {
     auto swiftClosure = NitroSound::Func_void_PlaybackEndType::fromUnsafe(swiftClosureWrapper);
     return [swiftClosure = std::move(swiftClosure)](const PlaybackEndType& playbackEndMeta) mutable -> void {
       swiftClosure.call(playbackEndMeta);
@@ -54,11 +55,11 @@ namespace margelo::nitro::sound::bridge::swift {
   }
   
   // pragma MARK: std::shared_ptr<HybridSoundSpec>
-  std::shared_ptr<HybridSoundSpec> create_std__shared_ptr_HybridSoundSpec_(void* _Nonnull swiftUnsafePointer) noexcept {
+  std::shared_ptr<HybridSoundSpec> create_std__shared_ptr_HybridSoundSpec_(void* NON_NULL swiftUnsafePointer) noexcept {
     NitroSound::HybridSoundSpec_cxx swiftPart = NitroSound::HybridSoundSpec_cxx::fromUnsafe(swiftUnsafePointer);
     return std::make_shared<margelo::nitro::sound::HybridSoundSpecSwift>(swiftPart);
   }
-  void* _Nonnull get_std__shared_ptr_HybridSoundSpec_(std__shared_ptr_HybridSoundSpec_ cppType) {
+  void* NON_NULL get_std__shared_ptr_HybridSoundSpec_(std__shared_ptr_HybridSoundSpec_ cppType) {
     std::shared_ptr<margelo::nitro::sound::HybridSoundSpecSwift> swiftWrapper = std::dynamic_pointer_cast<margelo::nitro::sound::HybridSoundSpecSwift>(cppType);
     #ifdef NITRO_DEBUG
     if (swiftWrapper == nullptr) [[unlikely]] {

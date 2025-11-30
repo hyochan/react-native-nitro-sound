@@ -98,13 +98,20 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
       Alert.alert('Permission required', 'Microphone permission needed');
       return;
     }
+    // AudioSet configuration from Issue #741 - tests Release build fix
+    // These properties were corrupted in Release builds before the patch
     const audioSet = {
       AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
       AudioSourceAndroid: AudioSourceAndroidType.MIC,
-      AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
+      AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.medium,
       AVNumberOfChannelsKeyIOS: 2,
       AVFormatIDKeyIOS: 'aac' as const,
       AVModeIOS: 'measurement' as const,
+      AVSampleRateKeyIOS: 22050,
+      // Cross-platform quality presets (also affected by the bug)
+      AudioSamplingRate: 22050,
+      AudioChannels: 2,
+      AudioEncodingBitRate: 64000,
     };
     try {
       setIsRecordLoading(true);
