@@ -99,14 +99,21 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         do {
             print("🎙️ Setting up recording...")
 
-            // Setup recording URL
+            // Setup recording URL (WAV format for crash-resilient recording)
             let fileURL: URL
             if let uri = uri {
-                fileURL = URL(fileURLWithPath: uri)
-                print("🎙️ Using provided URI: \(uri)")
+                // Ensure file path ends with .wav for crash resilience
+                var wavPath = uri
+                if !uri.lowercased().hasSuffix(".wav") {
+                    // Replace extension with .wav
+                    let basePath = (uri as NSString).deletingPathExtension
+                    wavPath = basePath + ".wav"
+                }
+                fileURL = URL(fileURLWithPath: wavPath)
+                print("🎙️ Using provided URI (converted to WAV): \(wavPath)")
             } else {
                 let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                let fileName = "sound_\(Date().timeIntervalSince1970).m4a"
+                let fileName = "sound_\(Date().timeIntervalSince1970).wav"
                 fileURL = documentsPath.appendingPathComponent(fileName)
                 print("🎙️ Generated file path: \(fileURL.path)")
             }
@@ -419,14 +426,16 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             }
 
             if let recorder = self.audioRecorder {
-                let url = recorder.url.absoluteString
+                let wavURL = recorder.url
+                let wavPath = wavURL.path
 
                 // Stop recorder on main queue
                 DispatchQueue.main.async {
                     recorder.stop()
                     self.stopRecordTimer()
                     self.removeInterruptionObserver()
-                    // Continue cleanup in background
+                    
+                    // Continue with conversion in background
                     DispatchQueue.global(qos: .userInitiated).async {
                         self.audioRecorder = nil
 
@@ -434,7 +443,24 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                         try? self.recordingSession?.setActive(false)
                         self.recordingSession = nil
 
-                        promise.resolve(withResult: url)
+                        // Convert WAV to M4A for smaller file size
+                        let conversionResult = WavToM4aConverter.convertSync(
+                            wavFilePath: wavPath,
+                            deleteWavAfterConversion: true
+                        )
+                        
+                        switch conversionResult {
+                        case .success(let outputPath, _):
+                            let outputURL = URL(fileURLWithPath: outputPath)
+                            promise.resolve(withResult: outputURL.absoluteString)
+                        case .error(let message):
+                            // If conversion fails, return the WAV file instead
+                            if FileManager.default.fileExists(atPath: wavPath) {
+                                promise.resolve(withResult: wavURL.absoluteString)
+                            } else {
+                                promise.reject(withError: RuntimeError.error(withMessage: "Recording failed: \(message)"))
+                            }
+                        }
                     }
                 }
             } else {
@@ -725,6 +751,162 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         return String(format: "%02d:%02d:%02d", minutes, seconds, milliseconds)
     }
 
+    // MARK: - Recovery Methods
+    
+    /**
+     * Restore any pending recordings that were interrupted by app crash.
+     * Scans for WAV files, converts them to M4A, and returns the results.
+     */
+    public func restorePendingRecordings(directory: String?) throws -> Promise<[RestoredRecording]> {
+        let promise = Promise<[RestoredRecording]>()
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let scanDirectory: URL
+                if let directory = directory {
+                    scanDirectory = URL(fileURLWithPath: directory)
+                } else {
+                    scanDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                }
+                
+                // Check if directory exists
+                var isDirectory: ObjCBool = false
+                guard FileManager.default.fileExists(atPath: scanDirectory.path, isDirectory: &isDirectory),
+                      isDirectory.boolValue else {
+                    promise.resolve(withResult: [])
+                    return
+                }
+                
+                // Find all WAV files
+                let contents = try FileManager.default.contentsOfDirectory(
+                    at: scanDirectory,
+                    includingPropertiesForKeys: nil
+                )
+                
+                let wavFiles = contents.filter { $0.pathExtension.lowercased() == "wav" }
+                
+                if wavFiles.isEmpty {
+                    promise.resolve(withResult: [])
+                    return
+                }
+                
+                var restoredRecordings: [RestoredRecording] = []
+                
+                for wavURL in wavFiles {
+                    let wavPath = wavURL.path
+                    
+                    // Convert to M4A
+                    let result = WavToM4aConverter.convertSync(
+                        wavFilePath: wavPath,
+                        deleteWavAfterConversion: true
+                    )
+                    
+                    switch result {
+                    case .success(let outputPath, let duration):
+                        let outputURL = URL(fileURLWithPath: outputPath)
+                        let recording = RestoredRecording(
+                            uri: outputURL.absoluteString,
+                            duration: duration * 1000, // Convert to milliseconds
+                            originalPath: wavPath
+                        )
+                        restoredRecordings.append(recording)
+                        
+                    case .error(let message):
+                        print("🎙️ Failed to convert \(wavPath): \(message)")
+                        // If conversion fails, still return the WAV file
+                        if FileManager.default.fileExists(atPath: wavPath) {
+                            do {
+                                let attributes = try FileManager.default.attributesOfItem(atPath: wavPath)
+                                let fileSize = attributes[.size] as? Int64 ?? 0
+                                // Estimate duration: (fileSize - 44 header) / (44100 * 2 bytes) * 1000ms
+                                let estimatedDuration = Double(fileSize - 44) / 88.2
+                                
+                                let recording = RestoredRecording(
+                                    uri: wavURL.absoluteString,
+                                    duration: estimatedDuration,
+                                    originalPath: wavPath
+                                )
+                                restoredRecordings.append(recording)
+                            } catch {
+                                print("🎙️ Could not get file attributes: \(error)")
+                            }
+                        }
+                    }
+                }
+                
+                promise.resolve(withResult: restoredRecordings)
+                
+            } catch {
+                promise.reject(withError: RuntimeError.error(withMessage: "Failed to restore recordings: \(error.localizedDescription)"))
+            }
+        }
+        
+        return promise
+    }
+    
+    /**
+     * Restore a single WAV recording file by converting it to M4A.
+     * Use this when you need to restore a specific file and update your local database.
+     */
+    public func restoreRecording(wavFilePath: String) throws -> Promise<RestoredRecording> {
+        let promise = Promise<RestoredRecording>()
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            // Check if file exists
+            guard FileManager.default.fileExists(atPath: wavFilePath) else {
+                promise.reject(withError: RuntimeError.error(withMessage: "WAV file not found: \(wavFilePath)"))
+                return
+            }
+            
+            // Check if it's a WAV file
+            guard wavFilePath.lowercased().hasSuffix(".wav") else {
+                promise.reject(withError: RuntimeError.error(withMessage: "File is not a WAV file: \(wavFilePath)"))
+                return
+            }
+            
+            // Convert to M4A
+            let result = WavToM4aConverter.convertSync(
+                wavFilePath: wavFilePath,
+                deleteWavAfterConversion: true
+            )
+            
+            switch result {
+            case .success(let outputPath, let duration):
+                let outputURL = URL(fileURLWithPath: outputPath)
+                let recording = RestoredRecording(
+                    uri: outputURL.absoluteString,
+                    duration: duration * 1000, // Convert to milliseconds
+                    originalPath: wavFilePath
+                )
+                promise.resolve(withResult: recording)
+                
+            case .error(let message):
+                // If conversion fails but WAV still exists, return WAV info
+                if FileManager.default.fileExists(atPath: wavFilePath) {
+                    let wavURL = URL(fileURLWithPath: wavFilePath)
+                    do {
+                        let attributes = try FileManager.default.attributesOfItem(atPath: wavFilePath)
+                        let fileSize = attributes[.size] as? Int64 ?? 0
+                        let estimatedDuration = Double(fileSize - 44) / 88.2
+                        
+                        let recording = RestoredRecording(
+                            uri: wavURL.absoluteString,
+                            duration: estimatedDuration,
+                            originalPath: wavFilePath
+                        )
+                        promise.resolve(withResult: recording)
+                    } catch {
+                        promise.reject(withError: RuntimeError.error(withMessage: "Conversion failed: \(message)"))
+                    }
+                } else {
+                    promise.reject(withError: RuntimeError.error(withMessage: "Conversion failed: \(message)"))
+                }
+            }
+        }
+        
+        return promise
+    }
+
     // MARK: - Private Methods
 
     private func getAudioSettings(audioSets: AudioSet?) -> [String: Any] {
@@ -734,12 +916,17 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         let audioQuality = audioSets?.AudioQuality ?? .high
         let defaults = Self.qualityPresets[audioQuality] ?? Self.qualityPresets[.high]!
 
-        // Apply default settings based on AudioQuality
-        settings[AVFormatIDKey] = Int(kAudioFormatMPEG4AAC)
+        // Use Linear PCM (WAV) format by default for crash-resilient recording
+        // WAV files are always playable even if recording is interrupted
+        settings[AVFormatIDKey] = Int(kAudioFormatLinearPCM)
         settings[AVSampleRateKey] = defaults.samplingRate
         settings[AVNumberOfChannelsKey] = defaults.channels
-        settings[AVEncoderBitRateKey] = defaults.bitrate
-        settings[AVEncoderAudioQualityKey] = defaults.encoderQuality.rawValue
+        
+        // Linear PCM specific settings
+        settings[AVLinearPCMBitDepthKey] = 16
+        settings[AVLinearPCMIsFloatKey] = false
+        settings[AVLinearPCMIsBigEndianKey] = false
+        settings[AVLinearPCMIsNonInterleaved] = false
 
         // Apply custom settings with explicit overrides taking precedence
         if let audioSets = audioSets {
@@ -758,17 +945,45 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 settings[AVNumberOfChannelsKey] = Int(audioChannels)
             }
 
-            if let bitRate = audioSets.AudioEncodingBitRate {
-                settings[AVEncoderBitRateKey] = Int(bitRate)
+            // Apply bit depth if specified
+            if let bitDepth = audioSets.AVLinearPCMBitDepthKeyIOS {
+                let bitDepthValue: Int
+                switch bitDepth {
+                case .bit8: bitDepthValue = 8
+                case .bit16: bitDepthValue = 16
+                case .bit24: bitDepthValue = 24
+                case .bit32: bitDepthValue = 32
+                @unknown default: bitDepthValue = 16
+                }
+                settings[AVLinearPCMBitDepthKey] = bitDepthValue
             }
 
-            if let quality = audioSets.AVEncoderAudioQualityKeyIOS {
-                let mappedQuality = mapToAVAudioQuality(quality)
-                settings[AVEncoderAudioQualityKey] = mappedQuality
-            }
-
+            // Apply format override only if explicitly specified
+            // Note: For crash resilience, we recommend staying with Linear PCM
             if let format = audioSets.AVFormatIDKeyIOS {
-                settings[AVFormatIDKey] = getAudioFormatID(from: format)
+                let formatId = getAudioFormatID(from: format)
+                settings[AVFormatIDKey] = formatId
+                
+                // If switching to a compressed format, remove PCM-specific settings
+                // and add encoder settings
+                if formatId != Int(kAudioFormatLinearPCM) {
+                    settings.removeValue(forKey: AVLinearPCMBitDepthKey)
+                    settings.removeValue(forKey: AVLinearPCMIsFloatKey)
+                    settings.removeValue(forKey: AVLinearPCMIsBigEndianKey)
+                    settings.removeValue(forKey: AVLinearPCMIsNonInterleaved)
+                    
+                    settings[AVEncoderBitRateKey] = defaults.bitrate
+                    settings[AVEncoderAudioQualityKey] = defaults.encoderQuality.rawValue
+                    
+                    if let bitRate = audioSets.AudioEncodingBitRate {
+                        settings[AVEncoderBitRateKey] = Int(bitRate)
+                    }
+                    
+                    if let quality = audioSets.AVEncoderAudioQualityKeyIOS {
+                        let mappedQuality = mapToAVAudioQuality(quality)
+                        settings[AVEncoderAudioQualityKey] = mappedQuality
+                    }
+                }
             }
         }
 
@@ -1036,10 +1251,78 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             name: AVAudioSession.interruptionNotification,
             object: nil
         )
+        
+        // Observe app termination to finalize recording
+        NotificationCenter.default.removeObserver(self, name: UIApplication.willTerminateNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAppWillTerminate),
+            name: UIApplication.willTerminateNotification,
+            object: nil
+        )
+        
     }
     
     private func removeInterruptionObserver() {
         NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIApplication.willTerminateNotification, object: nil)
+    }
+    
+    /**
+     * Called when the app is about to be terminated (e.g., user swipe kills the app).
+     * This ensures the audio file is properly finalized so it can be opened later.
+     */
+    @objc private func handleAppWillTerminate(notification: Notification) {
+        finalizeRecordingOnKill()
+    }
+    
+    /**
+     * Safely finalize the recording when app is being killed or entering background.
+     * This ensures the audio file header is written correctly and the file can be played back.
+     */
+    private func finalizeRecordingOnKill() {
+        guard let recorder = audioRecorder else { return }
+        
+        let fileURL = recorder.url
+        let currentTime = recorder.currentTime * 1000
+        
+        print("🎙️ Finalizing recording on app kill/background...")
+        print("🎙️ Recording path: \(fileURL.path)")
+        
+        // Stop recording to finalize file headers
+        recorder.stop()
+        stopRecordTimer()
+        
+        // Check if file was saved properly
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: fileURL.path) {
+            do {
+                let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
+                let fileSize = attributes[.size] as? Int64 ?? 0
+                print("🎙️ Audio file saved successfully: \(fileURL.path) (\(fileSize) bytes)")
+            } catch {
+                print("🎙️ Could not get file attributes: \(error)")
+            }
+        } else {
+            print("🎙️ ⚠️ Audio file not found after finalization: \(fileURL.path)")
+        }
+        
+        // Notify listener with final state
+        if let listener = recordBackListener {
+            listener(RecordBackType(
+                isRecording: false,
+                currentPosition: currentTime,
+                currentMetering: nil,
+                recordSecs: currentTime
+            ))
+        }
+        
+        // Cleanup
+        audioRecorder = nil
+        try? recordingSession?.setActive(false)
+        recordingSession = nil
+        
+        print("🎙️ Recording finalized successfully")
     }
     
     @objc private func handleAudioSessionInterruption(notification: Notification) {

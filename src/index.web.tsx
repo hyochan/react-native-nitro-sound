@@ -4,6 +4,7 @@ import type {
   RecordBackType,
   PlayBackType,
   PlaybackEndType,
+  RestoredRecording,
 } from './specs/Sound.nitro';
 
 export * from './specs/Sound.nitro';
@@ -313,6 +314,27 @@ class SoundWebImpl implements SoundType {
     const seconds = totalSeconds % 60;
     const milliseconds = Math.floor((milisecs % 1000) / 10);
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${milliseconds.toString().padStart(2, '0')}`;
+  }
+
+  // Recovery methods - Web doesn't have persistent storage for recordings
+  // so this always returns an empty array
+  async restorePendingRecordings(
+    _directory?: string
+  ): Promise<RestoredRecording[]> {
+    // Web recordings are stored in memory (Blob URLs) and are lost on page refresh
+    // There's no persistent storage to recover from
+    console.log(
+      '[Sound Web] restorePendingRecordings: Web does not support recording recovery'
+    );
+    return [];
+  }
+
+  async restoreRecording(_wavFilePath: string): Promise<RestoredRecording> {
+    // Web recordings are stored in memory (Blob URLs) and are lost on page refresh
+    // There's no persistent storage to recover from
+    throw new Error(
+      'restoreRecording is not supported on Web platform. Web recordings are stored in memory and lost on page refresh.'
+    );
   }
 
   // Private helper methods

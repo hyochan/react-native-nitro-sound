@@ -8,7 +8,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.media.MediaRecorder
-import android.net.Uri
 import android.os.Binder
 import android.os.Build
 import android.os.Handler
@@ -19,24 +18,23 @@ import androidx.core.app.NotificationCompat
 import java.io.File
 import java.util.Timer
 import java.util.TimerTask
-import kotlin.math.log10
 
 /**
- * Foreground Service that owns and manages MediaRecorder
+ * Foreground Service that owns and manages WavRecorder (AudioRecord-based)
  * Required for Android 9+ to record audio in background
- * MediaRecorder runs INSIDE this service to ensure it works when screen is off
+ * 
+ * Uses WAV format for crash-resilient recording:
+ * - WAV files are always playable even if recording is interrupted
+ * - Data is written continuously, no buffering issues
+ * - Header can be repaired/updated after crash
  */
 class RecordingForegroundService : Service() {
     private var wakeLock: PowerManager.WakeLock? = null
-    private var mediaRecorder: MediaRecorder? = null
+    private var wavRecorder: WavRecorder? = null
     private var recordTimer: Timer? = null
     
     // Recording state
     private var currentRecordingPath: String? = null
-    private var recordStartTime: Long = 0L
-    private var pausedRecordTime: Long = 0L
-    private var isRecording: Boolean = false
-    private var isPaused: Boolean = false
     private var meteringEnabled: Boolean = false
     
     // Metering
@@ -56,11 +54,8 @@ class RecordingForegroundService : Service() {
         private const val WAKE_LOCK_TAG = "RecordingForegroundService::WakeLock"
         
         // Audio constants
-        private const val MIN_AMPLITUDE_EPSILON = 1e-10
         private const val SILENCE_THRESHOLD_DB = -160.0
-        private const val MAX_AMPLITUDE_VALUE = 32767.0
         private const val METERING_UPDATE_INTERVAL_MS = 100L
-        private const val MAX_DECIBEL_LEVEL = 0.0
         private const val METERING_DISABLED_VALUE = 0.0
         
         private var instance: RecordingForegroundService? = null
@@ -110,8 +105,54 @@ class RecordingForegroundService : Service() {
         super.onDestroy()
     }
     
+    /**
+     * Called when user swipes away the app from recents.
+     * This ensures the audio file is properly finalized so it can be opened later.
+     */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        // Finalize the audio file before the app is killed
+        finalizeRecordingOnKill()
+        super.onTaskRemoved(rootIntent)
+        // Stop the service after finalizing
+        stopSelf()
+    }
+    
+    /**
+     * Safely finalize the recording when app is being killed.
+     * WAV format ensures the audio file is always playable - just need to update header.
+     */
+    private fun finalizeRecordingOnKill() {
+        try {
+            Logger.d("[ForegroundService] Finalizing WAV recording on app kill...")
+            
+            stopRecordTimer()
+            
+            // WavRecorder handles its own finalization and header update
+            wavRecorder?.finalizeOnKill()
+            wavRecorder = null
+            
+            // Log the saved file path for debugging
+            currentRecordingPath?.let { path ->
+                val file = File(path)
+                if (file.exists()) {
+                    Logger.d("[ForegroundService] WAV file saved: $path (${file.length()} bytes)")
+                } else {
+                    Logger.e("[ForegroundService] WAV file not found after finalization: $path")
+                }
+            }
+        } catch (e: Exception) {
+            Logger.e("[ForegroundService] Error finalizing recording on kill: ${e.message}", e)
+        }
+    }
+    
     // ==================== Recording Methods ====================
     
+    /**
+     * Start WAV recording with the specified settings.
+     * 
+     * Note: outputFormat and audioEncoder parameters are ignored for WAV recording
+     * as WAV always uses PCM format. They are kept for API compatibility.
+     */
     fun startRecording(
         filePath: String,
         audioSource: Int,
@@ -127,34 +168,33 @@ class RecordingForegroundService : Service() {
             // Stop any existing recording
             stopRecordingInternal()
             
-            currentRecordingPath = filePath
-            meteringEnabled = enableMetering
-            
-            // Initialize MediaRecorder INSIDE the service
-            mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                MediaRecorder(this)
+            // Ensure file path ends with .wav
+            val wavFilePath = if (filePath.endsWith(".wav", ignoreCase = true)) {
+                filePath
             } else {
-                @Suppress("DEPRECATION")
-                MediaRecorder()
-            }.apply {
-                setAudioSource(audioSource)
-                setOutputFormat(outputFormat)
-                setAudioEncoder(audioEncoder)
-                
-                samplingRate?.let { setAudioSamplingRate(it) }
-                channels?.let { setAudioChannels(it) }
-                bitrate?.let { setAudioEncodingBitRate(it) }
-                
-                setOutputFile(filePath)
-                
-                prepare()
-                start()
+                // Replace extension with .wav
+                val basePath = filePath.substringBeforeLast(".")
+                "$basePath.wav"
             }
             
-            recordStartTime = System.currentTimeMillis()
-            pausedRecordTime = 0L
-            isRecording = true
-            isPaused = false
+            currentRecordingPath = wavFilePath
+            meteringEnabled = enableMetering
+            
+            // Create and start WavRecorder
+            wavRecorder = WavRecorder()
+            val success = wavRecorder!!.startRecording(
+                path = wavFilePath,
+                audioSource = audioSource,
+                sampleRateHz = samplingRate ?: 44100,
+                channels = channels ?: 1,
+                bitsPerSample = 16
+            )
+            
+            if (!success) {
+                Logger.e("[ForegroundService] Failed to start WAV recording")
+                cleanupRecorder()
+                return false
+            }
             
             // Start timer for recording updates
             startRecordTimer(subscriptionDuration)
@@ -162,82 +202,59 @@ class RecordingForegroundService : Service() {
             // Update notification
             updateNotification("Recording in progress...")
             
+            Logger.d("[ForegroundService] WAV recording started: $wavFilePath")
             return true
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger.e("[ForegroundService] Error starting recording: ${e.message}", e)
             cleanupRecorder()
             return false
         }
     }
     
     fun pauseRecording(): Boolean {
-        if (!isRecording || isPaused) return false
+        val recorder = wavRecorder ?: return false
         
         return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                mediaRecorder?.pause()
-                pausedRecordTime = System.currentTimeMillis() - recordStartTime
-                isPaused = true
-                isRecording = false
+            val success = recorder.pauseRecording()
+            if (success) {
                 stopRecordTimer()
                 updateNotification("Recording paused")
-                true
-            } else {
-                false
             }
+            success
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger.e("[ForegroundService] Error pausing recording: ${e.message}", e)
             false
         }
     }
     
     fun resumeRecording(): Boolean {
-        if (!isPaused) return false
+        val recorder = wavRecorder ?: return false
         
         return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                mediaRecorder?.resume()
-                recordStartTime = System.currentTimeMillis() - pausedRecordTime
-                isPaused = false
-                isRecording = true
+            val success = recorder.resumeRecording()
+            if (success) {
                 startRecordTimer(60L) // Default, will be updated
                 updateNotification("Recording in progress...")
-                true
-            } else {
-                false
             }
+            success
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger.e("[ForegroundService] Error resuming recording: ${e.message}", e)
             false
         }
     }
     
     fun stopRecording(): String? {
-        val path = currentRecordingPath
+        val path = wavRecorder?.stopRecording()
         stopRecordingInternal()
-        return path
+        return path ?: currentRecordingPath
     }
     
     private fun stopRecordingInternal() {
         try {
             stopRecordTimer()
             
-            mediaRecorder?.apply {
-                try {
-                    stop()
-                } catch (e: Exception) {
-                    // Ignore stop errors
-                }
-                try {
-                    release()
-                } catch (e: Exception) {
-                    // Ignore release errors
-                }
-            }
-            mediaRecorder = null
-            
-            isRecording = false
-            isPaused = false
+            wavRecorder?.stopRecording()
+            wavRecorder = null
             
             // Reset metering
             meteringEnabled = false
@@ -245,27 +262,33 @@ class RecordingForegroundService : Service() {
             lastMeteringValue = SILENCE_THRESHOLD_DB
             
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger.e("[ForegroundService] Error in stopRecordingInternal: ${e.message}", e)
         }
     }
     
     private fun cleanupRecorder() {
         try {
-            mediaRecorder?.release()
+            wavRecorder?.stopRecording()
         } catch (e: Exception) {
             // Ignore
         }
-        mediaRecorder = null
-        isRecording = false
-        isPaused = false
+        wavRecorder = null
         currentRecordingPath = null
     }
     
     fun getRecordingPath(): String? = currentRecordingPath
     
-    fun isCurrentlyRecording(): Boolean = isRecording
+    fun isCurrentlyRecording(): Boolean = wavRecorder?.isCurrentlyRecording() == true
     
-    fun isCurrentlyPaused(): Boolean = isPaused
+    fun isCurrentlyPaused(): Boolean = wavRecorder?.isCurrentlyPaused() == true
+    
+    /**
+     * Get current recording time in milliseconds.
+     * Works for both recording and paused states.
+     */
+    fun getCurrentRecordingTime(): Double {
+        return wavRecorder?.getCurrentDuration()?.toDouble() ?: 0.0
+    }
     
     // ==================== Timer ====================
     
@@ -277,15 +300,16 @@ class RecordingForegroundService : Service() {
         recordTimer = Timer()
         recordTimer?.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
-                if (!isRecording || mediaRecorder == null) {
+                val recorder = wavRecorder
+                if (recorder == null || !recorder.isCurrentlyRecording()) {
                     return
                 }
                 
-                val currentTime = System.currentTimeMillis() - recordStartTime
+                val currentTime = recorder.getCurrentDuration()
                 val meteringValue = if (meteringEnabled) {
                     val now = System.currentTimeMillis()
                     if (now - lastMeteringUpdateTime >= METERING_UPDATE_INTERVAL_MS) {
-                        lastMeteringValue = getSimpleMetering()
+                        lastMeteringValue = recorder.getMeteringDb()
                         lastMeteringUpdateTime = now
                     }
                     lastMeteringValue
@@ -294,7 +318,11 @@ class RecordingForegroundService : Service() {
                 }
                 
                 handler.post {
-                    onRecordingUpdate?.invoke(isRecording, currentTime.toDouble(), meteringValue)
+                    onRecordingUpdate?.invoke(
+                        recorder.isCurrentlyRecording(),
+                        currentTime.toDouble(),
+                        meteringValue
+                    )
                 }
             }
         }, 0, durationMs)
@@ -303,22 +331,6 @@ class RecordingForegroundService : Service() {
     private fun stopRecordTimer() {
         recordTimer?.cancel()
         recordTimer = null
-    }
-    
-    private fun getSimpleMetering(): Double {
-        return try {
-            val maxAmplitude = mediaRecorder?.maxAmplitude ?: 0
-            if (maxAmplitude > 0) {
-                val normalizedAmplitude = maxAmplitude.toDouble() / MAX_AMPLITUDE_VALUE
-                val safeAmplitude = maxOf(normalizedAmplitude, MIN_AMPLITUDE_EPSILON)
-                val decibels = 20 * log10(safeAmplitude)
-                maxOf(SILENCE_THRESHOLD_DB, minOf(MAX_DECIBEL_LEVEL, decibels))
-            } else {
-                SILENCE_THRESHOLD_DB
-            }
-        } catch (e: Exception) {
-            SILENCE_THRESHOLD_DB
-        }
     }
     
     // ==================== Notification ====================

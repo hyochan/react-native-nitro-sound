@@ -133,6 +133,15 @@ export interface PlaybackEndType {
   currentPosition: number;
 }
 
+export interface RestoredRecording {
+  /** Path to the restored M4A file */
+  uri: string;
+  /** Duration in milliseconds */
+  duration: number;
+  /** Original WAV file path (before conversion) */
+  originalPath: string;
+}
+
 export type RecordBackListener = (recordingMeta: RecordBackType) => void;
 export type PlayBackListener = (playbackMeta: PlayBackType) => void;
 export type PlaybackEndListener = (playbackEndMeta: PlaybackEndType) => void;
@@ -181,4 +190,24 @@ export interface Sound extends HybridObject<{
   // Utility methods
   mmss(secs: number): string;
   mmssss(milisecs: number): string;
+
+  // Recovery methods
+  /**
+   * Restore any pending recordings that were interrupted by app crash.
+   * Call this when your app starts to recover any incomplete recordings.
+   *
+   * @param directory Optional directory to scan. If not provided, uses default recording directory.
+   * @returns Array of restored recordings (converted to M4A)
+   */
+  restorePendingRecordings(directory?: string): Promise<RestoredRecording[]>;
+
+  /**
+   * Restore a single WAV recording file by converting it to M4A.
+   * Use this when you need to restore a specific file and update your local database.
+   *
+   * @param wavFilePath Path to the WAV file to restore
+   * @returns The restored recording info with new M4A path
+   * @throws Error if file doesn't exist or conversion fails
+   */
+  restoreRecording(wavFilePath: string): Promise<RestoredRecording>;
 }

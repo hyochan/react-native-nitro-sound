@@ -21,6 +21,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.margelo.nitro.audiorecorderplayer.RecordingForegroundService
+import com.margelo.nitro.audiorecorderplayer.WavToM4aConverter
+import com.margelo.nitro.audiorecorderplayer.WavRecorder
 
 class HybridSound : HybridSoundSpec() {
     private var mediaPlayer: MediaPlayer? = null
@@ -41,6 +43,7 @@ class HybridSound : HybridSoundSpec() {
     // Audio focus for call interruption handling
     private var audioManager: AudioManager? = null
     private var audioFocusChangeListener: AudioManager.OnAudioFocusChangeListener? = null
+    private var audioFocusRequest: android.media.AudioFocusRequest? = null
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -98,10 +101,10 @@ class HybridSound : HybridSoundSpec() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // Create file path
+                // Create file path (WAV format for crash-resilient recording)
                 val filePath = uri ?: run {
                     val dir = context.filesDir
-                    val fileName = "sound_${System.currentTimeMillis()}.mp4"
+                    val fileName = "sound_${System.currentTimeMillis()}.wav"
                     File(dir, fileName).absolutePath
                 }
                 currentRecordingPath = filePath
@@ -327,7 +330,7 @@ class HybridSound : HybridSoundSpec() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val service = RecordingForegroundService.getInstance()
-                val path = service?.stopRecording() ?: currentRecordingPath
+                val wavPath = service?.stopRecording() ?: currentRecordingPath
                 
                 handler.post {
                     // Unbind from service
@@ -349,10 +352,33 @@ class HybridSound : HybridSoundSpec() {
 
                 currentRecordingPath = null
                 
-                path?.let { 
-                    val fileUri = Uri.fromFile(File(it)).toString()
-                    promise.resolve(fileUri)
-                } ?: promise.reject(Exception("Recorder not started or path is unavailable."))
+                if (wavPath == null) {
+                    promise.reject(Exception("Recorder not started or path is unavailable."))
+                    return@launch
+                }
+                
+                // Convert WAV to M4A for smaller file size
+                val conversionResult = WavToM4aConverter.convert(
+                    wavFilePath = wavPath,
+                    deleteWavAfterConversion = true
+                )
+                
+                when (conversionResult) {
+                    is WavToM4aConverter.ConversionResult.Success -> {
+                        val fileUri = Uri.fromFile(File(conversionResult.outputPath)).toString()
+                        promise.resolve(fileUri)
+                    }
+                    is WavToM4aConverter.ConversionResult.Error -> {
+                        // If conversion fails, return the WAV file instead
+                        val wavFile = File(wavPath)
+                        if (wavFile.exists()) {
+                            val fileUri = Uri.fromFile(wavFile).toString()
+                            promise.resolve(fileUri)
+                        } else {
+                            promise.reject(Exception("Recording failed: ${conversionResult.message}"))
+                        }
+                    }
+                }
             } catch (e: Exception) {
                 handler.post {
                     if (isServiceBound) {
@@ -638,6 +664,161 @@ class HybridSound : HybridSoundSpec() {
         return String.format("%02d:%02d:%02d", minutes, seconds, milliseconds)
     }
 
+    // Recovery methods
+    /**
+     * Restore any pending recordings that were interrupted by app crash.
+     * Scans for WAV files, repairs them if needed, converts to M4A, and returns the results.
+     */
+    override fun restorePendingRecordings(directory: String?): Promise<Array<RestoredRecording>> {
+        val promise = Promise<Array<RestoredRecording>>()
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val scanDir = if (directory != null) {
+                    File(directory)
+                } else {
+                    context.filesDir
+                }
+                
+                if (!scanDir.exists() || !scanDir.isDirectory) {
+                    promise.resolve(emptyArray())
+                    return@launch
+                }
+                
+                // Find all WAV files
+                val wavFiles = scanDir.listFiles { file ->
+                    file.isFile && file.name.endsWith(".wav", ignoreCase = true)
+                } ?: emptyArray()
+                
+                if (wavFiles.isEmpty()) {
+                    promise.resolve(emptyArray())
+                    return@launch
+                }
+                
+                val restoredRecordings = mutableListOf<RestoredRecording>()
+                
+                for (wavFile in wavFiles) {
+                    try {
+                        val wavPath = wavFile.absolutePath
+                        
+                        // Repair WAV header if needed
+                        WavRecorder.repairWavFile(wavPath)
+                        
+                        // Convert to M4A
+                        val result = WavToM4aConverter.convert(
+                            wavFilePath = wavPath,
+                            deleteWavAfterConversion = true
+                        )
+                        
+                        when (result) {
+                            is WavToM4aConverter.ConversionResult.Success -> {
+                                val fileUri = Uri.fromFile(File(result.outputPath)).toString()
+                                restoredRecordings.add(
+                                    RestoredRecording(
+                                        uri = fileUri,
+                                        duration = result.duration.toDouble(),
+                                        originalPath = wavPath
+                                    )
+                                )
+                            }
+                            is WavToM4aConverter.ConversionResult.Error -> {
+                                // If conversion fails, still return the WAV file
+                                if (wavFile.exists()) {
+                                    val fileUri = Uri.fromFile(wavFile).toString()
+                                    // Estimate duration from file size
+                                    // Assuming 16-bit, 44100Hz, mono: bytes / (44100 * 2) * 1000
+                                    val estimatedDuration = (wavFile.length() - 44) / 88.2
+                                    restoredRecordings.add(
+                                        RestoredRecording(
+                                            uri = fileUri,
+                                            duration = estimatedDuration,
+                                            originalPath = wavPath
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // Log error but continue with other files
+                        e.printStackTrace()
+                    }
+                }
+                
+                promise.resolve(restoredRecordings.toTypedArray())
+            } catch (e: Exception) {
+                promise.reject(e)
+            }
+        }
+        
+        return promise
+    }
+
+    /**
+     * Restore a single WAV recording file by converting it to M4A.
+     * Use this when you need to restore a specific file and update your local database.
+     */
+    override fun restoreRecording(wavFilePath: String): Promise<RestoredRecording> {
+        val promise = Promise<RestoredRecording>()
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val wavFile = File(wavFilePath)
+                
+                if (!wavFile.exists()) {
+                    promise.reject(Exception("WAV file not found: $wavFilePath"))
+                    return@launch
+                }
+                
+                if (!wavFile.name.endsWith(".wav", ignoreCase = true)) {
+                    promise.reject(Exception("File is not a WAV file: $wavFilePath"))
+                    return@launch
+                }
+                
+                // Repair WAV header if needed
+                WavRecorder.repairWavFile(wavFilePath)
+                
+                // Convert to M4A
+                val result = WavToM4aConverter.convert(
+                    wavFilePath = wavFilePath,
+                    deleteWavAfterConversion = true
+                )
+                
+                when (result) {
+                    is WavToM4aConverter.ConversionResult.Success -> {
+                        val fileUri = Uri.fromFile(File(result.outputPath)).toString()
+                        promise.resolve(
+                            RestoredRecording(
+                                uri = fileUri,
+                                duration = result.duration.toDouble(),
+                                originalPath = wavFilePath
+                            )
+                        )
+                    }
+                    is WavToM4aConverter.ConversionResult.Error -> {
+                        // If conversion fails but WAV still exists, return WAV info
+                        if (wavFile.exists()) {
+                            val fileUri = Uri.fromFile(wavFile).toString()
+                            val estimatedDuration = (wavFile.length() - 44) / 88.2
+                            promise.resolve(
+                                RestoredRecording(
+                                    uri = fileUri,
+                                    duration = estimatedDuration,
+                                    originalPath = wavFilePath
+                                )
+                            )
+                        } else {
+                            promise.reject(Exception("Conversion failed: ${result.message}"))
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                promise.reject(e)
+            }
+        }
+        
+        return promise
+    }
+
     // Private methods
     private fun startPlayTimer() {
         playTimer?.cancel()
@@ -687,22 +868,27 @@ class HybridSound : HybridSoundSpec() {
     // Audio Focus Handling for Call Interruption
     private fun setupAudioFocus() {
         audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        
         audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
             when (focusChange) {
                 AudioManager.AUDIOFOCUS_LOSS,
-                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                    // Audio focus lost - pause recording
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT,
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                    // Audio focus lost (video, phone call, other audio apps) - pause recording
                     handler.post {
                         val service = RecordingForegroundService.getInstance()
                         if (service != null && service.isCurrentlyRecording()) {
+                            // Get current position before pausing
+                            val currentPosition = service.getCurrentRecordingTime()
+                            
                             service.pauseRecording()
                             
                             recordBackListener?.invoke(
                                 RecordBackType(
                                     isRecording = false,
-                                    currentPosition = 0.0,
+                                    currentPosition = currentPosition,
                                     currentMetering = null,
-                                    recordSecs = 0.0
+                                    recordSecs = currentPosition
                                 )
                             )
                         }
@@ -714,16 +900,42 @@ class HybridSound : HybridSoundSpec() {
             }
         }
         
-        audioManager?.requestAudioFocus(
-            audioFocusChangeListener,
-            AudioManager.STREAM_MUSIC,
-            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
-        )
+        // Use new AudioFocusRequest API for Android 8.0+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val audioAttributes = android.media.AudioAttributes.Builder()
+                .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
+            
+            audioFocusRequest = android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(audioAttributes)
+                .setAcceptsDelayedFocusGain(false)
+                .setWillPauseWhenDucked(true)
+                .setOnAudioFocusChangeListener(audioFocusChangeListener!!, handler)
+                .build()
+            
+            audioManager?.requestAudioFocus(audioFocusRequest!!)
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager?.requestAudioFocus(
+                audioFocusChangeListener,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
+        }
     }
 
     private fun releaseAudioFocus() {
-        audioFocusChangeListener?.let { listener ->
-            audioManager?.abandonAudioFocus(listener)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioFocusRequest?.let { request ->
+                audioManager?.abandonAudioFocusRequest(request)
+            }
+            audioFocusRequest = null
+        } else {
+            @Suppress("DEPRECATION")
+            audioFocusChangeListener?.let { listener ->
+                audioManager?.abandonAudioFocus(listener)
+            }
         }
         audioFocusChangeListener = null
         audioManager = null
