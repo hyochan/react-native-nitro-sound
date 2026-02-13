@@ -32,8 +32,8 @@ class WavRecorder {
     private var recordingThread: Thread? = null
     
     private var filePath: String? = null
-    private var isRecording: Boolean = false
-    private var isPaused: Boolean = false
+    @Volatile private var isRecording: Boolean = false
+    @Volatile private var isPaused: Boolean = false
     
     // Audio settings
     private var sampleRate: Int = 44100
@@ -75,6 +75,11 @@ class WavRecorder {
                 
                 val dataSize = file.length() - WAV_HEADER_SIZE
                 val fileSize = dataSize + WAV_HEADER_SIZE - 8
+                
+                // WAV format uses 32-bit sizes; files > 2GB will have truncated headers
+                if (dataSize > Int.MAX_VALUE) {
+                    Logger.w("[WavRecorder] WAV file exceeds 2GB ($dataSize bytes), header sizes will be truncated")
+                }
                 
                 RandomAccessFile(file, "rw").use { raf ->
                     // Update RIFF chunk size at position 4
@@ -357,10 +362,19 @@ class WavRecorder {
         
         Logger.d("[WavRecorder] Finalizing recording on app kill...")
         
+        // Signal the recording thread to stop (isRecording is @Volatile)
         isRecording = false
         isPaused = false
         
-        // Stop AudioRecord immediately
+        // Wait briefly for the recording thread to finish its current write
+        try {
+            recordingThread?.join(500)
+        } catch (e: InterruptedException) {
+            Logger.w("[WavRecorder] Interrupted while waiting for recording thread on kill")
+        }
+        recordingThread = null
+        
+        // Stop AudioRecord
         try {
             audioRecord?.stop()
             audioRecord?.release()
@@ -477,29 +491,27 @@ class WavRecorder {
     
     private fun updateWavHeader(path: String, dataSize: Long) {
         try {
+            // WAV format uses 32-bit sizes; files > 2GB will have truncated headers
+            if (dataSize > Int.MAX_VALUE) {
+                Logger.w("[WavRecorder] Recording exceeds 2GB ($dataSize bytes), header sizes will be truncated")
+            }
+            
             RandomAccessFile(path, "rw").use { raf ->
                 val fileSize = dataSize + WAV_HEADER_SIZE - 8
                 
                 // Update RIFF chunk size at position 4
                 raf.seek(4)
-                raf.write(intToByteArrayLE(fileSize.toInt()))
+                raf.write(intToByteArray(fileSize.toInt()))
                 
                 // Update data chunk size at position 40
                 raf.seek(40)
-                raf.write(intToByteArrayLE(dataSize.toInt()))
+                raf.write(intToByteArray(dataSize.toInt()))
                 
                 Logger.d("[WavRecorder] Updated WAV header: file=${fileSize + 8} bytes, data=$dataSize bytes")
             }
         } catch (e: Exception) {
             Logger.e("[WavRecorder] Failed to update WAV header: ${e.message}", e)
         }
-    }
-    
-    private fun intToByteArrayLE(value: Int): ByteArray {
-        return ByteBuffer.allocate(4)
-            .order(ByteOrder.LITTLE_ENDIAN)
-            .putInt(value)
-            .array()
     }
     
     private fun cleanup() {

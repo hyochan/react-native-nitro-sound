@@ -66,12 +66,14 @@ class WavToM4aConverter {
             return .error(message: "WAV file not found: \(wavFilePath)")
         }
         
-        // Determine output path
-        let outputPath = m4aFilePath ?? wavFilePath.replacingOccurrences(
-            of: ".wav",
-            with: ".m4a",
-            options: .caseInsensitive
-        )
+        // Determine output path - only replace the file extension, not substrings in directory names
+        let outputPath: String
+        if let customPath = m4aFilePath {
+            outputPath = customPath
+        } else {
+            let url = URL(fileURLWithPath: wavFilePath)
+            outputPath = url.deletingPathExtension().appendingPathExtension("m4a").path
+        }
         let outputURL = URL(fileURLWithPath: outputPath)
         
         // Delete existing output file
@@ -84,20 +86,70 @@ class WavToM4aConverter {
         // Create asset from WAV file
         let asset = AVAsset(url: wavURL)
         
-        // Get audio track
-        guard let audioTrack = asset.tracks(withMediaType: .audio).first else {
+        // Load audio tracks and format info
+        // Use async load API on iOS 16+ to avoid deprecation warnings;
+        // fall back to synchronous API on older versions.
+        var audioTrack: AVAssetTrack?
+        var assetDurationValue: CMTime = .zero
+        
+        if #available(iOS 16.0, *) {
+            let semaphore = DispatchSemaphore(value: 0)
+            var loadError: Error?
+            
+            Task {
+                do {
+                    let tracks = try await asset.loadTracks(withMediaType: .audio)
+                    audioTrack = tracks.first
+                    assetDurationValue = try await asset.load(.duration)
+                } catch {
+                    loadError = error
+                }
+                semaphore.signal()
+            }
+            semaphore.wait()
+            
+            if let error = loadError {
+                return .error(message: "Failed to load asset: \(error.localizedDescription)")
+            }
+        } else {
+            // Fallback for iOS < 16
+            audioTrack = asset.tracks(withMediaType: .audio).first
+            assetDurationValue = asset.duration
+        }
+        
+        guard let track = audioTrack else {
             return .error(message: "No audio track found in WAV file")
         }
         
         // Get source format description
-        guard let formatDescriptions = audioTrack.formatDescriptions as? [CMFormatDescription],
-              let formatDescription = formatDescriptions.first else {
+        let formatDescriptions: [CMFormatDescription]
+        if #available(iOS 16.0, *) {
+            let semaphore = DispatchSemaphore(value: 0)
+            var loadedDescs: [CMFormatDescription] = []
+            Task {
+                do {
+                    let descs = try await track.load(.formatDescriptions)
+                    loadedDescs = descs as [CMFormatDescription]
+                } catch {
+                    // Will be handled below
+                }
+                semaphore.signal()
+            }
+            semaphore.wait()
+            formatDescriptions = loadedDescs
+        } else {
+            formatDescriptions = track.formatDescriptions as? [CMFormatDescription] ?? []
+        }
+        
+        guard let formatDescription = formatDescriptions.first else {
             return .error(message: "Could not get audio format description")
         }
         
-        let sourceFormat = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription)?.pointee
-        let sampleRate = sourceFormat?.mSampleRate ?? 44100
-        let channels = sourceFormat?.mChannelsPerFrame ?? 1
+        guard let sourceFormat = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription)?.pointee else {
+            return .error(message: "Could not parse audio stream basic description from format")
+        }
+        let sampleRate = sourceFormat.mSampleRate
+        let channels = sourceFormat.mChannelsPerFrame
         
         print("🎵 [WavToM4a] Source: \(sampleRate)Hz, \(channels)ch")
         
@@ -117,7 +169,7 @@ class WavToM4aConverter {
         ]
         
         let readerOutput = AVAssetReaderTrackOutput(
-            track: audioTrack,
+            track: track,
             outputSettings: readerOutputSettings
         )
         
@@ -213,8 +265,8 @@ class WavToM4aConverter {
             return .error(message: "Writer failed: \(writer.error?.localizedDescription ?? "unknown")")
         }
         
-        // Get duration from source asset
-        let duration = asset.duration.seconds
+        // Get duration from source asset (already loaded above)
+        let duration = assetDurationValue.seconds
         
         // Verify output file exists
         guard FileManager.default.fileExists(atPath: outputPath) else {
@@ -237,7 +289,19 @@ class WavToM4aConverter {
         // Validate M4A duration matches source WAV duration
         if deleteWavAfterConversion && duration > 0 {
             let outputAsset = AVAsset(url: URL(fileURLWithPath: outputPath))
-            let outputDuration = outputAsset.duration.seconds
+            let outputDuration: Double
+            if #available(iOS 16.0, *) {
+                let semaphore = DispatchSemaphore(value: 0)
+                var dur: Double = 0
+                Task {
+                    dur = (try? await outputAsset.load(.duration).seconds) ?? 0
+                    semaphore.signal()
+                }
+                semaphore.wait()
+                outputDuration = dur
+            } else {
+                outputDuration = outputAsset.duration.seconds
+            }
             let tolerance = max(duration * 0.1, 0.5) // 10% tolerance, minimum 0.5s
             
             let durationDiff: Double = Swift.abs(outputDuration - duration)

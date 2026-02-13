@@ -36,6 +36,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     private var subscriptionDuration: TimeInterval = 0.1 // 100ms - reduced from 60ms to lower memory pressure
     private var playbackRate: Double = 1.0 // default 1x
     private var recordingSession: AVAudioSession?
+    private var tempAudioFile: URL? // Temporary file for remote audio playback
 
     // MARK: - Recording Methods
 
@@ -597,6 +598,13 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         }
 
         self.stopPlayTimer()
+        
+        // Clean up temporary audio file from remote playback
+        if let tempFile = self.tempAudioFile {
+            try? FileManager.default.removeItem(at: tempFile)
+            self.tempAudioFile = nil
+        }
+        
         promise.resolve(withResult: "Player stopped")
 
         return promise
@@ -764,7 +772,13 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             do {
                 let scanDirectory: URL
                 if let directory = directory {
-                    scanDirectory = URL(fileURLWithPath: directory)
+                    let dirURL = URL(fileURLWithPath: directory)
+                    // Validate path to prevent directory traversal attacks
+                    guard Self.validatePathSecurity(path: dirURL.path) else {
+                        promise.reject(withError: RuntimeError.error(withMessage: "Access denied: directory is outside allowed paths"))
+                        return
+                    }
+                    scanDirectory = dirURL
                 } else {
                     scanDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
                 }
@@ -815,21 +829,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                         print("🎙️ Failed to convert \(wavPath): \(message)")
                         // If conversion fails, still return the WAV file
                         if FileManager.default.fileExists(atPath: wavPath) {
-                            do {
-                                let attributes = try FileManager.default.attributesOfItem(atPath: wavPath)
-                                let fileSize = attributes[.size] as? Int64 ?? 0
-                                // Estimate duration: (fileSize - 44 header) / (44100 * 2 bytes) * 1000ms
-                                let estimatedDuration = Double(fileSize - 44) / 88.2
-                                
-                                let recording = RestoredRecording(
-                                    uri: wavURL.absoluteString,
-                                    duration: estimatedDuration,
-                                    originalPath: wavPath
-                                )
-                                restoredRecordings.append(recording)
-                            } catch {
-                                print("🎙️ Could not get file attributes: \(error)")
-                            }
+                            let estimatedDuration = Self.estimateWavDuration(filePath: wavPath)
+                            
+                            let recording = RestoredRecording(
+                                uri: wavURL.absoluteString,
+                                duration: estimatedDuration,
+                                originalPath: wavPath
+                            )
+                            restoredRecordings.append(recording)
                         }
                     }
                 }
@@ -852,6 +859,12 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         let promise = Promise<RestoredRecording>()
         
         DispatchQueue.global(qos: .userInitiated).async {
+            // Validate path to prevent path traversal attacks
+            guard Self.validatePathSecurity(path: wavFilePath) else {
+                promise.reject(withError: RuntimeError.error(withMessage: "Access denied: file path is outside allowed paths"))
+                return
+            }
+            
             // Check if file exists
             guard FileManager.default.fileExists(atPath: wavFilePath) else {
                 promise.reject(withError: RuntimeError.error(withMessage: "WAV file not found: \(wavFilePath)"))
@@ -884,20 +897,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 // If conversion fails but WAV still exists, return WAV info
                 if FileManager.default.fileExists(atPath: wavFilePath) {
                     let wavURL = URL(fileURLWithPath: wavFilePath)
-                    do {
-                        let attributes = try FileManager.default.attributesOfItem(atPath: wavFilePath)
-                        let fileSize = attributes[.size] as? Int64 ?? 0
-                        let estimatedDuration = Double(fileSize - 44) / 88.2
-                        
-                        let recording = RestoredRecording(
-                            uri: wavURL.absoluteString,
-                            duration: estimatedDuration,
-                            originalPath: wavFilePath
-                        )
-                        promise.resolve(withResult: recording)
-                    } catch {
-                        promise.reject(withError: RuntimeError.error(withMessage: "Conversion failed: \(message)"))
-                    }
+                    let estimatedDuration = Self.estimateWavDuration(filePath: wavFilePath)
+                    
+                    let recording = RestoredRecording(
+                        uri: wavURL.absoluteString,
+                        duration: estimatedDuration,
+                        originalPath: wavFilePath
+                    )
+                    promise.resolve(withResult: recording)
                 } else {
                     promise.reject(withError: RuntimeError.error(withMessage: "Conversion failed: \(message)"))
                 }
@@ -907,6 +914,78 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         return promise
     }
 
+    // MARK: - Path Security Validation
+    
+    /**
+     * Validate that the given path is within allowed directories.
+     * Prevents path traversal attacks by ensuring the path is under
+     * the app's Documents, Library, tmp, or Caches directory.
+     */
+    private static func validatePathSecurity(path: String) -> Bool {
+        let canonicalPath = (path as NSString).standardizingPath
+        
+        let allowedDirs: [String] = [
+            FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path,
+            FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first?.path,
+            FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?.path,
+            NSTemporaryDirectory()
+        ].compactMap { $0 }.map { ($0 as NSString).standardizingPath }
+        
+        return allowedDirs.contains { canonicalPath.hasPrefix($0) }
+    }
+    
+    // MARK: - WAV Duration Estimation
+    
+    /**
+     * Estimate WAV file duration by reading the actual byte rate from the header.
+     * Falls back to a default assumption if header cannot be read.
+     *
+     * WAV header layout (bytes):
+     *   0-3:   "RIFF"
+     *   4-7:   file size - 8
+     *   8-11:  "WAVE"
+     *  12-15:  "fmt "
+     *  16-19:  subchunk1 size (16 for PCM)
+     *  20-21:  audio format (1 = PCM)
+     *  22-23:  num channels
+     *  24-27:  sample rate
+     *  28-31:  byte rate (sampleRate * channels * bitsPerSample / 8)
+     *  32-33:  block align
+     *  34-35:  bits per sample
+     *  36-39:  "data"
+     *  40-43:  data size
+     */
+    private static func estimateWavDuration(filePath: String) -> Double {
+        guard let fileHandle = FileHandle(forReadingAtPath: filePath) else {
+            return 0.0
+        }
+        defer { fileHandle.closeFile() }
+        
+        let headerData = fileHandle.readData(ofLength: 44)
+        guard headerData.count >= 44 else {
+            return 0.0
+        }
+        
+        // Read byte rate from offset 28 (little-endian UInt32)
+        let byteRate: UInt32 = headerData.withUnsafeBytes { bytes in
+            bytes.load(fromByteOffset: 28, as: UInt32.self)
+        }
+        
+        guard byteRate > 0 else {
+            // Fallback: assume 44100Hz, 16-bit, mono
+            let fileSize = (try? FileManager.default.attributesOfItem(atPath: filePath)[.size] as? Int64) ?? 0
+            return Double(fileSize - 44) / 88.2
+        }
+        
+        // Get total file size
+        let attributes = try? FileManager.default.attributesOfItem(atPath: filePath)
+        let fileSize = attributes?[.size] as? Int64 ?? 0
+        let dataSize = fileSize - 44 // Subtract WAV header
+        
+        // Duration in milliseconds: dataSize / byteRate * 1000
+        return (Double(dataSize) / Double(byteRate)) * 1000.0
+    }
+    
     // MARK: - Private Methods
 
     private func getAudioSettings(audioSets: AudioSet?) -> [String: Any] {
@@ -1081,13 +1160,11 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 player.play()
             }
 
+            // Store temp file reference for cleanup when player stops
+            self.tempAudioFile = tempFile
+            
             self.startPlayTimer()
             promise.resolve(withResult: url)
-            
-            // Clean up temp file after a delay (player keeps reference)
-            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 1.0) {
-                try? FileManager.default.removeItem(at: tempFile)
-            }
         } catch {
             // Clean up temp file on error
             try? FileManager.default.removeItem(at: tempFile)
@@ -1334,12 +1411,21 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         
         switch type {
         case .began:
-            // Interruption began (e.g., phone call) - stop recording to avoid losing audio
+            // Interruption began (e.g., phone call) - stop recording to save the audio.
+            //
+            // The recording is stopped (not paused) because iOS does not guarantee
+            // that the audio session can be restored. The WAV file is finalized on disk
+            // and remains playable.
+            //
+            // Note: The callback sends isRecording=false with the current position,
+            // but does NOT include the file path. The JS side already knows the file
+            // path from the startRecorder() promise. If the file was auto-generated,
+            // callers should use restorePendingRecordings() after app restart to
+            // retrieve any interrupted recordings.
             if let recorder = audioRecorder, recorder.isRecording {
-                let fileURL = recorder.url
                 let currentTime = recorder.currentTime * 1000
                 
-                // Stop recording (not pause) to save the audio
+                // Stop recording to save the audio
                 recorder.stop()
                 stopRecordTimer()
                 
@@ -1348,7 +1434,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 try? recordingSession?.setActive(false)
                 recordingSession = nil
                 
-                // Notify listener with interruption status and file path
+                // Notify listener with interruption status
                 if let listener = recordBackListener {
                     listener(RecordBackType(
                         isRecording: false,
@@ -1391,6 +1477,12 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         audioEngine = nil
         audioPlayerNode = nil
         audioFile = nil
+        
+        // Clean up temporary audio file
+        if let tempFile = tempAudioFile {
+            try? FileManager.default.removeItem(at: tempFile)
+            tempAudioFile = nil
+        }
         
         // Clear all listeners to break potential retain cycles
         recordBackListener = nil

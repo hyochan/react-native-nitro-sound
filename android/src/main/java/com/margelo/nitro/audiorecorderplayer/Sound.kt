@@ -15,11 +15,15 @@ import android.os.Looper
 import com.margelo.nitro.NitroModules
 import com.margelo.nitro.core.Promise
 import java.io.File
+import java.io.RandomAccessFile
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.Timer
 import java.util.TimerTask
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.margelo.nitro.audiorecorderplayer.Logger
 import com.margelo.nitro.audiorecorderplayer.RecordingForegroundService
 import com.margelo.nitro.audiorecorderplayer.WavToM4aConverter
 import com.margelo.nitro.audiorecorderplayer.WavRecorder
@@ -39,6 +43,22 @@ class HybridSound : HybridSoundSpec() {
     private var recordingService: RecordingForegroundService? = null
     private var isServiceBound = false
     private var currentRecordingPath: String? = null
+
+    // Pending recording parameters (used by event-driven service connection)
+    private var pendingRecordingParams: PendingRecordingParams? = null
+    private var pendingRecordingPromise: Promise<String>? = null
+
+    private data class PendingRecordingParams(
+        val filePath: String,
+        val audioSource: Int,
+        val outputFormat: Int,
+        val audioEncoder: Int,
+        val samplingRate: Int?,
+        val channels: Int?,
+        val bitrate: Int?,
+        val enableMetering: Boolean,
+        val subscriptionDuration: Long
+    )
 
     // Audio focus for call interruption handling
     private var audioManager: AudioManager? = null
@@ -67,6 +87,18 @@ class HybridSound : HybridSoundSpec() {
                             recordSecs = currentPosition
                         )
                     )
+                }
+            }
+            
+            // Start pending recording if exists (event-driven, no Thread.sleep)
+            val params = pendingRecordingParams
+            val promise = pendingRecordingPromise
+            if (params != null && promise != null) {
+                pendingRecordingParams = null
+                pendingRecordingPromise = null
+                
+                CoroutineScope(Dispatchers.IO).launch {
+                    startRecordingOnService(recordingService!!, params, promise)
                 }
             }
         }
@@ -197,96 +229,46 @@ class HybridSound : HybridSoundSpec() {
                 val channels = sanitizedAudioSets?.AudioChannels?.toInt() ?: defaults?.channels
                 val bitrate = sanitizedAudioSets?.AudioEncodingBitRate?.toInt() ?: defaults?.bitrate
 
-                // Start the foreground service first
-                handler.post {
-                    RecordingForegroundService.start(context)
-                    
-                    // Bind to service
-                    val intent = Intent(context, RecordingForegroundService::class.java)
-                    context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-                    
-                    // Setup audio focus
-                    setupAudioFocus()
-                }
-
-                // Wait a bit for service to start, then start recording
-                Thread.sleep(300)
+                // Store pending recording params for event-driven start
+                val params = PendingRecordingParams(
+                    filePath = filePath,
+                    audioSource = audioSource,
+                    outputFormat = outputFormat,
+                    audioEncoder = audioEncoder,
+                    samplingRate = samplingRate,
+                    channels = channels,
+                    bitrate = bitrate,
+                    enableMetering = enableMetering ?: false,
+                    subscriptionDuration = subscriptionDuration
+                )
                 
-                // Get service instance and start recording
-                val service = RecordingForegroundService.getInstance()
-                if (service != null) {
-                    // Setup callback
-                    service.onRecordingUpdate = { isRecording, currentPosition, metering ->
-                        handler.post {
-                            recordBackListener?.invoke(
-                                RecordBackType(
-                                    isRecording = isRecording,
-                                    currentPosition = currentPosition,
-                                    currentMetering = metering,
-                                    recordSecs = currentPosition
-                                )
-                            )
-                        }
-                    }
-                    
-                    val success = service.startRecording(
-                        filePath = filePath,
-                        audioSource = audioSource,
-                        outputFormat = outputFormat,
-                        audioEncoder = audioEncoder,
-                        samplingRate = samplingRate,
-                        channels = channels,
-                        bitrate = bitrate,
-                        enableMetering = enableMetering ?: false,
-                        subscriptionDuration = subscriptionDuration
-                    )
-                    
-                    if (success) {
-                        val fileUri = Uri.fromFile(File(filePath)).toString()
-                        promise.resolve(fileUri)
-                    } else {
-                        // Unbind and stop service if recording failed to start
-                        handler.post {
-                            if (isServiceBound) {
-                                try {
-                                    context.unbindService(serviceConnection)
-                                } catch (ex: Exception) {
-                                    // Ignore unbind errors
-                                }
-                                isServiceBound = false
-                            }
-                            RecordingForegroundService.stop(context)
-                        }
-                        promise.reject(Exception("Failed to start recording in service"))
-                    }
+                // Check if service is already bound and available
+                val existingService = recordingService
+                if (isServiceBound && existingService != null) {
+                    // Service already connected, start recording directly
+                    startRecordingOnService(existingService, params, promise)
                 } else {
-                    // Unbind and stop service if it's not available
+                    // Reject any previous pending promise to avoid orphaned promises
+                    pendingRecordingPromise?.reject(Exception("Recording superseded by a new startRecorder call"))
+                    
+                    // Store pending params - will be picked up in onServiceConnected
+                    pendingRecordingParams = params
+                    pendingRecordingPromise = promise
+                    
+                    // Start the foreground service and bind
                     handler.post {
-                        if (isServiceBound) {
-                            try {
-                                context.unbindService(serviceConnection)
-                            } catch (ex: Exception) {
-                                // Ignore unbind errors
-                            }
-                            isServiceBound = false
-                        }
-                        RecordingForegroundService.stop(context)
+                        RecordingForegroundService.start(context)
+                        
+                        val intent = Intent(context, RecordingForegroundService::class.java)
+                        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+                        
+                        setupAudioFocus()
                     }
-                    promise.reject(Exception("Recording service not available"))
                 }
             } catch (e: Exception) {
-                // Unbind and stop service on any exception
-                handler.post {
-                    if (isServiceBound) {
-                        try {
-                            context.unbindService(serviceConnection)
-                        } catch (ex: Exception) {
-                            // Ignore unbind errors
-                        }
-                        isServiceBound = false
-                    }
-                    RecordingForegroundService.stop(context)
-                }
+                pendingRecordingParams = null
+                pendingRecordingPromise = null
+                cleanupServiceOnError()
                 promise.reject(e)
             }
         }
@@ -675,7 +657,13 @@ class HybridSound : HybridSoundSpec() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val scanDir = if (directory != null) {
-                    File(directory)
+                    val dir = File(directory)
+                    // Validate path to prevent directory traversal attacks
+                    if (!validatePathSecurity(dir.absolutePath)) {
+                        promise.reject(Exception("Access denied: directory is outside allowed paths"))
+                        return@launch
+                    }
+                    dir
                 } else {
                     context.filesDir
                 }
@@ -725,9 +713,7 @@ class HybridSound : HybridSoundSpec() {
                                 // If conversion fails, still return the WAV file
                                 if (wavFile.exists()) {
                                     val fileUri = Uri.fromFile(wavFile).toString()
-                                    // Estimate duration from file size
-                                    // Assuming 16-bit, 44100Hz, mono: bytes / (44100 * 2) * 1000
-                                    val estimatedDuration = (wavFile.length() - 44) / 88.2
+                                    val estimatedDuration = estimateWavDuration(wavPath)
                                     restoredRecordings.add(
                                         RestoredRecording(
                                             uri = fileUri,
@@ -740,7 +726,7 @@ class HybridSound : HybridSoundSpec() {
                         }
                     } catch (e: Exception) {
                         // Log error but continue with other files
-                        e.printStackTrace()
+                        Logger.e("[Sound] Error restoring recording ${wavFile.name}: ${e.message}", e)
                     }
                 }
                 
@@ -762,6 +748,12 @@ class HybridSound : HybridSoundSpec() {
         
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                // Validate path to prevent path traversal attacks
+                if (!validatePathSecurity(wavFilePath)) {
+                    promise.reject(Exception("Access denied: file path is outside allowed paths"))
+                    return@launch
+                }
+                
                 val wavFile = File(wavFilePath)
                 
                 if (!wavFile.exists()) {
@@ -798,7 +790,7 @@ class HybridSound : HybridSoundSpec() {
                         // If conversion fails but WAV still exists, return WAV info
                         if (wavFile.exists()) {
                             val fileUri = Uri.fromFile(wavFile).toString()
-                            val estimatedDuration = (wavFile.length() - 44) / 88.2
+                            val estimatedDuration = estimateWavDuration(wavFilePath)
                             promise.resolve(
                                 RestoredRecording(
                                     uri = fileUri,
@@ -820,6 +812,110 @@ class HybridSound : HybridSoundSpec() {
     }
 
     // Private methods
+    
+    /**
+     * Start recording on a connected service instance.
+     * This is called either directly (if service already bound) or from onServiceConnected.
+     */
+    private fun startRecordingOnService(
+        service: RecordingForegroundService,
+        params: PendingRecordingParams,
+        promise: Promise<String>
+    ) {
+        try {
+            val success = service.startRecording(
+                filePath = params.filePath,
+                audioSource = params.audioSource,
+                outputFormat = params.outputFormat,
+                audioEncoder = params.audioEncoder,
+                samplingRate = params.samplingRate,
+                channels = params.channels,
+                bitrate = params.bitrate,
+                enableMetering = params.enableMetering,
+                subscriptionDuration = params.subscriptionDuration
+            )
+            
+            if (success) {
+                val fileUri = Uri.fromFile(File(params.filePath)).toString()
+                promise.resolve(fileUri)
+            } else {
+                cleanupServiceOnError()
+                promise.reject(Exception("Failed to start recording in service"))
+            }
+        } catch (e: Exception) {
+            cleanupServiceOnError()
+            promise.reject(e)
+        }
+    }
+    
+    /**
+     * Cleanup service binding and stop service when an error occurs.
+     */
+    private fun cleanupServiceOnError() {
+        handler.post {
+            if (isServiceBound) {
+                try {
+                    context.unbindService(serviceConnection)
+                } catch (ex: Exception) {
+                    // Ignore unbind errors
+                }
+                isServiceBound = false
+            }
+            RecordingForegroundService.stop(context)
+            releaseAudioFocus()
+        }
+    }
+    
+    /**
+     * Estimate WAV file duration by reading the byte rate from the WAV header.
+     * Falls back to a default assumption (44100Hz mono 16-bit) if header cannot be read.
+     *
+     * @param filePath Path to the WAV file
+     * @return Estimated duration in milliseconds
+     */
+    private fun estimateWavDuration(filePath: String): Double {
+        return try {
+            val file = File(filePath)
+            if (!file.exists() || file.length() < 44) return 0.0
+            
+            RandomAccessFile(file, "r").use { raf ->
+                // Read byte rate from WAV header offset 28 (little-endian Int32)
+                raf.seek(28)
+                val bytes = ByteArray(4)
+                raf.readFully(bytes)
+                val byteRate = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).int
+                
+                if (byteRate > 0) {
+                    val dataSize = file.length() - 44
+                    (dataSize.toDouble() / byteRate) * 1000.0
+                } else {
+                    // Fallback: assume 44100Hz, 16-bit, mono
+                    (file.length() - 44) / 88.2
+                }
+            }
+        } catch (e: Exception) {
+            Logger.w("[Sound] Could not read WAV header for duration estimation: ${e.message}")
+            val file = File(filePath)
+            if (file.exists()) (file.length() - 44) / 88.2 else 0.0
+        }
+    }
+    
+    /**
+     * Validate that the given path is within allowed directories.
+     * Prevents path traversal attacks by ensuring the path is under
+     * the app's files directory or cache directory.
+     */
+    private fun validatePathSecurity(path: String): Boolean {
+        val canonicalPath = File(path).canonicalPath
+        val allowedDirs = listOf(
+            context.filesDir.canonicalPath,
+            context.cacheDir.canonicalPath,
+            context.getExternalFilesDir(null)?.canonicalPath
+        ).filterNotNull()
+        
+        return allowedDirs.any { canonicalPath.startsWith(it) }
+    }
+    
     private fun startPlayTimer() {
         playTimer?.cancel()
         playTimer = Timer()

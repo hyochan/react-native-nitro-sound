@@ -58,6 +58,9 @@ class RecordingForegroundService : Service() {
         private const val METERING_UPDATE_INTERVAL_MS = 100L
         private const val METERING_DISABLED_VALUE = 0.0
         
+        // Wake lock timeout: 30 minutes, renewed periodically while recording
+        private const val WAKE_LOCK_TIMEOUT_MS = 30 * 60 * 1000L
+        
         private var instance: RecordingForegroundService? = null
         
         fun getInstance(): RecordingForegroundService? = instance
@@ -86,12 +89,14 @@ class RecordingForegroundService : Service() {
         super.onCreate()
         instance = this
         createNotificationChannel()
-        acquireWakeLock()
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIFICATION_ID, createNotification())
-        return START_STICKY
+        // Use START_NOT_STICKY: if the system kills the process, don't restart
+        // the service automatically. This prevents a zombie foreground notification
+        // with no active recording and no way to stop it from JS.
+        return START_NOT_STICKY
     }
     
     override fun onBind(intent: Intent?): IBinder {
@@ -100,7 +105,6 @@ class RecordingForegroundService : Service() {
     
     override fun onDestroy() {
         stopRecordingInternal()
-        releaseWakeLock()
         instance = null
         super.onDestroy()
     }
@@ -130,6 +134,9 @@ class RecordingForegroundService : Service() {
             // WavRecorder handles its own finalization and header update
             wavRecorder?.finalizeOnKill()
             wavRecorder = null
+            
+            // Release wake lock
+            releaseWakeLock()
             
             // Log the saved file path for debugging
             currentRecordingPath?.let { path ->
@@ -196,6 +203,9 @@ class RecordingForegroundService : Service() {
                 return false
             }
             
+            // Acquire wake lock while recording
+            acquireWakeLock()
+            
             // Start timer for recording updates
             startRecordTimer(subscriptionDuration)
             
@@ -218,6 +228,7 @@ class RecordingForegroundService : Service() {
             val success = recorder.pauseRecording()
             if (success) {
                 stopRecordTimer()
+                releaseWakeLock()
                 updateNotification("Recording paused")
             }
             success
@@ -233,7 +244,8 @@ class RecordingForegroundService : Service() {
         return try {
             val success = recorder.resumeRecording()
             if (success) {
-                startRecordTimer(60L) // Default, will be updated
+                acquireWakeLock()
+                startRecordTimer(subscriptionDurationMs)
                 updateNotification("Recording in progress...")
             }
             success
@@ -244,9 +256,9 @@ class RecordingForegroundService : Service() {
     }
     
     fun stopRecording(): String? {
-        val path = wavRecorder?.stopRecording()
+        val path = currentRecordingPath
         stopRecordingInternal()
-        return path ?: currentRecordingPath
+        return path
     }
     
     private fun stopRecordingInternal() {
@@ -261,6 +273,8 @@ class RecordingForegroundService : Service() {
             lastMeteringUpdateTime = 0L
             lastMeteringValue = SILENCE_THRESHOLD_DB
             
+            // Release wake lock when recording stops
+            releaseWakeLock()
         } catch (e: Exception) {
             Logger.e("[ForegroundService] Error in stopRecordingInternal: ${e.message}", e)
         }
@@ -354,6 +368,10 @@ class RecordingForegroundService : Service() {
     private fun createNotification(contentText: String = "Tap to return to app"): Notification {
         val packageName = packageName
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+            ?: Intent().apply { 
+                // Fallback: create a basic intent if no launch activity found
+                setPackage(packageName)
+            }
         val pendingIntentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         } else {
@@ -385,22 +403,65 @@ class RecordingForegroundService : Service() {
     
     // ==================== WakeLock ====================
     
+    private val wakeLockHandler = Handler(Looper.getMainLooper())
+    private var wakeLockRenewalRunnable: Runnable? = null
+    
     private fun acquireWakeLock() {
         try {
+            if (wakeLock?.isHeld == true) return // Already held
+            
             val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
             wakeLock = powerManager.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK,
                 WAKE_LOCK_TAG
             ).apply {
-                acquire(10 * 60 * 60 * 1000L) // 10 hours max
+                acquire(WAKE_LOCK_TIMEOUT_MS)
             }
+            
+            // Schedule periodic renewal while recording is active
+            scheduleWakeLockRenewal()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Logger.e("[ForegroundService] Error acquiring wake lock: ${e.message}", e)
         }
+    }
+    
+    private fun scheduleWakeLockRenewal() {
+        wakeLockRenewalRunnable?.let { wakeLockHandler.removeCallbacks(it) }
+        
+        val runnable = Runnable {
+            try {
+                val recorder = wavRecorder
+                if (recorder != null && recorder.isCurrentlyRecording()) {
+                    // Renew the wake lock for another period
+                    wakeLock?.let {
+                        if (it.isHeld) {
+                            it.release()
+                        }
+                    }
+                    val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+                    wakeLock = powerManager.newWakeLock(
+                        PowerManager.PARTIAL_WAKE_LOCK,
+                        WAKE_LOCK_TAG
+                    ).apply {
+                        acquire(WAKE_LOCK_TIMEOUT_MS)
+                    }
+                    Logger.d("[ForegroundService] Wake lock renewed")
+                    scheduleWakeLockRenewal()
+                }
+            } catch (e: Exception) {
+                Logger.e("[ForegroundService] Error renewing wake lock: ${e.message}", e)
+            }
+        }
+        wakeLockRenewalRunnable = runnable
+        // Renew 1 minute before expiry
+        wakeLockHandler.postDelayed(runnable, WAKE_LOCK_TIMEOUT_MS - 60_000L)
     }
     
     private fun releaseWakeLock() {
         try {
+            wakeLockRenewalRunnable?.let { wakeLockHandler.removeCallbacks(it) }
+            wakeLockRenewalRunnable = null
+            
             wakeLock?.let {
                 if (it.isHeld) {
                     it.release()
@@ -408,7 +469,7 @@ class RecordingForegroundService : Service() {
             }
             wakeLock = null
         } catch (e: Exception) {
-            // Ignore
+            Logger.w("[ForegroundService] Error releasing wake lock: ${e.message}", e)
         }
     }
 }
