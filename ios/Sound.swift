@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import UIKit
 import NitroModules
 
 final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {

@@ -522,14 +522,14 @@ class WavRecorder {
             audioRecord?.stop()
             audioRecord?.release()
         } catch (e: Exception) {
-            // Ignore
+            Logger.d("[WavRecorder] Cleanup AudioRecord: ${e.message}")
         }
         audioRecord = null
         
         try {
             outputStream?.close()
         } catch (e: Exception) {
-            // Ignore
+            Logger.d("[WavRecorder] Cleanup OutputStream: ${e.message}")
         }
         outputStream = null
         

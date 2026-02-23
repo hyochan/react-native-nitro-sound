@@ -34,7 +34,7 @@
 
 ### 2.1 Components
 
-```
+```text
 ┌──────────────────────────────────────────────────┐
 │  ftyp (File Type Box)                            │
 │  - Size: 20-32 bytes                             │
@@ -87,7 +87,7 @@ This information can only be calculated after recording ends → `moov` is writt
 
 ### 3.1 Normal Recording Flow
 
-```
+```text
 Step 1: Start recording
         → Write ftyp ✅
         → Begin writing mdat ✅
@@ -103,7 +103,7 @@ Step 3: Call stopRecorder()
 
 ### 3.2 Sudden Power Off / Force Stop
 
-```
+```text
 Step 1: Start recording
         → Write ftyp ✅
         → Begin writing mdat ✅
@@ -111,10 +111,10 @@ Step 1: Start recording
 Step 2: Recording in progress...
         → Continuously write AAC frames ✅
 
-Step 3: SUDDEN POWER OFF! ⚡
+Step 3: SUDDEN POWER OFF!
         → Process killed immediately
         → mdat not properly closed
-        → moov NEVER WRITTEN ❌
+        → moov NEVER WRITTEN
 
 Result:
 ┌──────┐ ┌──────────────────┐
@@ -139,7 +139,7 @@ Without `moov`, the player has no way to know:
 
 ### 4.1 WAV File Structure
 
-```
+```text
 ┌──────────────────────────────────┐
 │  RIFF Header (44 bytes)          │  ← Written FIRST
 │  - "RIFF"                        │
@@ -159,7 +159,7 @@ Without `moov`, the player has no way to know:
 
 ### 4.2 WAV After Sudden Power Off
 
-```
+```text
 ┌──────────────────────────────────┐
 │  RIFF Header (44 bytes)          │  ← Already written, size may be wrong
 ├──────────────────────────────────┤
@@ -193,7 +193,7 @@ Without `moov`, the player has no way to know:
 
 ### 5.1 Recording Flow
 
-```
+```text
                      startRecorder()
                           │
                           ▼

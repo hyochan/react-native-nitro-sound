@@ -143,7 +143,7 @@ class RecordingForegroundService : Service() {
 
 **M4A = MPEG-4 Audio Container + AAC Codec**
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │  ftyp (File Type) - 20-32 bytes         │  ← Written at start
 ├─────────────────────────────────────────┤
@@ -183,7 +183,7 @@ This happens when:
 
 The library includes a **WavRecorder** that uses `AudioRecord` (Android) and `AVAudioEngine` (iOS) to record in WAV format:
 
-```
+```text
 WAV File Structure:
 ┌─────────────────────────────────┐
 │  RIFF Header (44 bytes)         │  ← Written FIRST (header at top)
@@ -210,7 +210,7 @@ WAV File Structure:
 
 ### 5.2 What Happens on Crash
 
-```
+```text
 Normal stop:
 ┌────────────────┐ ┌──────────────────────┐
 │ Header (fixed) │ │     Audio Data       │  ← Complete file ✅
@@ -256,7 +256,7 @@ The library provides two recovery methods:
 
 ### 6.2 Recovery Flow
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────┐
 │                        RECORDING FLOW                            │
 │                                                                  │
@@ -546,7 +546,7 @@ const restored = await sound.restorePendingRecordings();
 
 > "When an app is force-stopped, the entire process is killed instantly. Standard lifecycle methods such as onStop() and onDestroy() are not guaranteed to run."
 > — [Android Developer Documentation](https://developer.android.com/guide/components/activities/process-lifecycle)
-
+>
 > "The system provides no notification when an app is terminated while in a suspended state."
 > — [Apple Developer Documentation](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/applicationwillterminate(_:))
 

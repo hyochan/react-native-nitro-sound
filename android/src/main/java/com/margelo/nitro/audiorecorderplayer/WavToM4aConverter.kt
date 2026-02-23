@@ -114,7 +114,11 @@ object WavToM4aConverter {
             }
             
             // Calculate duration in milliseconds
-            val durationMs = (wavHeader.dataSize * 1000L) / wavHeader.byteRate
+            val durationMs = if (wavHeader.byteRate > 0) {
+                (wavHeader.dataSize * 1000L) / wavHeader.byteRate
+            } else {
+                0L
+            }
             
             Logger.d("[WavToM4a] Conversion successful: ${outputFile.length()} bytes, ${durationMs}ms")
             
@@ -196,7 +200,11 @@ object WavToM4aConverter {
                 return ConversionResult.Error("Output file is empty or missing")
             }
             
-            val durationMs = (wavHeader.dataSize * 1000L) / wavHeader.byteRate
+            val durationMs = if (wavHeader.byteRate > 0) {
+                (wavHeader.dataSize * 1000L) / wavHeader.byteRate
+            } else {
+                0L
+            }
             
             // Validate output file size before deleting WAV
             val inputSize = wavFile.length()
@@ -437,19 +445,25 @@ object WavToM4aConverter {
         } finally {
             try {
                 inputStream?.close()
-            } catch (e: Exception) { }
+            } catch (e: Exception) {
+                Logger.w("[WavToM4a] Error closing input stream: ${e.message}")
+            }
             
             try {
                 encoder?.stop()
                 encoder?.release()
-            } catch (e: Exception) { }
+            } catch (e: Exception) {
+                Logger.w("[WavToM4a] Error releasing encoder: ${e.message}")
+            }
             
             try {
                 if (muxerStarted) {
                     muxer?.stop()
                 }
                 muxer?.release()
-            } catch (e: Exception) { }
+            } catch (e: Exception) {
+                Logger.w("[WavToM4a] Error releasing muxer: ${e.message}")
+            }
         }
     }
 }
