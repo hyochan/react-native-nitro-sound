@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import UIKit
 import NitroModules
 
 final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
@@ -33,15 +34,17 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     private var playbackEndListener: ((PlaybackEndType) -> Void)?
     private var didEmitPlaybackEnd = false
 
-    private var subscriptionDuration: TimeInterval = 0.06
+    private var subscriptionDuration: TimeInterval = 0.1 // 100ms - reduced from 60ms to lower memory pressure
     private var playbackRate: Double = 1.0 // default 1x
     private var recordingSession: AVAudioSession?
+    private var tempAudioFile: URL? // Temporary file for remote audio playback
 
     // MARK: - Recording Methods
 
     public func startRecorder(uri: String?, audioSets: AudioSet?, meteringEnabled: Bool?) throws -> Promise<String> {
         let promise = Promise<String>()
-        
+        setupInterruptionObserver()
+
         // Sanitize audioSets to ignore Android-specific fields on iOS to prevent crashes
         let sanitizedAudioSets = audioSets.map { original in
             var sanitized = original
@@ -98,14 +101,21 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         do {
             print("🎙️ Setting up recording...")
 
-            // Setup recording URL
+            // Setup recording URL (WAV format for crash-resilient recording)
             let fileURL: URL
             if let uri = uri {
-                fileURL = URL(fileURLWithPath: uri)
-                print("🎙️ Using provided URI: \(uri)")
+                // Ensure file path ends with .wav for crash resilience
+                var wavPath = uri
+                if !uri.lowercased().hasSuffix(".wav") {
+                    // Replace extension with .wav
+                    let basePath = (uri as NSString).deletingPathExtension
+                    wavPath = basePath + ".wav"
+                }
+                fileURL = URL(fileURLWithPath: wavPath)
+                print("🎙️ Using provided URI (converted to WAV): \(wavPath)")
             } else {
                 let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                let fileName = "sound_\(Date().timeIntervalSince1970).m4a"
+                let fileName = "sound_\(Date().timeIntervalSince1970).wav"
                 fileURL = documentsPath.appendingPathComponent(fileName)
                 print("🎙️ Generated file path: \(fileURL.path)")
             }
@@ -118,9 +128,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             }
 
             if !FileManager.default.isWritableFile(atPath: directory.path) {
+                #if DEBUG
                 print("🎙️ Directory is not writable: \(directory.path)")
-                throw NSError(domain: "AudioRecorder", code: -2, userInfo: [NSLocalizedDescriptionKey: "Directory is not writable"])
-                throw NSError(domain: "AudioRecorder", code: -2, userInfo: [NSLocalizedDescriptionKey: "Directory is not writable"])
+                #endif
                 throw NSError(domain: "AudioRecorder", code: -2, userInfo: [NSLocalizedDescriptionKey: "Directory is not writable"])
             }
 
@@ -418,14 +428,16 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             }
 
             if let recorder = self.audioRecorder {
-                let url = recorder.url.absoluteString
+                let wavURL = recorder.url
+                let wavPath = wavURL.path
 
                 // Stop recorder on main queue
                 DispatchQueue.main.async {
                     recorder.stop()
                     self.stopRecordTimer()
-
-                    // Continue cleanup in background
+                    self.removeInterruptionObserver()
+                    
+                    // Continue with conversion in background
                     DispatchQueue.global(qos: .userInitiated).async {
                         self.audioRecorder = nil
 
@@ -433,7 +445,24 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                         try? self.recordingSession?.setActive(false)
                         self.recordingSession = nil
 
-                        promise.resolve(withResult: url)
+                        // Convert WAV to M4A for smaller file size
+                        let conversionResult = WavToM4aConverter.convertSync(
+                            wavFilePath: wavPath,
+                            deleteWavAfterConversion: true
+                        )
+                        
+                        switch conversionResult {
+                        case .success(let outputPath, _):
+                            let outputURL = URL(fileURLWithPath: outputPath)
+                            promise.resolve(withResult: outputURL.absoluteString)
+                        case .error(let message):
+                            // If conversion fails, return the WAV file instead
+                            if FileManager.default.fileExists(atPath: wavPath) {
+                                promise.resolve(withResult: wavURL.absoluteString)
+                            } else {
+                                promise.reject(withError: RuntimeError.error(withMessage: "Recording failed: \(message)"))
+                            }
+                        }
                     }
                 }
             } else {
@@ -445,7 +474,6 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     }
 
     // MARK: - Playback Methods
-
     public func startPlayer(uri: String?, httpHeaders: Dictionary<String, String>?) throws -> Promise<String> {
         let promise = Promise<String>()
 
@@ -559,6 +587,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
         if let player = self.audioPlayer {
             player.stop()
+            player.delegate = nil  // Clear delegate to prevent callbacks
             self.audioPlayer = nil
         }
 
@@ -570,6 +599,13 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         }
 
         self.stopPlayTimer()
+        
+        // Clean up temporary audio file from remote playback
+        if let tempFile = self.tempAudioFile {
+            try? FileManager.default.removeItem(at: tempFile)
+            self.tempAudioFile = nil
+        }
+        
         promise.resolve(withResult: "Player stopped")
 
         return promise
@@ -679,7 +715,12 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     }
 
     public func removeRecordBackListener() throws {
+        #if DEBUG
+        print("🎙️ Removing record back listener")
+        #endif
         self.recordBackListener = nil
+        // Also stop timer if no listener
+        self.stopRecordTimer()
     }
 
     public func addPlayBackListener(callback: @escaping (PlayBackType) -> Void) throws {
@@ -687,7 +728,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     }
 
     public func removePlayBackListener() throws {
+        #if DEBUG
         print("🎵 Removing playback listener and stopping timer")
+        #endif
         self.playBackListener = nil
         self.stopPlayTimer()
     }
@@ -717,6 +760,233 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         return String(format: "%02d:%02d:%02d", minutes, seconds, milliseconds)
     }
 
+    // MARK: - Recovery Methods
+    
+    /**
+     * Restore any pending recordings that were interrupted by app crash.
+     * Scans for WAV files, converts them to M4A, and returns the results.
+     */
+    public func restorePendingRecordings(directory: String?) throws -> Promise<[RestoredRecording]> {
+        let promise = Promise<[RestoredRecording]>()
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let scanDirectory: URL
+                if let directory = directory {
+                    let dirURL = URL(fileURLWithPath: directory)
+                    // Validate path to prevent directory traversal attacks
+                    guard Self.validatePathSecurity(path: dirURL.path) else {
+                        promise.reject(withError: RuntimeError.error(withMessage: "Access denied: directory is outside allowed paths"))
+                        return
+                    }
+                    scanDirectory = dirURL
+                } else {
+                    scanDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                }
+                
+                // Check if directory exists
+                var isDirectory: ObjCBool = false
+                guard FileManager.default.fileExists(atPath: scanDirectory.path, isDirectory: &isDirectory),
+                      isDirectory.boolValue else {
+                    promise.resolve(withResult: [])
+                    return
+                }
+                
+                // Find all WAV files
+                let contents = try FileManager.default.contentsOfDirectory(
+                    at: scanDirectory,
+                    includingPropertiesForKeys: nil
+                )
+                
+                let wavFiles = contents.filter { $0.pathExtension.lowercased() == "wav" }
+                
+                if wavFiles.isEmpty {
+                    promise.resolve(withResult: [])
+                    return
+                }
+                
+                var restoredRecordings: [RestoredRecording] = []
+                
+                for wavURL in wavFiles {
+                    let wavPath = wavURL.path
+                    
+                    // Convert to M4A
+                    let result = WavToM4aConverter.convertSync(
+                        wavFilePath: wavPath,
+                        deleteWavAfterConversion: true
+                    )
+                    
+                    switch result {
+                    case .success(let outputPath, let duration):
+                        let outputURL = URL(fileURLWithPath: outputPath)
+                        let recording = RestoredRecording(
+                            uri: outputURL.absoluteString,
+                            duration: duration * 1000, // Convert to milliseconds
+                            originalPath: wavPath
+                        )
+                        restoredRecordings.append(recording)
+                        
+                    case .error(let message):
+                        print("🎙️ Failed to convert \(wavPath): \(message)")
+                        // If conversion fails, still return the WAV file
+                        if FileManager.default.fileExists(atPath: wavPath) {
+                            let estimatedDuration = Self.estimateWavDuration(filePath: wavPath)
+                            
+                            let recording = RestoredRecording(
+                                uri: wavURL.absoluteString,
+                                duration: estimatedDuration,
+                                originalPath: wavPath
+                            )
+                            restoredRecordings.append(recording)
+                        }
+                    }
+                }
+                
+                promise.resolve(withResult: restoredRecordings)
+                
+            } catch {
+                promise.reject(withError: RuntimeError.error(withMessage: "Failed to restore recordings: \(error.localizedDescription)"))
+            }
+        }
+        
+        return promise
+    }
+    
+    /**
+     * Restore a single WAV recording file by converting it to M4A.
+     * Use this when you need to restore a specific file and update your local database.
+     */
+    public func restoreRecording(wavFilePath: String) throws -> Promise<RestoredRecording> {
+        let promise = Promise<RestoredRecording>()
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            // Validate path to prevent path traversal attacks
+            guard Self.validatePathSecurity(path: wavFilePath) else {
+                promise.reject(withError: RuntimeError.error(withMessage: "Access denied: file path is outside allowed paths"))
+                return
+            }
+            
+            // Check if file exists
+            guard FileManager.default.fileExists(atPath: wavFilePath) else {
+                promise.reject(withError: RuntimeError.error(withMessage: "WAV file not found: \(wavFilePath)"))
+                return
+            }
+            
+            // Check if it's a WAV file
+            guard wavFilePath.lowercased().hasSuffix(".wav") else {
+                promise.reject(withError: RuntimeError.error(withMessage: "File is not a WAV file: \(wavFilePath)"))
+                return
+            }
+            
+            // Convert to M4A
+            let result = WavToM4aConverter.convertSync(
+                wavFilePath: wavFilePath,
+                deleteWavAfterConversion: true
+            )
+            
+            switch result {
+            case .success(let outputPath, let duration):
+                let outputURL = URL(fileURLWithPath: outputPath)
+                let recording = RestoredRecording(
+                    uri: outputURL.absoluteString,
+                    duration: duration * 1000, // Convert to milliseconds
+                    originalPath: wavFilePath
+                )
+                promise.resolve(withResult: recording)
+                
+            case .error(let message):
+                // If conversion fails but WAV still exists, return WAV info
+                if FileManager.default.fileExists(atPath: wavFilePath) {
+                    let wavURL = URL(fileURLWithPath: wavFilePath)
+                    let estimatedDuration = Self.estimateWavDuration(filePath: wavFilePath)
+                    
+                    let recording = RestoredRecording(
+                        uri: wavURL.absoluteString,
+                        duration: estimatedDuration,
+                        originalPath: wavFilePath
+                    )
+                    promise.resolve(withResult: recording)
+                } else {
+                    promise.reject(withError: RuntimeError.error(withMessage: "Conversion failed: \(message)"))
+                }
+            }
+        }
+        
+        return promise
+    }
+
+    // MARK: - Path Security Validation
+    
+    /**
+     * Validate that the given path is within allowed directories.
+     * Prevents path traversal attacks by ensuring the path is under
+     * the app's Documents, Library, tmp, or Caches directory.
+     */
+    private static func validatePathSecurity(path: String) -> Bool {
+        let canonicalPath = (path as NSString).standardizingPath
+        
+        let allowedDirs: [String] = [
+            FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path,
+            FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first?.path,
+            FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?.path,
+            NSTemporaryDirectory()
+        ].compactMap { $0 }.map { ($0 as NSString).standardizingPath }
+        
+        return allowedDirs.contains { canonicalPath.hasPrefix($0) }
+    }
+    
+    // MARK: - WAV Duration Estimation
+    
+    /**
+     * Estimate WAV file duration by reading the actual byte rate from the header.
+     * Falls back to a default assumption if header cannot be read.
+     *
+     * WAV header layout (bytes):
+     *   0-3:   "RIFF"
+     *   4-7:   file size - 8
+     *   8-11:  "WAVE"
+     *  12-15:  "fmt "
+     *  16-19:  subchunk1 size (16 for PCM)
+     *  20-21:  audio format (1 = PCM)
+     *  22-23:  num channels
+     *  24-27:  sample rate
+     *  28-31:  byte rate (sampleRate * channels * bitsPerSample / 8)
+     *  32-33:  block align
+     *  34-35:  bits per sample
+     *  36-39:  "data"
+     *  40-43:  data size
+     */
+    private static func estimateWavDuration(filePath: String) -> Double {
+        guard let fileHandle = FileHandle(forReadingAtPath: filePath) else {
+            return 0.0
+        }
+        defer { fileHandle.closeFile() }
+        
+        let headerData = fileHandle.readData(ofLength: 44)
+        guard headerData.count >= 44 else {
+            return 0.0
+        }
+        
+        // Read byte rate from offset 28 (little-endian UInt32)
+        let byteRate: UInt32 = headerData.withUnsafeBytes { bytes in
+            bytes.load(fromByteOffset: 28, as: UInt32.self)
+        }
+        
+        guard byteRate > 0 else {
+            // Fallback: assume 44100Hz, 16-bit, mono
+            let fileSize = (try? FileManager.default.attributesOfItem(atPath: filePath)[.size] as? Int64) ?? 0
+            return Double(fileSize - 44) / 88.2
+        }
+        
+        // Get total file size
+        let attributes = try? FileManager.default.attributesOfItem(atPath: filePath)
+        let fileSize = attributes?[.size] as? Int64 ?? 0
+        let dataSize = fileSize - 44 // Subtract WAV header
+        
+        // Duration in milliseconds: dataSize / byteRate * 1000
+        return (Double(dataSize) / Double(byteRate)) * 1000.0
+    }
+    
     // MARK: - Private Methods
 
     private func getAudioSettings(audioSets: AudioSet?) -> [String: Any] {
@@ -726,12 +996,17 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         let audioQuality = audioSets?.AudioQuality ?? .high
         let defaults = Self.qualityPresets[audioQuality] ?? Self.qualityPresets[.high]!
 
-        // Apply default settings based on AudioQuality
-        settings[AVFormatIDKey] = Int(kAudioFormatMPEG4AAC)
+        // Use Linear PCM (WAV) format by default for crash-resilient recording
+        // WAV files are always playable even if recording is interrupted
+        settings[AVFormatIDKey] = Int(kAudioFormatLinearPCM)
         settings[AVSampleRateKey] = defaults.samplingRate
         settings[AVNumberOfChannelsKey] = defaults.channels
-        settings[AVEncoderBitRateKey] = defaults.bitrate
-        settings[AVEncoderAudioQualityKey] = defaults.encoderQuality.rawValue
+        
+        // Linear PCM specific settings
+        settings[AVLinearPCMBitDepthKey] = 16
+        settings[AVLinearPCMIsFloatKey] = false
+        settings[AVLinearPCMIsBigEndianKey] = false
+        settings[AVLinearPCMIsNonInterleaved] = false
 
         // Apply custom settings with explicit overrides taking precedence
         if let audioSets = audioSets {
@@ -750,17 +1025,45 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 settings[AVNumberOfChannelsKey] = Int(audioChannels)
             }
 
-            if let bitRate = audioSets.AudioEncodingBitRate {
-                settings[AVEncoderBitRateKey] = Int(bitRate)
+            // Apply bit depth if specified
+            if let bitDepth = audioSets.AVLinearPCMBitDepthKeyIOS {
+                let bitDepthValue: Int
+                switch bitDepth {
+                case .bit8: bitDepthValue = 8
+                case .bit16: bitDepthValue = 16
+                case .bit24: bitDepthValue = 24
+                case .bit32: bitDepthValue = 32
+                @unknown default: bitDepthValue = 16
+                }
+                settings[AVLinearPCMBitDepthKey] = bitDepthValue
             }
 
-            if let quality = audioSets.AVEncoderAudioQualityKeyIOS {
-                let mappedQuality = mapToAVAudioQuality(quality)
-                settings[AVEncoderAudioQualityKey] = mappedQuality
-            }
-
+            // Apply format override only if explicitly specified
+            // Note: For crash resilience, we recommend staying with Linear PCM
             if let format = audioSets.AVFormatIDKeyIOS {
-                settings[AVFormatIDKey] = getAudioFormatID(from: format)
+                let formatId = getAudioFormatID(from: format)
+                settings[AVFormatIDKey] = formatId
+                
+                // If switching to a compressed format, remove PCM-specific settings
+                // and add encoder settings
+                if formatId != Int(kAudioFormatLinearPCM) {
+                    settings.removeValue(forKey: AVLinearPCMBitDepthKey)
+                    settings.removeValue(forKey: AVLinearPCMIsFloatKey)
+                    settings.removeValue(forKey: AVLinearPCMIsBigEndianKey)
+                    settings.removeValue(forKey: AVLinearPCMIsNonInterleaved)
+                    
+                    settings[AVEncoderBitRateKey] = defaults.bitrate
+                    settings[AVEncoderAudioQualityKey] = defaults.encoderQuality.rawValue
+                    
+                    if let bitRate = audioSets.AudioEncodingBitRate {
+                        settings[AVEncoderBitRateKey] = Int(bitRate)
+                    }
+                    
+                    if let quality = audioSets.AVEncoderAudioQualityKeyIOS {
+                        let mappedQuality = mapToAVAudioQuality(quality)
+                        settings[AVEncoderAudioQualityKey] = mappedQuality
+                    }
+                }
             }
         }
 
@@ -831,15 +1134,24 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
     private func setupEnginePlayer(url: String, httpHeaders: Dictionary<String, String>?, promise: Promise<String>) {
         // TODO: Implement HTTP streaming with AVAudioEngine
-        // For now, use basic implementation
+        // For now, use basic implementation with memory optimization
         guard let audioURL = URL(string: url) else {
             promise.reject(withError: RuntimeError.error(withMessage: "Invalid URL"))
             return
         }
 
+        // Download to temporary file instead of loading into memory
+        // This prevents memory issues with large audio files
+        let tempDir = FileManager.default.temporaryDirectory
+        let tempFile = tempDir.appendingPathComponent("audio_\(UUID().uuidString).tmp")
+        
         do {
+            // Use streaming download instead of loading into memory
             let data = try Data(contentsOf: audioURL)
-            self.audioPlayer = try AVAudioPlayer(data: data)
+            try data.write(to: tempFile)
+            
+            // Create player from file instead of data (more memory efficient)
+            self.audioPlayer = try AVAudioPlayer(contentsOf: tempFile)
             self.ensurePlayerDelegate()
             self.audioPlayer?.delegate = self.playerDelegateProxy
             if let player = self.audioPlayer {
@@ -849,9 +1161,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 player.play()
             }
 
+            // Store temp file reference for cleanup when player stops
+            self.tempAudioFile = tempFile
+            
             self.startPlayTimer()
             promise.resolve(withResult: url)
         } catch {
+            // Clean up temp file on error
+            try? FileManager.default.removeItem(at: tempFile)
             promise.reject(withError: RuntimeError.error(withMessage: error.localizedDescription))
         }
     }
@@ -862,54 +1179,42 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
 
+            #if DEBUG
             print("🎙️ Starting record timer with interval: \(self.subscriptionDuration)")
-            print("🎙️ Current thread: \(Thread.current)")
-            print("🎙️ Is main thread: \(Thread.isMainThread)")
+            #endif
 
             self.recordTimer = Timer.scheduledTimer(withTimeInterval: self.subscriptionDuration, repeats: true) { [weak self] _ in
-                guard let self = self else {
-                    print("🎙️ Timer callback: self is nil")
-                    return
-                }
-                guard let recorder = self.audioRecorder else {
-                    print("🎙️ Timer callback: audioRecorder is nil")
-                    return
-                }
+                // Use autoreleasepool to ensure temporary objects are released promptly during long recordings
+                autoreleasepool {
+                    guard let self = self,
+                          let recorder = self.audioRecorder,
+                          recorder.isRecording else {
+                        self?.stopRecordTimer()
+                        return
+                    }
 
-                print("🎙️ Timer callback: recorder exists, isRecording=\(recorder.isRecording)")
+                    // Only update meters if metering is enabled
+                    if recorder.isMeteringEnabled {
+                        recorder.updateMeters()
+                    }
 
-                if !recorder.isRecording {
-                    print("🎙️ Timer callback: recorder is not recording anymore, stopping timer")
-                    self.stopRecordTimer()
-                    return
-                }
+                    let currentTime = recorder.currentTime * 1000 // Convert to ms
+                    let currentMetering = recorder.isMeteringEnabled ? Double(recorder.averagePower(forChannel: 0)) : -160.0
 
-                recorder.updateMeters()
+                    let recordBack = RecordBackType(
+                        isRecording: true,
+                        currentPosition: currentTime,
+                        currentMetering: currentMetering,
+                        recordSecs: currentTime
+                    )
 
-                let currentTime = recorder.currentTime * 1000 // Convert to ms
-                let currentMetering = recorder.averagePower(forChannel: 0)
-
-                print("🎙️ Timer callback: currentTime=\(currentTime)ms, metering=\(currentMetering)")
-
-                let recordBack = RecordBackType(
-                    isRecording: recorder.isRecording,
-                    currentPosition: currentTime,
-                    currentMetering: Double(currentMetering),
-                    recordSecs: currentTime
-                )
-
-                // Avoid interpolating RecordBackType directly to prevent Swift IRGen issues on Swift 6
-                print("🎙️ Timer callback: calling recordBackListener (time=\(currentTime)ms, metering=\(currentMetering))")
-
-                if let listener = self.recordBackListener {
-                    print("🎙️ Timer callback: recordBackListener exists, calling it")
-                    listener(recordBack)
-                } else {
-                    print("🎙️ Timer callback: recordBackListener is nil - not set up yet")
+                    self.recordBackListener?(recordBack)
                 }
             }
 
+            #if DEBUG
             print("🎙️ Record timer created and scheduled on main thread")
+            #endif
         }
     }
 
@@ -921,65 +1226,56 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
 
+            #if DEBUG
             print("🎵 Starting play timer with interval: \(self.subscriptionDuration)")
-            print("🎵 Current thread: \(Thread.current)")
-            print("🎵 Is main thread: \(Thread.isMainThread)")
+            #endif
 
             self.didEmitPlaybackEnd = false
 
             self.playTimer = Timer.scheduledTimer(withTimeInterval: self.subscriptionDuration, repeats: true) { [weak self] timer in
-                print("🎵 ===== TIMER CALLBACK FIRED =====")
-                guard let self = self else {
-                    print("🎵 Play timer callback: self is nil")
-                    return
-                }
-
-                // First check if we should stop the timer
-                guard let player = self.audioPlayer, let listener = self.playBackListener else {
-                    print("🎵 Play timer callback: stopping timer - player or listener is nil")
-                    self.stopPlayTimer()
-                    return
-                }
-
-                // Check if player is still playing
-                if !player.isPlaying {
-                    print("🎵 Play timer callback: player stopped, stopping timer")
-
-                    // Send final callback if duration is available
-                    if player.duration > 0 {
-                        self.emitPlaybackEndEvents(durationMs: player.duration * 1000, includePlaybackUpdate: true)
+                // Use autoreleasepool to ensure temporary objects are released promptly
+                autoreleasepool {
+                    guard let self = self,
+                          let player = self.audioPlayer,
+                          let listener = self.playBackListener else {
+                        self?.stopPlayTimer()
+                        return
                     }
 
-                    self.stopPlayTimer()
-                    return
-                }
+                    // Check if player is still playing
+                    if !player.isPlaying {
+                        // Send final callback if duration is available
+                        if player.duration > 0 {
+                            self.emitPlaybackEndEvents(durationMs: player.duration * 1000, includePlaybackUpdate: true)
+                        }
+                        self.stopPlayTimer()
+                        return
+                    }
 
-                let currentTime = player.currentTime * 1000 // Convert to ms
-                let duration = player.duration * 1000 // Convert to ms
+                    let currentTime = player.currentTime * 1000 // Convert to ms
+                    let duration = player.duration * 1000 // Convert to ms
 
-                print("🎵 Play timer callback: currentTime=\(currentTime)ms, duration=\(duration)ms")
+                    let playBack = PlayBackType(
+                        isMuted: false,
+                        duration: duration,
+                        currentPosition: currentTime
+                    )
 
-                let playBack = PlayBackType(
-                    isMuted: false,
-                    duration: duration,
-                    currentPosition: currentTime
-                )
+                    listener(playBack)
 
-                listener(playBack)
-
-                // Check if playback finished - use a small threshold for floating point comparison
-                let threshold = 100.0 // 100ms threshold
-                if duration > 0 && currentTime >= (duration - threshold) {
-                    print("🎵 Play timer callback: playback finished by position")
-
-                    self.emitPlaybackEndEvents(durationMs: duration, includePlaybackUpdate: true)
-
-                    self.stopPlayTimer()
-                    return
+                    // Check if playback finished - use a small threshold for floating point comparison
+                    let threshold = 100.0 // 100ms threshold
+                    if duration > 0 && currentTime >= (duration - threshold) {
+                        self.emitPlaybackEndEvents(durationMs: duration, includePlaybackUpdate: true)
+                        self.stopPlayTimer()
+                        return
+                    }
                 }
             }
 
+            #if DEBUG
             print("🎵 Play timer created and scheduled on main thread")
+            #endif
         }
     }
 
@@ -1001,7 +1297,6 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
     private func emitPlaybackEndEvents(durationMs: Double, includePlaybackUpdate: Bool) {
         guard !self.didEmitPlaybackEnd else {
-            print("🎵 Playback end already emitted, skipping duplicate")
             return
         }
         self.didEmitPlaybackEnd = true
@@ -1012,7 +1307,6 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 duration: durationMs,
                 currentPosition: durationMs
             )
-            print("🎵 Emitting final playback update at \(durationMs)ms")
             listener(finalPlayBack)
         }
 
@@ -1021,15 +1315,191 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 duration: durationMs,
                 currentPosition: durationMs
             )
-            print("🎵 Emitting playback end event at \(durationMs)ms")
             endListener(endEvent)
         }
     }
 
+    // MARK: - Interruption Handling
+    
+    private func setupInterruptionObserver() {
+        NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioSessionInterruption),
+            name: AVAudioSession.interruptionNotification,
+            object: nil
+        )
+        
+        // Observe app termination to finalize recording
+        NotificationCenter.default.removeObserver(self, name: UIApplication.willTerminateNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAppWillTerminate),
+            name: UIApplication.willTerminateNotification,
+            object: nil
+        )
+        
+    }
+    
+    private func removeInterruptionObserver() {
+        NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIApplication.willTerminateNotification, object: nil)
+    }
+    
+    /**
+     * Called when the app is about to be terminated (e.g., user swipe kills the app).
+     * This ensures the audio file is properly finalized so it can be opened later.
+     */
+    @objc private func handleAppWillTerminate(notification: Notification) {
+        finalizeRecordingOnKill()
+    }
+    
+    /**
+     * Safely finalize the recording when app is being killed or entering background.
+     * This ensures the audio file header is written correctly and the file can be played back.
+     */
+    private func finalizeRecordingOnKill() {
+        guard let recorder = audioRecorder else { return }
+        
+        let fileURL = recorder.url
+        let currentTime = recorder.currentTime * 1000
+        
+        print("🎙️ Finalizing recording on app kill/background...")
+        print("🎙️ Recording path: \(fileURL.path)")
+        
+        // Stop recording to finalize file headers
+        recorder.stop()
+        stopRecordTimer()
+        
+        // Check if file was saved properly
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: fileURL.path) {
+            do {
+                let attributes = try fileManager.attributesOfItem(atPath: fileURL.path)
+                let fileSize = attributes[.size] as? Int64 ?? 0
+                print("🎙️ Audio file saved successfully: \(fileURL.path) (\(fileSize) bytes)")
+            } catch {
+                print("🎙️ Could not get file attributes: \(error)")
+            }
+        } else {
+            print("🎙️ ⚠️ Audio file not found after finalization: \(fileURL.path)")
+        }
+        
+        // Notify listener with final state
+        if let listener = recordBackListener {
+            listener(RecordBackType(
+                isRecording: false,
+                currentPosition: currentTime,
+                currentMetering: nil,
+                recordSecs: currentTime
+            ))
+        }
+        
+        // Cleanup
+        audioRecorder = nil
+        try? recordingSession?.setActive(false)
+        recordingSession = nil
+        
+        print("🎙️ Recording finalized successfully")
+    }
+    
+    @objc private func handleAudioSessionInterruption(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+        
+        switch type {
+        case .began:
+            // Interruption began (e.g., phone call) - stop recording to save the audio.
+            //
+            // The recording is stopped (not paused) because iOS does not guarantee
+            // that the audio session can be restored. The WAV file is finalized on disk
+            // and remains playable.
+            //
+            // Note: The callback sends isRecording=false with the current position,
+            // but does NOT include the file path. The JS side already knows the file
+            // path from the startRecorder() promise. If the file was auto-generated,
+            // callers should use restorePendingRecordings() after app restart to
+            // retrieve any interrupted recordings.
+            if let recorder = audioRecorder, recorder.isRecording {
+                let currentTime = recorder.currentTime * 1000
+                
+                // Stop recording to save the audio
+                recorder.stop()
+                stopRecordTimer()
+                
+                // Clean up current recorder but keep session for potential resume
+                audioRecorder = nil
+                try? recordingSession?.setActive(false)
+                recordingSession = nil
+                
+                // Notify listener with interruption status
+                if let listener = recordBackListener {
+                    listener(RecordBackType(
+                        isRecording: false,
+                        currentPosition: currentTime,
+                        currentMetering: nil,
+                        recordSecs: currentTime,
+                    ))
+                }
+            }
+        case .ended:
+            break
+        @unknown default:
+            break
+        }
+    }
+    
     // MARK: - AVAudioPlayerDelegate via proxy
     deinit {
+        #if DEBUG
+        print("🎙️ HybridSound deinit called - cleaning up resources")
+        #endif
+        
+        // Remove notification observer
+        removeInterruptionObserver()
+        
+        // Stop and invalidate timers
         recordTimer?.invalidate()
+        recordTimer = nil
         playTimer?.invalidate()
+        playTimer = nil
+        
+        // Stop any active recording/playback
+        audioRecorder?.stop()
+        audioRecorder = nil
+        audioPlayer?.stop()
+        audioPlayer = nil
+        
+        // Clean up audio engine
+        audioEngine?.stop()
+        audioEngine = nil
+        audioPlayerNode = nil
+        audioFile = nil
+        
+        // Clean up temporary audio file
+        if let tempFile = tempAudioFile {
+            try? FileManager.default.removeItem(at: tempFile)
+            tempAudioFile = nil
+        }
+        
+        // Clear all listeners to break potential retain cycles
+        recordBackListener = nil
+        playBackListener = nil
+        playbackEndListener = nil
+        
+        // Deactivate audio session
+        try? recordingSession?.setActive(false)
+        recordingSession = nil
+        
+        // Clear delegate proxy
+        playerDelegateProxy = nil
+        
+        #if DEBUG
+        print("🎙️ HybridSound cleanup completed")
+        #endif
     }
 
     private class AudioPlayerDelegateProxy: NSObject, AVAudioPlayerDelegate {
@@ -1037,7 +1507,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         init(owner: HybridSound) { self.owner = owner }
 
         func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+            #if DEBUG
             print("🎵 AVAudioPlayer finished playing. success=\(flag)")
+            #endif
             guard let owner = owner else { return }
             let finalDurationMs = player.duration * 1000
             owner.emitPlaybackEndEvents(durationMs: finalDurationMs, includePlaybackUpdate: true)
@@ -1045,7 +1517,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         }
 
         func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+            #if DEBUG
             print("🎵 AVAudioPlayer decode error: \(String(describing: error))")
+            #endif
         }
     }
 

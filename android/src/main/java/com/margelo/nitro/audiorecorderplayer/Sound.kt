@@ -1,32 +1,36 @@
 package com.margelo.nitro.sound
 
-import android.media.AudioFormat
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.media.AudioManager
-import android.media.AudioRecord
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
-import android.content.Context
-import com.facebook.react.bridge.ReactApplicationContext
 import com.margelo.nitro.NitroModules
 import com.margelo.nitro.core.Promise
 import java.io.File
+import java.io.RandomAccessFile
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.Timer
 import java.util.TimerTask
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.math.log10
+import com.margelo.nitro.audiorecorderplayer.Logger
+import com.margelo.nitro.audiorecorderplayer.RecordingForegroundService
+import com.margelo.nitro.audiorecorderplayer.WavToM4aConverter
+import com.margelo.nitro.audiorecorderplayer.WavRecorder
 
 class HybridSound : HybridSoundSpec() {
-    private var mediaRecorder: MediaRecorder? = null
     private var mediaPlayer: MediaPlayer? = null
-    private var currentRecordingPath: String? = null
 
-    private var recordTimer: Timer? = null
     private var playTimer: Timer? = null
 
     private var recordBackListener: ((recordingMeta: RecordBackType) -> Unit)? = null
@@ -34,54 +38,75 @@ class HybridSound : HybridSoundSpec() {
     private var playbackEndListener: ((playbackEndMeta: PlaybackEndType) -> Unit)? = null
 
     private var subscriptionDuration: Long = 60L
-    private var recordStartTime: Long = 0L
-    private var pausedRecordTime: Long = 0L
-    private var meteringEnabled: Boolean = false
     
-    // Metering-related properties
-    private var lastMeteringUpdateTime = 0L
-    private var lastMeteringValue = SILENCE_THRESHOLD_DB
+    // Service connection for recording
+    private var recordingService: RecordingForegroundService? = null
+    private var isServiceBound = false
+    private var currentRecordingPath: String? = null
+
+    // Pending recording parameters (used by event-driven service connection)
+    private var pendingRecordingParams: PendingRecordingParams? = null
+    private var pendingRecordingPromise: Promise<String>? = null
+
+    private data class PendingRecordingParams(
+        val filePath: String,
+        val audioSource: Int,
+        val outputFormat: Int,
+        val audioEncoder: Int,
+        val samplingRate: Int?,
+        val channels: Int?,
+        val bitrate: Int?,
+        val enableMetering: Boolean,
+        val subscriptionDuration: Long
+    )
+
+    // Audio focus for call interruption handling
+    private var audioManager: AudioManager? = null
+    private var audioFocusChangeListener: AudioManager.OnAudioFocusChangeListener? = null
+    private var audioFocusRequest: android.media.AudioFocusRequest? = null
 
     private val handler = Handler(Looper.getMainLooper())
 
     private val context: Context
         get() = NitroModules.applicationContext ?: throw IllegalStateException("Application context not available")
 
-    // Named constants with documentation
-    companion object {
-      /**
-       * Minimum amplitude value to prevent log10(0) which would return negative infinity.
-       * This represents the noise floor for audio metering calculations.
-       */
-      private const val MIN_AMPLITUDE_EPSILON = 1e-10
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as RecordingForegroundService.RecordingBinder
+            recordingService = binder.getService()
+            isServiceBound = true
+            
+            // Setup callback for recording updates
+            recordingService?.onRecordingUpdate = { isRecording, currentPosition, metering ->
+                handler.post {
+                    recordBackListener?.invoke(
+                        RecordBackType(
+                            isRecording = isRecording,
+                            currentPosition = currentPosition,
+                            currentMetering = metering,
+                            recordSecs = currentPosition
+                        )
+                    )
+                }
+            }
+            
+            // Start pending recording if exists (event-driven, no Thread.sleep)
+            val params = pendingRecordingParams
+            val promise = pendingRecordingPromise
+            if (params != null && promise != null) {
+                pendingRecordingParams = null
+                pendingRecordingPromise = null
+                
+                CoroutineScope(Dispatchers.IO).launch {
+                    startRecordingOnService(recordingService!!, params, promise)
+                }
+            }
+        }
 
-      /**
-       * Silence threshold in decibels. Values below this are considered silence.
-       * -160 dB is effectively digital silence.
-       */
-      private const val SILENCE_THRESHOLD_DB = -160.0
-
-      /**
-       * Maximum amplitude value from MediaRecorder.getMaxAmplitude().
-       * Used for normalizing amplitude values to 0.0-1.0 range.
-       */
-      private const val MAX_AMPLITUDE_VALUE = 32767.0
-
-      /**
-       * Minimum interval between metering calculations to optimize performance.
-       * Limits metering updates to 10Hz maximum (every 100ms).
-       */
-      private const val METERING_UPDATE_INTERVAL_MS = 100L
-
-      /**
-       * Maximum decibel level representing full scale amplitude (0 dB).
-       */
-      private const val MAX_DECIBEL_LEVEL = 0.0
-
-      /**
-       * Default metering value when metering is disabled.
-       */
-      private const val METERING_DISABLED_VALUE = 0.0
+        override fun onServiceDisconnected(name: ComponentName?) {
+            recordingService = null
+            isServiceBound = false
+        }
     }
 
     // Recording methods
@@ -92,10 +117,7 @@ class HybridSound : HybridSoundSpec() {
     ): Promise<String> {
         val promise = Promise<String>()
 
-      // For audio metering
-      this.meteringEnabled = enableMetering ?: false
-
-                // Sanitize audioSets to ignore iOS-specific fields on Android to prevent crashes
+        // Sanitize audioSets to ignore iOS-specific fields on Android
         val sanitizedAudioSets = audioSets?.copy(
             AVEncoderAudioQualityKeyIOS = null,
             AVModeIOS = null,
@@ -109,26 +131,17 @@ class HybridSound : HybridSoundSpec() {
             AVSampleRateKeyIOS = null
         )
 
-        // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
             try {
-            // Create file path
-            val filePath = uri ?: run {
-                val dir = context.filesDir
-                val fileName = "sound_${System.currentTimeMillis()}.mp4"
-                File(dir, fileName).absolutePath
-            }
-            // Store the recording path
-            currentRecordingPath = filePath
+                // Create file path (WAV format for crash-resilient recording)
+                val filePath = uri ?: run {
+                    val dir = context.filesDir
+                    val fileName = "sound_${System.currentTimeMillis()}.wav"
+                    File(dir, fileName).absolutePath
+                }
+                currentRecordingPath = filePath
 
-            // Initialize MediaRecorder
-            mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                MediaRecorder(context)
-            } else {
-                @Suppress("DEPRECATION")
-                MediaRecorder()
-            }.apply {
-                // Set audio source
+                // Get audio settings
                 val audioSource = when (sanitizedAudioSets?.AudioSourceAndroid) {
                     AudioSourceAndroidType.DEFAULT -> MediaRecorder.AudioSource.DEFAULT
                     AudioSourceAndroidType.MIC -> MediaRecorder.AudioSource.MIC
@@ -148,26 +161,24 @@ class HybridSound : HybridSoundSpec() {
                     } else {
                         MediaRecorder.AudioSource.MIC
                     }
-                    AudioSourceAndroidType.RADIO_TUNER -> MediaRecorder.AudioSource.MIC // Not available in standard API
-                    AudioSourceAndroidType.HOTWORD -> MediaRecorder.AudioSource.MIC // Not available in standard API
+                    AudioSourceAndroidType.RADIO_TUNER -> MediaRecorder.AudioSource.MIC
+                    AudioSourceAndroidType.HOTWORD -> MediaRecorder.AudioSource.MIC
                     null -> MediaRecorder.AudioSource.MIC
                 }
-                setAudioSource(audioSource)
 
-                // Set output format
                 val outputFormat = when (sanitizedAudioSets?.OutputFormatAndroid) {
                     OutputFormatAndroidType.DEFAULT -> MediaRecorder.OutputFormat.DEFAULT
                     OutputFormatAndroidType.THREE_GPP -> MediaRecorder.OutputFormat.THREE_GPP
                     OutputFormatAndroidType.MPEG_4 -> MediaRecorder.OutputFormat.MPEG_4
                     OutputFormatAndroidType.AMR_NB -> MediaRecorder.OutputFormat.AMR_NB
                     OutputFormatAndroidType.AMR_WB -> MediaRecorder.OutputFormat.AMR_WB
-                    OutputFormatAndroidType.AAC_ADIF -> MediaRecorder.OutputFormat.MPEG_4 // AAC_ADIF not available
+                    OutputFormatAndroidType.AAC_ADIF -> MediaRecorder.OutputFormat.MPEG_4
                     OutputFormatAndroidType.AAC_ADTS -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                         MediaRecorder.OutputFormat.AAC_ADTS
                     } else {
                         MediaRecorder.OutputFormat.MPEG_4
                     }
-                    OutputFormatAndroidType.OUTPUT_FORMAT_RTP_AVP -> MediaRecorder.OutputFormat.MPEG_4 // RTP_AVP not available
+                    OutputFormatAndroidType.OUTPUT_FORMAT_RTP_AVP -> MediaRecorder.OutputFormat.MPEG_4
                     OutputFormatAndroidType.MPEG_2_TS -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
                         MediaRecorder.OutputFormat.MPEG_2_TS
                     } else {
@@ -180,9 +191,7 @@ class HybridSound : HybridSoundSpec() {
                     }
                     null -> MediaRecorder.OutputFormat.MPEG_4
                 }
-                setOutputFormat(outputFormat)
 
-                // Set audio encoder
                 val audioEncoder = when (sanitizedAudioSets?.AudioEncoderAndroid) {
                     AudioEncoderAndroidType.DEFAULT -> MediaRecorder.AudioEncoder.DEFAULT
                     AudioEncoderAndroidType.AMR_NB -> MediaRecorder.AudioEncoder.AMR_NB
@@ -205,13 +214,9 @@ class HybridSound : HybridSoundSpec() {
                     }
                     null -> MediaRecorder.AudioEncoder.AAC
                 }
-                setAudioEncoder(audioEncoder)
 
-                // Apply sane defaults based on AudioQuality when explicit values are missing
-                // Default to HIGH if not provided
+                // Quality settings
                 val audioQuality = sanitizedAudioSets?.AudioQuality ?: AudioQualityType.HIGH
-
-                // Define quality presets to avoid repetition
                 data class QualitySettings(val samplingRate: Int, val channels: Int, val bitrate: Int)
                 val presets = mapOf(
                     AudioQualityType.LOW to QualitySettings(22050, 1, 64000),
@@ -220,35 +225,50 @@ class HybridSound : HybridSoundSpec() {
                 )
                 val defaults = presets[audioQuality]
 
-                // Apply settings with explicit overrides taking precedence
                 val samplingRate = sanitizedAudioSets?.AudioSamplingRate?.toInt() ?: defaults?.samplingRate
-                samplingRate?.let { setAudioSamplingRate(it) }
-
                 val channels = sanitizedAudioSets?.AudioChannels?.toInt() ?: defaults?.channels
-                channels?.let { setAudioChannels(it) }
-
                 val bitrate = sanitizedAudioSets?.AudioEncodingBitRate?.toInt() ?: defaults?.bitrate
-                bitrate?.let { setAudioEncodingBitRate(it) }
 
-                // Set output file
-                setOutputFile(filePath)
-
-                // Prepare and start
-                prepare()
-                start()
-            }
-
-                recordStartTime = System.currentTimeMillis()
-                pausedRecordTime = 0L
-
-                // Start timer on main thread
-                handler.post {
-                    startRecordTimer()
+                // Store pending recording params for event-driven start
+                val params = PendingRecordingParams(
+                    filePath = filePath,
+                    audioSource = audioSource,
+                    outputFormat = outputFormat,
+                    audioEncoder = audioEncoder,
+                    samplingRate = samplingRate,
+                    channels = channels,
+                    bitrate = bitrate,
+                    enableMetering = enableMetering ?: false,
+                    subscriptionDuration = subscriptionDuration
+                )
+                
+                // Check if service is already bound and available
+                val existingService = recordingService
+                if (isServiceBound && existingService != null) {
+                    // Service already connected, start recording directly
+                    startRecordingOnService(existingService, params, promise)
+                } else {
+                    // Reject any previous pending promise to avoid orphaned promises
+                    pendingRecordingPromise?.reject(Exception("Recording superseded by a new startRecorder call"))
+                    
+                    // Store pending params - will be picked up in onServiceConnected
+                    pendingRecordingParams = params
+                    pendingRecordingPromise = promise
+                    
+                    // Start the foreground service and bind
+                    handler.post {
+                        RecordingForegroundService.start(context)
+                        
+                        val intent = Intent(context, RecordingForegroundService::class.java)
+                        context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+                        
+                        setupAudioFocus()
+                    }
                 }
-
-                val fileUri = Uri.fromFile(File(filePath)).toString()
-                promise.resolve(fileUri)
             } catch (e: Exception) {
+                pendingRecordingParams = null
+                pendingRecordingPromise = null
+                cleanupServiceOnError()
                 promise.reject(e)
             }
         }
@@ -259,10 +279,12 @@ class HybridSound : HybridSoundSpec() {
     override fun pauseRecorder(): Promise<String> {
         return Promise.parallel {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                mediaRecorder?.pause()
-                pausedRecordTime = System.currentTimeMillis() - recordStartTime
-                stopRecordTimer()
-                "Recorder paused"
+                val service = RecordingForegroundService.getInstance()
+                if (service != null && service.pauseRecording()) {
+                    "Recorder paused"
+                } else {
+                    throw Exception("Failed to pause recording")
+                }
             } else {
                 throw Exception("Pause is not supported on Android API < 24")
             }
@@ -272,10 +294,12 @@ class HybridSound : HybridSoundSpec() {
     override fun resumeRecorder(): Promise<String> {
         return Promise.parallel {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                mediaRecorder?.resume()
-                recordStartTime = System.currentTimeMillis() - pausedRecordTime
-                startRecordTimer()
-                "Recorder resumed"
+                val service = RecordingForegroundService.getInstance()
+                if (service != null && service.resumeRecording()) {
+                    "Recorder resumed"
+                } else {
+                    throw Exception("Failed to resume recording")
+                }
             } else {
                 throw Exception("Resume is not supported on Android API < 24")
             }
@@ -285,40 +309,71 @@ class HybridSound : HybridSoundSpec() {
     override fun stopRecorder(): Promise<String> {
         val promise = Promise<String>()
 
-        // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                mediaRecorder?.apply {
-                    stop()
-                    release()
-                }
-                mediaRecorder = null
-
-                // Reset metering state
-                meteringEnabled = false
-                lastMeteringUpdateTime = 0L
-                lastMeteringValue = SILENCE_THRESHOLD_DB
-
-                handler.post {
-                    stopRecordTimer()
-                }
-
-                val path = currentRecordingPath
-                currentRecordingPath = null // State is cleared regardless of outcome
+                val service = RecordingForegroundService.getInstance()
+                val wavPath = service?.stopRecording() ?: currentRecordingPath
                 
-                path?.let { 
-                    val fileUri = Uri.fromFile(File(it)).toString()
-                    promise.resolve(fileUri)
-                } ?: promise.reject(Exception("Recorder not started or path is unavailable."))
+                handler.post {
+                    // Unbind from service
+                    if (isServiceBound) {
+                        try {
+                            context.unbindService(serviceConnection)
+                        } catch (e: Exception) {
+                            // Ignore unbind errors
+                        }
+                        isServiceBound = false
+                    }
+                    
+                    // Stop the service
+                    RecordingForegroundService.stop(context)
+                    
+                    // Release audio focus
+                    releaseAudioFocus()
+                }
+
+                currentRecordingPath = null
+                
+                if (wavPath == null) {
+                    promise.reject(Exception("Recorder not started or path is unavailable."))
+                    return@launch
+                }
+                
+                // Convert WAV to M4A for smaller file size
+                val conversionResult = WavToM4aConverter.convert(
+                    wavFilePath = wavPath,
+                    deleteWavAfterConversion = true
+                )
+                
+                when (conversionResult) {
+                    is WavToM4aConverter.ConversionResult.Success -> {
+                        val fileUri = Uri.fromFile(File(conversionResult.outputPath)).toString()
+                        promise.resolve(fileUri)
+                    }
+                    is WavToM4aConverter.ConversionResult.Error -> {
+                        // If conversion fails, return the WAV file instead
+                        val wavFile = File(wavPath)
+                        if (wavFile.exists()) {
+                            val fileUri = Uri.fromFile(wavFile).toString()
+                            promise.resolve(fileUri)
+                        } else {
+                            promise.reject(Exception("Recording failed: ${conversionResult.message}"))
+                        }
+                    }
+                }
             } catch (e: Exception) {
-                mediaRecorder?.release()
-                mediaRecorder = null
-
-                // Reset metering state even on error
-                meteringEnabled = false
-                lastMeteringUpdateTime = 0L
-                lastMeteringValue = SILENCE_THRESHOLD_DB
-
+                handler.post {
+                    if (isServiceBound) {
+                        try {
+                            context.unbindService(serviceConnection)
+                        } catch (ex: Exception) {
+                            // Ignore
+                        }
+                        isServiceBound = false
+                    }
+                    RecordingForegroundService.stop(context)
+                    releaseAudioFocus()
+                }
                 promise.reject(e)
             }
         }
@@ -333,7 +388,6 @@ class HybridSound : HybridSoundSpec() {
     ): Promise<String> {
         val promise = Promise<String>()
 
-        // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 if (uri == null) {
@@ -358,88 +412,76 @@ class HybridSound : HybridSoundSpec() {
                     stopPlayTimer()
                 }
 
-            mediaPlayer = MediaPlayer().apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    setAudioAttributes(
-                        android.media.AudioAttributes.Builder()
-                            .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
-                            .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .build()
-                    )
-                } else {
-                    @Suppress("DEPRECATION")
-                    setAudioStreamType(AudioManager.STREAM_MUSIC)
-                }
+                mediaPlayer = MediaPlayer().apply {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        setAudioAttributes(
+                            android.media.AudioAttributes.Builder()
+                                .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+                                .build()
+                        )
+                    } else {
+                        @Suppress("DEPRECATION")
+                        setAudioStreamType(AudioManager.STREAM_MUSIC)
+                    }
 
-                // Track if promise has been resolved to avoid double resolution
-                val isPromiseResolved = java.util.concurrent.atomic.AtomicBoolean(false)
+                    val isPromiseResolved = java.util.concurrent.atomic.AtomicBoolean(false)
 
-                // Set up error listener BEFORE any operations that might fail
-                setOnErrorListener { _, what, extra ->
-                    handler.post {
-                        stopPlayTimer()
-                        if (isPromiseResolved.compareAndSet(false, true)) {
-                            promise.reject(Exception("MediaPlayer error: what=$what, extra=$extra"))
+                    setOnErrorListener { _, what, extra ->
+                        handler.post {
+                            stopPlayTimer()
+                            if (isPromiseResolved.compareAndSet(false, true)) {
+                                promise.reject(Exception("MediaPlayer error: what=$what, extra=$extra"))
+                            }
+                        }
+                        true
+                    }
+
+                    setOnCompletionListener { player ->
+                        handler.post {
+                            stopPlayTimer()
+
+                            val safeDuration = try {
+                                player.duration.toDouble()
+                            } catch (e: IllegalStateException) {
+                                0.0
+                            }
+
+                            playBackListener?.invoke(
+                                PlayBackType(
+                                    isMuted = false,
+                                    duration = safeDuration,
+                                    currentPosition = safeDuration
+                                )
+                            )
+
+                            playbackEndListener?.invoke(
+                                PlaybackEndType(
+                                    duration = safeDuration,
+                                    currentPosition = safeDuration
+                                )
+                            )
                         }
                     }
-                    // Log error for debugging but don't try to reject promise again
-                    true
-                }
 
-                setOnCompletionListener { player ->
-                    handler.post {
-                        stopPlayTimer()
-
-                        // Get duration safely
-                        val safeDuration = try {
-                            player.duration.toDouble()
-                        } catch (e: IllegalStateException) {
-                            0.0
+                    when {
+                        uri.startsWith("http") -> {
+                            val headers = httpHeaders ?: emptyMap()
+                            setDataSource(context, Uri.parse(uri), headers)
                         }
+                        uri.startsWith("content://") -> {
+                            setDataSource(context, Uri.parse(uri))
+                        }
+                        uri.startsWith("file://") -> {
+                            setDataSource(context, Uri.parse(uri))
+                        }
+                        else -> {
+                            setDataSource(uri)
+                        }
+                    }
 
-                        // Send final playback update
-                        playBackListener?.invoke(
-                            PlayBackType(
-                                isMuted = false,
-                                duration = safeDuration,
-                                currentPosition = safeDuration
-                            )
-                        )
-
-                        // Send playback end event
-                        playbackEndListener?.invoke(
-                            PlaybackEndType(
-                                duration = safeDuration,
-                                currentPosition = safeDuration
-                            )
-                        )
-                    }
-                }
-
-                when {
-                    uri.startsWith("http") -> {
-                        // Handle network audio
-                        val headers = httpHeaders ?: emptyMap()
-                        setDataSource(context, Uri.parse(uri), headers)
-                    }
-                    uri.startsWith("content://") -> {
-                        // Handle content URI
-                        setDataSource(context, Uri.parse(uri))
-                    }
-                    uri.startsWith("file://") -> {
-                        // Handle file URI
-                        setDataSource(context, Uri.parse(uri))
-                    }
-                    else -> {
-                        // Handle local file paths
-                        setDataSource(uri)
-                    }
-                }
-
-                    // Prepare on IO thread
                     prepare()
 
-                    // Start playback on main thread
                     handler.post {
                         try {
                             if (isPromiseResolved.compareAndSet(false, true)) {
@@ -448,7 +490,6 @@ class HybridSound : HybridSoundSpec() {
                                 promise.resolve(uri)
                             }
                         } catch (e: Exception) {
-                            // If start() fails, make sure we don't leave promise unresolved
                             if (isPromiseResolved.compareAndSet(false, true)) {
                                 promise.reject(Exception("Failed to start MediaPlayer: ${e.message}", e))
                             }
@@ -466,11 +507,9 @@ class HybridSound : HybridSoundSpec() {
     override fun stopPlayer(): Promise<String> {
         val promise = Promise<String>()
 
-        // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 mediaPlayer?.let { player ->
-                    // Check if player is in a valid state before stopping
                     if (player.isPlaying) {
                         player.stop()
                     }
@@ -485,12 +524,11 @@ class HybridSound : HybridSoundSpec() {
 
                 promise.resolve("Player stopped")
             } catch (e: Exception) {
-                // Ensure cleanup even if error occurs
                 try {
                     mediaPlayer?.reset()
                     mediaPlayer?.release()
                 } catch (releaseError: Exception) {
-                    // Ignore errors during cleanup
+                    // Ignore
                 }
                 mediaPlayer = null
 
@@ -608,72 +646,276 @@ class HybridSound : HybridSoundSpec() {
         return String.format("%02d:%02d:%02d", minutes, seconds, milliseconds)
     }
 
-    // Removed redundant meteringUpdateInterval property; using METERING_UPDATE_INTERVAL_MS directly
+    // Recovery methods
+    /**
+     * Restore any pending recordings that were interrupted by app crash.
+     * Scans for WAV files, repairs them if needed, converts to M4A, and returns the results.
+     */
+    override fun restorePendingRecordings(directory: String?): Promise<Array<RestoredRecording>> {
+        val promise = Promise<Array<RestoredRecording>>()
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val scanDir = if (directory != null) {
+                    val dir = File(directory)
+                    // Validate path to prevent directory traversal attacks
+                    if (!validatePathSecurity(dir.absolutePath)) {
+                        promise.reject(Exception("Access denied: directory is outside allowed paths"))
+                        return@launch
+                    }
+                    dir
+                } else {
+                    context.filesDir
+                }
+                
+                if (!scanDir.exists() || !scanDir.isDirectory) {
+                    promise.resolve(emptyArray())
+                    return@launch
+                }
+                
+                // Find all WAV files
+                val wavFiles = scanDir.listFiles { file ->
+                    file.isFile && file.name.endsWith(".wav", ignoreCase = true)
+                } ?: emptyArray()
+                
+                if (wavFiles.isEmpty()) {
+                    promise.resolve(emptyArray())
+                    return@launch
+                }
+                
+                val restoredRecordings = mutableListOf<RestoredRecording>()
+                
+                for (wavFile in wavFiles) {
+                    try {
+                        val wavPath = wavFile.absolutePath
+                        
+                        // Repair WAV header if needed
+                        WavRecorder.repairWavFile(wavPath)
+                        
+                        // Convert to M4A
+                        val result = WavToM4aConverter.convert(
+                            wavFilePath = wavPath,
+                            deleteWavAfterConversion = true
+                        )
+                        
+                        when (result) {
+                            is WavToM4aConverter.ConversionResult.Success -> {
+                                val fileUri = Uri.fromFile(File(result.outputPath)).toString()
+                                restoredRecordings.add(
+                                    RestoredRecording(
+                                        uri = fileUri,
+                                        duration = result.duration.toDouble(),
+                                        originalPath = wavPath
+                                    )
+                                )
+                            }
+                            is WavToM4aConverter.ConversionResult.Error -> {
+                                // If conversion fails, still return the WAV file
+                                if (wavFile.exists()) {
+                                    val fileUri = Uri.fromFile(wavFile).toString()
+                                    val estimatedDuration = estimateWavDuration(wavPath)
+                                    restoredRecordings.add(
+                                        RestoredRecording(
+                                            uri = fileUri,
+                                            duration = estimatedDuration,
+                                            originalPath = wavPath
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        // Log error but continue with other files
+                        Logger.e("[Sound] Error restoring recording ${wavFile.name}: ${e.message}", e)
+                    }
+                }
+                
+                promise.resolve(restoredRecordings.toTypedArray())
+            } catch (e: Exception) {
+                promise.reject(e)
+            }
+        }
+        
+        return promise
+    }
+
+    /**
+     * Restore a single WAV recording file by converting it to M4A.
+     * Use this when you need to restore a specific file and update your local database.
+     */
+    override fun restoreRecording(wavFilePath: String): Promise<RestoredRecording> {
+        val promise = Promise<RestoredRecording>()
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Validate path to prevent path traversal attacks
+                if (!validatePathSecurity(wavFilePath)) {
+                    promise.reject(Exception("Access denied: file path is outside allowed paths"))
+                    return@launch
+                }
+                
+                val wavFile = File(wavFilePath)
+                
+                if (!wavFile.exists()) {
+                    promise.reject(Exception("WAV file not found: $wavFilePath"))
+                    return@launch
+                }
+                
+                if (!wavFile.name.endsWith(".wav", ignoreCase = true)) {
+                    promise.reject(Exception("File is not a WAV file: $wavFilePath"))
+                    return@launch
+                }
+                
+                // Repair WAV header if needed
+                WavRecorder.repairWavFile(wavFilePath)
+                
+                // Convert to M4A
+                val result = WavToM4aConverter.convert(
+                    wavFilePath = wavFilePath,
+                    deleteWavAfterConversion = true
+                )
+                
+                when (result) {
+                    is WavToM4aConverter.ConversionResult.Success -> {
+                        val fileUri = Uri.fromFile(File(result.outputPath)).toString()
+                        promise.resolve(
+                            RestoredRecording(
+                                uri = fileUri,
+                                duration = result.duration.toDouble(),
+                                originalPath = wavFilePath
+                            )
+                        )
+                    }
+                    is WavToM4aConverter.ConversionResult.Error -> {
+                        // If conversion fails but WAV still exists, return WAV info
+                        if (wavFile.exists()) {
+                            val fileUri = Uri.fromFile(wavFile).toString()
+                            val estimatedDuration = estimateWavDuration(wavFilePath)
+                            promise.resolve(
+                                RestoredRecording(
+                                    uri = fileUri,
+                                    duration = estimatedDuration,
+                                    originalPath = wavFilePath
+                                )
+                            )
+                        } else {
+                            promise.reject(Exception("Conversion failed: ${result.message}"))
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                promise.reject(e)
+            }
+        }
+        
+        return promise
+    }
 
     // Private methods
-    // For audioMetering using mediaRecorder
-    private fun getSimpleMetering(): Double {
-      return try {
-        val maxAmplitude = mediaRecorder?.maxAmplitude ?: 0
-        if (maxAmplitude > 0) {
-          // Convert amplitude to decibels
-          // getMaxAmplitude() returns values from 0 to 32767
-          val normalizedAmplitude = maxAmplitude.toDouble() / MAX_AMPLITUDE_VALUE
-
-          // Use epsilon to prevent log10(0) which would return negative infinity
-          val safeAmplitude = maxOf(normalizedAmplitude, MIN_AMPLITUDE_EPSILON)
-          val decibels = 20 * log10(safeAmplitude)
-
-          // Clamp to reasonable dB range (silence threshold to 0 dB)
-          maxOf(SILENCE_THRESHOLD_DB, minOf(MAX_DECIBEL_LEVEL, decibels))
-        } else {
-          SILENCE_THRESHOLD_DB
+    
+    /**
+     * Start recording on a connected service instance.
+     * This is called either directly (if service already bound) or from onServiceConnected.
+     */
+    private fun startRecordingOnService(
+        service: RecordingForegroundService,
+        params: PendingRecordingParams,
+        promise: Promise<String>
+    ) {
+        try {
+            val success = service.startRecording(
+                filePath = params.filePath,
+                audioSource = params.audioSource,
+                outputFormat = params.outputFormat,
+                audioEncoder = params.audioEncoder,
+                samplingRate = params.samplingRate,
+                channels = params.channels,
+                bitrate = params.bitrate,
+                enableMetering = params.enableMetering,
+                subscriptionDuration = params.subscriptionDuration
+            )
+            
+            if (success) {
+                val fileUri = Uri.fromFile(File(params.filePath)).toString()
+                promise.resolve(fileUri)
+            } else {
+                cleanupServiceOnError()
+                promise.reject(Exception("Failed to start recording in service"))
+            }
+        } catch (e: Exception) {
+            cleanupServiceOnError()
+            promise.reject(e)
         }
-      } catch (e: IllegalStateException) {
-        // MediaRecorder not in recording state
-        SILENCE_THRESHOLD_DB
-      } catch (e: Exception) {
-        // Handle any other exceptions
-        SILENCE_THRESHOLD_DB
-      }
     }
-
-    private fun startRecordTimer() {
-        recordTimer?.cancel()
-        recordTimer = Timer()
-        recordTimer?.scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
-                val currentTime = System.currentTimeMillis() - recordStartTime
-                val meteringValue = if (meteringEnabled) {
-                  val now = System.currentTimeMillis()
-                  if (now - lastMeteringUpdateTime >= METERING_UPDATE_INTERVAL_MS) {
-                    lastMeteringValue = getSimpleMetering()
-                    lastMeteringUpdateTime = now
-                  }
-                  lastMeteringValue
-                } else {
-                  METERING_DISABLED_VALUE
+    
+    /**
+     * Cleanup service binding and stop service when an error occurs.
+     */
+    private fun cleanupServiceOnError() {
+        handler.post {
+            if (isServiceBound) {
+                try {
+                    context.unbindService(serviceConnection)
+                } catch (ex: Exception) {
+                    // Ignore unbind errors
                 }
-
-                handler.post {
-                    recordBackListener?.invoke(
-                        RecordBackType(
-                            isRecording = true,
-                            currentPosition = currentTime.toDouble(),
-                            currentMetering = meteringValue, // Added metering value using mediaRecorder
-                            recordSecs = currentTime.toDouble()
-                        )
-                    )
+                isServiceBound = false
+            }
+            RecordingForegroundService.stop(context)
+            releaseAudioFocus()
+        }
+    }
+    
+    /**
+     * Estimate WAV file duration by reading the byte rate from the WAV header.
+     * Falls back to a default assumption (44100Hz mono 16-bit) if header cannot be read.
+     *
+     * @param filePath Path to the WAV file
+     * @return Estimated duration in milliseconds
+     */
+    private fun estimateWavDuration(filePath: String): Double {
+        return try {
+            val file = File(filePath)
+            if (!file.exists() || file.length() < 44) return 0.0
+            
+            RandomAccessFile(file, "r").use { raf ->
+                // Read byte rate from WAV header offset 28 (little-endian Int32)
+                raf.seek(28)
+                val bytes = ByteArray(4)
+                raf.readFully(bytes)
+                val byteRate = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).int
+                
+                if (byteRate > 0) {
+                    val dataSize = file.length() - 44
+                    (dataSize.toDouble() / byteRate) * 1000.0
+                } else {
+                    // Fallback: assume 44100Hz, 16-bit, mono
+                    (file.length() - 44) / 88.2
                 }
             }
-        }, 0, subscriptionDuration)
+        } catch (e: Exception) {
+            Logger.w("[Sound] Could not read WAV header for duration estimation: ${e.message}")
+            val file = File(filePath)
+            if (file.exists()) (file.length() - 44) / 88.2 else 0.0
+        }
     }
-
-    private fun stopRecordTimer() {
-        recordTimer?.cancel()
-        recordTimer = null
+    
+    /**
+     * Validate that the given path is within allowed directories.
+     * Prevents path traversal attacks by ensuring the path is under
+     * the app's files directory or cache directory.
+     */
+    private fun validatePathSecurity(path: String): Boolean {
+        val canonicalPath = File(path).canonicalPath
+        val allowedDirs = listOf(
+            context.filesDir.canonicalPath,
+            context.cacheDir.canonicalPath,
+            context.getExternalFilesDir(null)?.canonicalPath
+        ).filterNotNull()
+        
+        return allowedDirs.any { canonicalPath.startsWith(it) }
     }
-
+    
     private fun startPlayTimer() {
         playTimer?.cancel()
         playTimer = Timer()
@@ -681,20 +923,18 @@ class HybridSound : HybridSoundSpec() {
             override fun run() {
                 mediaPlayer?.let { player ->
                     try {
-                        // Check if player is in valid state for getting duration/position
                         val safeDuration = try {
                             player.duration.toDouble()
                         } catch (e: IllegalStateException) {
-                            -1.0 // Invalid state, skip this update
+                            -1.0
                         }
                         
                         val safeCurrentPosition = try {
                             player.currentPosition.toDouble()
                         } catch (e: IllegalStateException) {
-                            -1.0 // Invalid state, skip this update
+                            -1.0
                         }
                         
-                        // Only invoke callback if we have valid data
                         if (safeDuration >= 0 && safeCurrentPosition >= 0) {
                             handler.post {
                                 playBackListener?.invoke(
@@ -707,7 +947,6 @@ class HybridSound : HybridSoundSpec() {
                             }
                         }
                     } catch (e: Exception) {
-                        // MediaPlayer might be in invalid state, stop timer
                         handler.post {
                             stopPlayTimer()
                         }
@@ -720,5 +959,81 @@ class HybridSound : HybridSoundSpec() {
     private fun stopPlayTimer() {
         playTimer?.cancel()
         playTimer = null
+    }
+
+    // Audio Focus Handling for Call Interruption
+    private fun setupAudioFocus() {
+        audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        
+        audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+            when (focusChange) {
+                AudioManager.AUDIOFOCUS_LOSS,
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT,
+                AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                    // Audio focus lost (video, phone call, other audio apps) - pause recording
+                    handler.post {
+                        val service = RecordingForegroundService.getInstance()
+                        if (service != null && service.isCurrentlyRecording()) {
+                            // Get current position before pausing
+                            val currentPosition = service.getCurrentRecordingTime()
+                            
+                            service.pauseRecording()
+                            
+                            recordBackListener?.invoke(
+                                RecordBackType(
+                                    isRecording = false,
+                                    currentPosition = currentPosition,
+                                    currentMetering = null,
+                                    recordSecs = currentPosition
+                                )
+                            )
+                        }
+                    }
+                }
+                AudioManager.AUDIOFOCUS_GAIN -> {
+                    // Audio focus regained - don't auto-resume
+                }
+            }
+        }
+        
+        // Use new AudioFocusRequest API for Android 8.0+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val audioAttributes = android.media.AudioAttributes.Builder()
+                .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
+            
+            audioFocusRequest = android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(audioAttributes)
+                .setAcceptsDelayedFocusGain(false)
+                .setWillPauseWhenDucked(true)
+                .setOnAudioFocusChangeListener(audioFocusChangeListener!!, handler)
+                .build()
+            
+            audioManager?.requestAudioFocus(audioFocusRequest!!)
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager?.requestAudioFocus(
+                audioFocusChangeListener,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
+        }
+    }
+
+    private fun releaseAudioFocus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioFocusRequest?.let { request ->
+                audioManager?.abandonAudioFocusRequest(request)
+            }
+            audioFocusRequest = null
+        } else {
+            @Suppress("DEPRECATION")
+            audioFocusChangeListener?.let { listener ->
+                audioManager?.abandonAudioFocus(listener)
+            }
+        }
+        audioFocusChangeListener = null
+        audioManager = null
     }
 }
