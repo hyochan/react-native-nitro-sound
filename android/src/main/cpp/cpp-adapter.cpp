@@ -1,6 +1,9 @@
 #include <jni.h>
 #include "NitroSoundOnLoad.hpp"
+#include <fbjni/fbjni.h>
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
-  return margelo::nitro::sound::initialize(vm);
+  return facebook::jni::initialize(vm, []() {
+    margelo::nitro::sound::registerAllNatives();
+  });
 }
