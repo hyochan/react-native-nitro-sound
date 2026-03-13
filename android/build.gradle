@@ -24,6 +24,8 @@ android {
   defaultConfig {
     minSdk getExtOrIntegerDefault("minSdkVersion")
     targetSdk getExtOrIntegerDefault("targetSdkVersion")
+    ndkVersion getExtOrDefault("ndkVersion")
+
 
     externalNativeBuild {
       cmake {
