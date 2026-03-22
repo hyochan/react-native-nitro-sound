@@ -719,6 +719,13 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         return Int(v)
     }
 
+    /// Safe Double that handles corrupted std::optional<double> values.
+    /// Returns nil for NaN or infinity values.
+    private func safeDouble(_ value: Double?) -> Double? {
+        guard let v = value, v.isFinite else { return nil }
+        return v
+    }
+
     private func getAudioSettings(audioSets: AudioSet?) -> [String: Any] {
         var settings: [String: Any] = [:]
 
@@ -738,9 +745,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         // std::optional<double> values from NitroModules C++ interop bug.
         if let audioSets = audioSets {
             // iOS-specific settings take highest priority
-            if let sampleRate = safeInt(audioSets.AVSampleRateKeyIOS) {
+            if let sampleRate = safeDouble(audioSets.AVSampleRateKeyIOS) {
                 settings[AVSampleRateKey] = sampleRate
-            } else if let audioSamplingRate = safeInt(audioSets.AudioSamplingRate) {
+            } else if let audioSamplingRate = safeDouble(audioSets.AudioSamplingRate) {
                 settings[AVSampleRateKey] = audioSamplingRate
             }
 
