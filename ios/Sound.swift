@@ -714,9 +714,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     /// values from NitroModules C++ interop (swiftlang/swift#85735).
     /// Returns nil for NaN, infinity, or out-of-range values instead of trapping.
     private func safeInt(_ value: Double?) -> Int? {
-        guard let v = value, v.isFinite,
-              v >= Double(Int.min), v <= Double(Int.max) else { return nil }
-        return Int(v)
+        guard let v = value, v.isFinite else { return nil }
+        let truncated = v.rounded(.towardZero)
+        return Int(exactly: truncated)
     }
 
     /// Safe Double that handles corrupted std::optional<double> values.
@@ -745,19 +745,19 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         // std::optional<double> values from NitroModules C++ interop bug.
         if let audioSets = audioSets {
             // iOS-specific settings take highest priority
-            if let sampleRate = safeDouble(audioSets.AVSampleRateKeyIOS) {
+            if let sampleRate = safeDouble(audioSets.AVSampleRateKeyIOS), sampleRate > 0 {
                 settings[AVSampleRateKey] = sampleRate
-            } else if let audioSamplingRate = safeDouble(audioSets.AudioSamplingRate) {
+            } else if let audioSamplingRate = safeDouble(audioSets.AudioSamplingRate), audioSamplingRate > 0 {
                 settings[AVSampleRateKey] = audioSamplingRate
             }
 
-            if let channels = safeInt(audioSets.AVNumberOfChannelsKeyIOS) {
+            if let channels = safeInt(audioSets.AVNumberOfChannelsKeyIOS), channels > 0 {
                 settings[AVNumberOfChannelsKey] = channels
-            } else if let audioChannels = safeInt(audioSets.AudioChannels) {
+            } else if let audioChannels = safeInt(audioSets.AudioChannels), audioChannels > 0 {
                 settings[AVNumberOfChannelsKey] = audioChannels
             }
 
-            if let bitRate = safeInt(audioSets.AudioEncodingBitRate) {
+            if let bitRate = safeInt(audioSets.AudioEncodingBitRate), bitRate > 0 {
                 settings[AVEncoderBitRateKey] = bitRate
             }
 
