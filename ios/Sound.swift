@@ -710,6 +710,22 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
     // MARK: - Private Methods
 
+    /// Safe Double→Int conversion that handles corrupted std::optional<double>
+    /// values from NitroModules C++ interop (swiftlang/swift#85735).
+    /// Returns nil for NaN, infinity, or out-of-range values instead of trapping.
+    private func safeInt(_ value: Double?) -> Int? {
+        guard let v = value, v.isFinite else { return nil }
+        let truncated = v.rounded(.towardZero)
+        return Int(exactly: truncated)
+    }
+
+    /// Safe Double that handles corrupted std::optional<double> values.
+    /// Returns nil for NaN or infinity values.
+    private func safeDouble(_ value: Double?) -> Double? {
+        guard let v = value, v.isFinite else { return nil }
+        return v
+    }
+
     private func getAudioSettings(audioSets: AudioSet?) -> [String: Any] {
         var settings: [String: Any] = [:]
 
@@ -724,25 +740,25 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         settings[AVEncoderBitRateKey] = defaults.bitrate
         settings[AVEncoderAudioQualityKey] = defaults.encoderQuality.rawValue
 
-        // Apply custom settings with explicit overrides taking precedence
+        // Apply custom settings with explicit overrides taking precedence.
+        // All Double→Int conversions use safeInt() to guard against corrupted
+        // std::optional<double> values from NitroModules C++ interop bug.
         if let audioSets = audioSets {
             // iOS-specific settings take highest priority
-            if let sampleRate = audioSets.AVSampleRateKeyIOS {
+            if let sampleRate = safeDouble(audioSets.AVSampleRateKeyIOS), sampleRate > 0 {
                 settings[AVSampleRateKey] = sampleRate
-            } else if let audioSamplingRate = audioSets.AudioSamplingRate {
-                // Fall back to cross-platform setting
-                settings[AVSampleRateKey] = Int(audioSamplingRate)
+            } else if let audioSamplingRate = safeDouble(audioSets.AudioSamplingRate), audioSamplingRate > 0 {
+                settings[AVSampleRateKey] = audioSamplingRate
             }
 
-            if let channels = audioSets.AVNumberOfChannelsKeyIOS {
-                settings[AVNumberOfChannelsKey] = Int(channels)
-            } else if let audioChannels = audioSets.AudioChannels {
-                // Fall back to cross-platform setting
-                settings[AVNumberOfChannelsKey] = Int(audioChannels)
+            if let channels = safeInt(audioSets.AVNumberOfChannelsKeyIOS), channels > 0 {
+                settings[AVNumberOfChannelsKey] = channels
+            } else if let audioChannels = safeInt(audioSets.AudioChannels), audioChannels > 0 {
+                settings[AVNumberOfChannelsKey] = audioChannels
             }
 
-            if let bitRate = audioSets.AudioEncodingBitRate {
-                settings[AVEncoderBitRateKey] = Int(bitRate)
+            if let bitRate = safeInt(audioSets.AudioEncodingBitRate), bitRate > 0 {
+                settings[AVEncoderBitRateKey] = bitRate
             }
 
             if let quality = audioSets.AVEncoderAudioQualityKeyIOS {
