@@ -70,6 +70,9 @@ jobs:
             bundle exec pod install --project-directory=ios --repo-update
           fi
 
+      - name: Install xcpretty
+        run: gem install xcpretty --no-document
+
       - name: Build example for iOS
         run: |
           xcodebuild \
