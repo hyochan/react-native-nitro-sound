@@ -38,8 +38,8 @@ const REPO = 'hyochan/react-native-nitro-sound';
 // ─── 1. Resolve previous tag ─────────────────────────────────────────────────
 let prevTag;
 try {
-  // HEAD is not yet tagged at generation time, so look for the most recent tag
-  prevTag = execSync('git describe --tags --abbrev=0', { stdio: ['pipe', 'pipe', 'pipe'] })
+  // npm version has already tagged HEAD, so look at HEAD^ to find the previous release tag
+  prevTag = execSync('git describe --tags --abbrev=0 HEAD^', { stdio: ['pipe', 'pipe', 'pipe'] })
     .toString()
     .trim();
 } catch {
