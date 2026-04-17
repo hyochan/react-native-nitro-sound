@@ -31,7 +31,7 @@ permissions:
   id-token: write # Required for OIDC trusted publishing
 
 jobs:
-  # Pre-release validation
+  # Pre-release validation: lint + typecheck + unit tests + Android build + iOS build
   validate:
     name: Validate
     uses: ./.github/workflows/ci.yml
@@ -69,6 +69,44 @@ jobs:
           NEW_VERSION=$(node -p "require('./package.json').version")
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          node scripts/generate-release-notes.js ${{ steps.bump.outputs.version }} > /tmp/release-notes.md
+          echo "── Generated release notes ──"
+          cat /tmp/release-notes.md
+          echo ""
+          {
+            echo 'RELEASE_BODY<<ENDOFBODY'
+            cat /tmp/release-notes.md
+            echo 'ENDOFBODY'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update CHANGELOG.md
+        run: |
+          NEW_VERSION="${{ steps.bump.outputs.version }}"
+          DATE=$(date -u +"%Y-%m-%d")
+          NOTES=$(cat /tmp/release-notes.md)
+
+          # Prepend new entry to CHANGELOG.md
+          {
+            echo "# Changelogs"
+            echo ""
+            echo "## [$NEW_VERSION] — $DATE"
+            echo ""
+            # Strip the "## Installation" header block (first 5 lines) — CHANGELOG only needs content
+            tail -n +6 /tmp/release-notes.md
+            echo ""
+            echo "---"
+            echo ""
+            # Keep existing content minus the old header line
+            tail -n +2 CHANGELOG.md
+          } > /tmp/CHANGELOG_new.md
+          mv /tmp/CHANGELOG_new.md CHANGELOG.md
+
+          git add CHANGELOG.md
+          git commit --amend --no-edit
+
       - name: Prepare package (build + codegen)
         run: yarn prepare
 
@@ -93,6 +131,6 @@ jobs:
         with:
           tag_name: ${{ steps.bump.outputs.version }}
           name: ${{ steps.bump.outputs.version }}
+          body: ${{ steps.release_notes.outputs.RELEASE_BODY }}
           draft: false
           prerelease: ${{ github.event.inputs.tag != 'latest' }}
-          generate_release_notes: true
