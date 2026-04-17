@@ -67,11 +67,9 @@ jobs:
             bundle exec pod install --project-directory=ios --repo-update
           fi
 
-      - name: Install xcpretty
-        run: gem install xcpretty --no-document
-
       - name: Build example for iOS
         run: |
+          set -o pipefail
           xcodebuild \
             -workspace example/ios/SoundExample.xcworkspace \
             -scheme SoundExample \
@@ -81,4 +79,10 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             SKIP_BUNDLING=YES \
             build \
-            2>&1 | xcpretty --color && exit ${PIPESTATUS[0]}
+            2>&1 | tee /tmp/xcodebuild.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)|▸" || true
+          EXIT_CODE=${PIPESTATUS[0]}
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "=== BUILD FAILED — last 50 raw lines ==="
+            tail -50 /tmp/xcodebuild.log
+          fi
+          exit $EXIT_CODE
