@@ -23,14 +23,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Generate nitrogen code
-        run: yarn nitrogen
+      - name: Build library + generate nitrogen code
+        run: yarn prepare
 
       - name: Fix Nitrogen-generated Swift code
         run: ./scripts/fix-nitrogen-swift.sh
-
-      - name: Build library first
-        run: yarn prepare
 
       - name: Use appropriate Xcode version
         uses: maxim-lobanov/setup-xcode@v1
