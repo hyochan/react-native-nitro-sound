@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  ios-dependencies:
+  build-ios:
     runs-on: macos-14
     env:
       XCODE_VERSION: 16.1
@@ -70,9 +70,14 @@ jobs:
             bundle exec pod install --project-directory=ios --repo-update
           fi
 
-      - name: Verify iOS dependencies
+      - name: Build example for iOS
         run: |
-          cd example/ios
-          echo "✅ iOS dependencies installed successfully"
-          echo "Pods directory contents:"
-          ls -la Pods/ | head -20
+          xcodebuild \
+            -workspace example/ios/SoundExample.xcworkspace \
+            -scheme SoundExample \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build \
+            2>&1 | xcpretty --color && exit ${PIPESTATUS[0]}
