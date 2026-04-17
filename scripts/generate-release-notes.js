@@ -48,7 +48,7 @@ try {
 }
 
 // ─── 2. Collect commits since previous tag ───────────────────────────────────
-const SEP = '\x00';
+const SEP = '|||';
 const rawLog = execSync(
   `git log ${prevTag}..HEAD --pretty=format:"%H${SEP}%s${SEP}%an${SEP}%b" --no-merges`
 )
