@@ -1,0 +1,147 @@
+name: AI Dispatch
+
+# Mobile-friendly entrypoints for Claude-driven maintenance on react-native-nitro-sound.
+# Triggers:
+#   1. manual workflow_dispatch (usable from GitHub mobile app via Actions tab)
+#   2. an issue comment containing "/ai <command>" (also usable from mobile)
+#   3. an issue body containing "/ai <command>" when opened (also mobile)
+#
+# NOTE: The actual Claude run is performed by your local agent (e.g., Claude Code
+#       CLI) via a repository dispatch or a self-hosted runner picking up the
+#       queued job. This workflow only records and routes intent — it does not
+#       attempt to call an LLM API itself.
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'AI command to run'
+        required: true
+        type: choice
+        options:
+          - resolve-issue
+          - upgrade-deps
+          - compile-knowledge
+          - triage-all
+          - custom
+      target:
+        description: 'Target (issue #, PR #, or free-form for custom)'
+        required: false
+        type: string
+        default: ''
+      notes:
+        description: 'Extra instructions for Claude'
+        required: false
+        type: string
+        default: ''
+
+  issue_comment:
+    types: [created]
+
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract intent
+        id: intent
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          WD_COMMAND: ${{ inputs.command }}
+          WD_TARGET: ${{ inputs.target }}
+          WD_NOTES: ${{ inputs.notes }}
+        run: |
+          set -eu
+          body=""
+          case "$EVENT_NAME" in
+            workflow_dispatch)
+              echo "command=$WD_COMMAND"            >> "$GITHUB_OUTPUT"
+              echo "target=$WD_TARGET"              >> "$GITHUB_OUTPUT"
+              echo "notes<<EOF"                     >> "$GITHUB_OUTPUT"
+              echo "$WD_NOTES"                      >> "$GITHUB_OUTPUT"
+              echo "EOF"                            >> "$GITHUB_OUTPUT"
+              ;;
+            issue_comment)
+              body="$COMMENT_BODY"
+              ;;
+            issues)
+              body="$ISSUE_BODY"
+              ;;
+          esac
+
+          if [ -n "$body" ]; then
+            # Match lines like "/ai resolve-issue" or "/ai upgrade-deps"
+            line=$(echo "$body" | grep -Eo '^/ai[[:space:]]+[a-z-]+.*' | head -n1 || true)
+            if [ -z "$line" ]; then
+              echo "no-ai-command=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            cmd=$(echo "$line" | awk '{print $2}')
+            rest=$(echo "$line" | cut -d' ' -f3-)
+            echo "command=$cmd"                     >> "$GITHUB_OUTPUT"
+            echo "target=${ISSUE_NUMBER:-}"         >> "$GITHUB_OUTPUT"
+            echo "notes<<EOF"                       >> "$GITHUB_OUTPUT"
+            echo "$rest"                            >> "$GITHUB_OUTPUT"
+            echo "EOF"                              >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Acknowledge on the issue (comment-triggered)
+        if: >-
+          steps.intent.outputs.no-ai-command != 'true' &&
+          github.event.issue.number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ github.event.issue.number }}
+          CMD:   ${{ steps.intent.outputs.command }}
+          TGT:   ${{ steps.intent.outputs.target }}
+          NOTES: ${{ steps.intent.outputs.notes }}
+        run: |
+          set -eu
+          : "${CMD:?command missing}"
+          gh issue comment "$ISSUE" \
+            --repo "${{ github.repository }}" \
+            --body "🤖 AI dispatch queued: \`$CMD\` (target: \`$TGT\`).
+Claude will pick this up shortly. Notes: ${NOTES:-(none)}.
+
+_This repo is maintained in an AI-native workflow — see README._"
+
+      - name: Emit repository_dispatch for the Claude agent to pick up
+        if: steps.intent.outputs.no-ai-command != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CMD:   ${{ steps.intent.outputs.command }}
+          TGT:   ${{ steps.intent.outputs.target }}
+          NOTES: ${{ steps.intent.outputs.notes }}
+        run: |
+          set -eu
+          : "${CMD:?command missing}"
+          gh api \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${{ github.repository }}/dispatches" \
+            -f "event_type=ai-${CMD}" \
+            -F "client_payload[command]=${CMD}" \
+            -F "client_payload[target]=${TGT}" \
+            -F "client_payload[notes]=${NOTES}" \
+            -F "client_payload[actor]=${{ github.actor }}"
+
+      - name: Summary
+        run: |
+          {
+            echo "### AI Dispatch"
+            echo ""
+            echo "- Event: \`${{ github.event_name }}\`"
+            echo "- Command: \`${{ steps.intent.outputs.command }}\`"
+            echo "- Target: \`${{ steps.intent.outputs.target }}\`"
+            echo "- Notes: ${{ steps.intent.outputs.notes }}"
+          } >> "$GITHUB_STEP_SUMMARY"

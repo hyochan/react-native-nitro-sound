@@ -86,4 +86,6 @@ build.log
 ios-build.log
 kotlin-compiler-*
 
-.claude
+# Claude: ignore local settings, keep shared skills committed
+.claude/settings.local.json
+.claude/*.local.*
