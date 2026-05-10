@@ -21,7 +21,7 @@ namespace margelo::nitro::sound {
    */
   struct JPlaybackEndType final: public jni::JavaClass<JPlaybackEndType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/PlaybackEndType;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/PlaybackEndType;";
 
   public:
     /**

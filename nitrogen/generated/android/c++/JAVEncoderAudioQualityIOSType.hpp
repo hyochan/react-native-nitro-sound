@@ -19,7 +19,7 @@ namespace margelo::nitro::sound {
    */
   struct JAVEncoderAudioQualityIOSType final: public jni::JavaClass<JAVEncoderAudioQualityIOSType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AVEncoderAudioQualityIOSType;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/AVEncoderAudioQualityIOSType;";
 
   public:
     /**
