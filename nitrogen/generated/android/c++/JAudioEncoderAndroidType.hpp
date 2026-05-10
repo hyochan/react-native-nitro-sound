@@ -19,7 +19,7 @@ namespace margelo::nitro::sound {
    */
   struct JAudioEncoderAndroidType final: public jni::JavaClass<JAudioEncoderAndroidType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AudioEncoderAndroidType;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/AudioEncoderAndroidType;";
 
   public:
     /**

@@ -9,6 +9,7 @@ package com.margelo.nitro.sound
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import java.util.Objects
 
 
 /**
@@ -31,6 +32,24 @@ data class RecordBackType(
   val recordSecs: Double?
 ) {
   /* primary constructor */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is RecordBackType) return false
+    return Objects.deepEquals(this.isRecording, other.isRecording)
+      && Objects.deepEquals(this.currentPosition, other.currentPosition)
+      && Objects.deepEquals(this.currentMetering, other.currentMetering)
+      && Objects.deepEquals(this.recordSecs, other.recordSecs)
+  }
+
+  override fun hashCode(): Int {
+    return arrayOf(
+      isRecording,
+      currentPosition,
+      currentMetering,
+      recordSecs
+    ).contentDeepHashCode()
+  }
 
   companion object {
     /**
