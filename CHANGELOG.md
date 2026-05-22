@@ -1,5 +1,25 @@
 # Changelogs
 
+## [0.2.15] — 2026-05-22
+
+yarn add react-native-nitro-sound@0.2.15
+```
+
+### 🔧 Maintenance Release
+
+This release contains dependency updates and internal improvements only.
+
+### 📦 Dependency Updates
+
+7 dependency bump(s) — see the [full diff](https://github.com/hyochan/react-native-nitro-sound/compare/0.2.14...0.2.15) for details.
+
+---
+
+**Full Changelog**: https://github.com/hyochan/react-native-nitro-sound/compare/0.2.14...0.2.15
+
+---
+
+
 ## [0.2.14] — 2026-04-25
 
 yarn add react-native-nitro-sound@0.2.14
