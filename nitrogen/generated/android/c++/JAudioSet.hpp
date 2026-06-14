@@ -37,7 +37,7 @@ namespace margelo::nitro::sound {
    */
   struct JAudioSet final: public jni::JavaClass<JAudioSet> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AudioSet;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/AudioSet;";
 
   public:
     /**
