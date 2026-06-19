@@ -9,6 +9,7 @@ package com.margelo.nitro.sound
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import java.util.Objects
 
 
 /**
@@ -25,6 +26,20 @@ data class PlaybackEndType(
   val currentPosition: Double
 ) {
   /* primary constructor */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is PlaybackEndType) return false
+    return Objects.deepEquals(this.duration, other.duration)
+      && Objects.deepEquals(this.currentPosition, other.currentPosition)
+  }
+
+  override fun hashCode(): Int {
+    return arrayOf<Any?>(
+      duration,
+      currentPosition
+    ).contentDeepHashCode()
+  }
 
   companion object {
     /**
