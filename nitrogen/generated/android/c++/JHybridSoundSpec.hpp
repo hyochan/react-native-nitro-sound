@@ -21,11 +21,11 @@ namespace margelo::nitro::sound {
   class JHybridSoundSpec: public virtual HybridSoundSpec, public virtual JHybridObject {
   public:
     struct JavaPart: public jni::JavaClass<JavaPart, JHybridObject::JavaPart> {
-      static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/HybridSoundSpec;";
+      static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/HybridSoundSpec;";
       std::shared_ptr<JHybridSoundSpec> getJHybridSoundSpec();
     };
     struct CxxPart: public jni::HybridClass<CxxPart, JHybridObject::CxxPart> {
-      static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/HybridSoundSpec$CxxPart;";
+      static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/HybridSoundSpec$CxxPart;";
       static jni::local_ref<jhybriddata> initHybrid(jni::alias_ref<jhybridobject> jThis);
       static void registerNatives();
       using HybridBase::HybridBase;

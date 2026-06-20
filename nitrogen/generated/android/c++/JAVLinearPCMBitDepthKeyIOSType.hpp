@@ -19,7 +19,7 @@ namespace margelo::nitro::sound {
    */
   struct JAVLinearPCMBitDepthKeyIOSType final: public jni::JavaClass<JAVLinearPCMBitDepthKeyIOSType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AVLinearPCMBitDepthKeyIOSType;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/AVLinearPCMBitDepthKeyIOSType;";
 
   public:
     /**
