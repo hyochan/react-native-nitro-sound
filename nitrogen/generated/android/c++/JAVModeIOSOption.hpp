@@ -19,7 +19,7 @@ namespace margelo::nitro::sound {
    */
   struct JAVModeIOSOption final: public jni::JavaClass<JAVModeIOSOption> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AVModeIOSOption;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/AVModeIOSOption;";
 
   public:
     /**

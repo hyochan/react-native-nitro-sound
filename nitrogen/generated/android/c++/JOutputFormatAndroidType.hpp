@@ -19,7 +19,7 @@ namespace margelo::nitro::sound {
    */
   struct JOutputFormatAndroidType final: public jni::JavaClass<JOutputFormatAndroidType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/OutputFormatAndroidType;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/OutputFormatAndroidType;";
 
   public:
     /**

@@ -21,7 +21,7 @@ namespace margelo::nitro::sound {
    */
   struct JRecordBackType final: public jni::JavaClass<JRecordBackType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/RecordBackType;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/RecordBackType;";
 
   public:
     /**
