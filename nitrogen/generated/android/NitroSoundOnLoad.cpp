@@ -30,9 +30,9 @@ int initialize(JavaVM* vm) {
 }
 
 struct JHybridSoundSpecImpl: public jni::JavaClass<JHybridSoundSpecImpl, JHybridSoundSpec::JavaPart> {
-  static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/HybridSound;";
+  static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/HybridSound;";
   static std::shared_ptr<JHybridSoundSpec> create() {
-    static auto constructorFn = javaClassStatic()->getConstructor<JHybridSoundSpecImpl::javaobject()>();
+    static const auto constructorFn = javaClassStatic()->getConstructor<JHybridSoundSpecImpl::javaobject()>();
     jni::local_ref<JHybridSoundSpec::JavaPart> javaPart = javaClassStatic()->newObject(constructorFn);
     return javaPart->getJHybridSoundSpec();
   }
