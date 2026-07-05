@@ -15,11 +15,11 @@ namespace margelo::nitro::sound {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ enum "AVLinearPCMBitDepthKeyIOSType" and the the Kotlin enum "AVLinearPCMBitDepthKeyIOSType".
+   * The C++ JNI bridge between the C++ enum "AVLinearPCMBitDepthKeyIOSType" and the Kotlin enum "AVLinearPCMBitDepthKeyIOSType".
    */
   struct JAVLinearPCMBitDepthKeyIOSType final: public jni::JavaClass<JAVLinearPCMBitDepthKeyIOSType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AVLinearPCMBitDepthKeyIOSType;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/AVLinearPCMBitDepthKeyIOSType;";
 
   public:
     /**
