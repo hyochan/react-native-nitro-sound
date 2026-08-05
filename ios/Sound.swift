@@ -726,6 +726,30 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         return v
     }
 
+    // isFinite alone is not enough: a corrupted std::optional<double> can carry
+    // finite garbage (e.g. 5e-15 or 1e18) that passes the `> 0` check, reaches
+    // AudioQueueNew, and gets rejected as 'fmt?' — prepareToRecord() then fails,
+    // but only in optimized release builds (#766). Values outside the range any
+    // iOS codec accepts are dropped in favor of the quality-preset defaults.
+    private static let validSampleRateRange = 4_000.0...192_000.0
+    private static let validChannelRange = 1...8
+    private static let validBitRateRange = 8_000...1_536_000
+
+    private func validSampleRate(_ value: Double?) -> Double? {
+        guard let v = safeDouble(value), Self.validSampleRateRange.contains(v) else { return nil }
+        return v
+    }
+
+    private func validChannelCount(_ value: Double?) -> Int? {
+        guard let v = safeInt(value), Self.validChannelRange.contains(v) else { return nil }
+        return v
+    }
+
+    private func validBitRate(_ value: Double?) -> Int? {
+        guard let v = safeInt(value), Self.validBitRateRange.contains(v) else { return nil }
+        return v
+    }
+
     private func getAudioSettings(audioSets: AudioSet?) -> [String: Any] {
         var settings: [String: Any] = [:]
 
@@ -733,32 +757,34 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         let audioQuality = audioSets?.AudioQuality ?? .high
         let defaults = Self.qualityPresets[audioQuality] ?? Self.qualityPresets[.high]!
 
-        // Apply default settings based on AudioQuality
+        // Apply default settings based on AudioQuality.
+        // AVSampleRateKey expects a floating-point number.
         settings[AVFormatIDKey] = Int(kAudioFormatMPEG4AAC)
-        settings[AVSampleRateKey] = defaults.samplingRate
+        settings[AVSampleRateKey] = Double(defaults.samplingRate)
         settings[AVNumberOfChannelsKey] = defaults.channels
         settings[AVEncoderBitRateKey] = defaults.bitrate
         settings[AVEncoderAudioQualityKey] = defaults.encoderQuality.rawValue
 
-        // Apply custom settings with explicit overrides taking precedence.
-        // All Double→Int conversions use safeInt() to guard against corrupted
-        // std::optional<double> values from NitroModules C++ interop bug.
+        // Apply custom settings with explicit overrides taking precedence,
+        // but only when they survive range validation.
         if let audioSets = audioSets {
             // iOS-specific settings take highest priority
-            if let sampleRate = safeDouble(audioSets.AVSampleRateKeyIOS), sampleRate > 0 {
+            if let sampleRate = validSampleRate(audioSets.AVSampleRateKeyIOS) ?? validSampleRate(audioSets.AudioSamplingRate) {
                 settings[AVSampleRateKey] = sampleRate
-            } else if let audioSamplingRate = safeDouble(audioSets.AudioSamplingRate), audioSamplingRate > 0 {
-                settings[AVSampleRateKey] = audioSamplingRate
+            } else if audioSets.AVSampleRateKeyIOS != nil || audioSets.AudioSamplingRate != nil {
+                print("🎙️ ⚠️ Ignoring out-of-range sample rate, using preset \(defaults.samplingRate) Hz")
             }
 
-            if let channels = safeInt(audioSets.AVNumberOfChannelsKeyIOS), channels > 0 {
+            if let channels = validChannelCount(audioSets.AVNumberOfChannelsKeyIOS) ?? validChannelCount(audioSets.AudioChannels) {
                 settings[AVNumberOfChannelsKey] = channels
-            } else if let audioChannels = safeInt(audioSets.AudioChannels), audioChannels > 0 {
-                settings[AVNumberOfChannelsKey] = audioChannels
+            } else if audioSets.AVNumberOfChannelsKeyIOS != nil || audioSets.AudioChannels != nil {
+                print("🎙️ ⚠️ Ignoring out-of-range channel count, using preset \(defaults.channels)")
             }
 
-            if let bitRate = safeInt(audioSets.AudioEncodingBitRate), bitRate > 0 {
+            if let bitRate = validBitRate(audioSets.AudioEncodingBitRate) {
                 settings[AVEncoderBitRateKey] = bitRate
+            } else if audioSets.AudioEncodingBitRate != nil {
+                print("🎙️ ⚠️ Ignoring out-of-range bit rate, using preset \(defaults.bitrate) bps")
             }
 
             if let quality = audioSets.AVEncoderAudioQualityKeyIOS {
