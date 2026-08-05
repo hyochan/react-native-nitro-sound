@@ -119,7 +119,10 @@ jobs:
           git push --follow-tags
 
       - name: Ensure npm CLI v11.5.1 or later (required for OIDC)
-        run: npm install -g npm@latest
+        # Pinned to npm 11: npm@latest is now npm 12, which requires Node >= 22.22
+        # while this job runs Node 20 (EBADENGINE). npm 11.5.1+ satisfies the
+        # OIDC trusted-publishing requirement.
+        run: npm install -g npm@11
 
       - name: Publish to npm with OIDC trusted publishing
         run: |
