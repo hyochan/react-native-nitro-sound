@@ -26,6 +26,10 @@ class HybridSound : HybridSoundSpec() {
     private var mediaPlayer: MediaPlayer? = null
     private var currentRecordingPath: String? = null
 
+    // Returned by repeated stopRecorder() calls so every call yields the same
+    // file URI instead of a sentinel string a caller could mistake for a path.
+    private var lastRecordingUri: String? = null
+
     private var recordTimer: Timer? = null
     private var playTimer: Timer? = null
 
@@ -291,11 +295,13 @@ class HybridSound : HybridSoundSpec() {
                 val recorder = mediaRecorder
                 if (recorder == null) {
                     // stopRecorder is idempotent: a second call after the recorder
-                    // was already stopped is a no-op instead of an error (#789).
+                    // was already stopped resolves with the same URI as the first
+                    // one, so a double-tapped stop button cannot hand the caller a
+                    // sentinel string where it expects a file path (#789, #693).
                     handler.post {
                         stopRecordTimer()
                     }
-                    promise.resolve("recorder already stopped")
+                    promise.resolve(lastRecordingUri ?: "recorder already stopped")
                     return@launch
                 }
 
@@ -317,8 +323,9 @@ class HybridSound : HybridSoundSpec() {
                 val path = currentRecordingPath
                 currentRecordingPath = null // State is cleared regardless of outcome
                 
-                path?.let { 
+                path?.let {
                     val fileUri = Uri.fromFile(File(it)).toString()
+                    lastRecordingUri = fileUri
                     promise.resolve(fileUri)
                 } ?: promise.reject(Exception("Recorder not started or path is unavailable."))
             } catch (e: Exception) {

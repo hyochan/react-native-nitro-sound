@@ -40,6 +40,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     private var subscriptionDuration: TimeInterval = 0.06
     private var playbackRate: Double = 1.0 // default 1x
     private var recordingSession: AVAudioSession?
+    // Returned by repeated stopRecorder() calls so every call yields the same
+    // file URI instead of a sentinel string a caller could mistake for a path.
+    private var lastRecordingURI: String?
 
     // MARK: - Recording Methods
 
@@ -414,6 +417,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
             if let recorder = self.audioRecorder {
                 let url = recorder.url.absoluteString
+                self.lastRecordingURI = url
 
                 // Stop recorder on main queue
                 DispatchQueue.main.async {
@@ -433,8 +437,10 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 }
             } else {
                 // stopRecorder is idempotent: a second call after the recorder
-                // was already stopped is a no-op instead of an error (#789).
-                promise.resolve(withResult: "recorder already stopped")
+                // was already stopped resolves with the same URI as the first
+                // one, so a double-tapped stop button cannot hand the caller a
+                // sentinel string where it expects a file path (#789, #693).
+                promise.resolve(withResult: self.lastRecordingURI ?? "recorder already stopped")
             }
         }
 
