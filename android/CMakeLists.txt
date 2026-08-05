@@ -35,3 +35,13 @@ target_link_libraries(
         ${LOG_LIB}
         android # <-- Android core
 )
+
+# 16 KB page-size alignment (Google Play requirement since Nov 2025).
+# ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES in build.gradle only takes effect on
+# NDK r27+, but this library compiles inside the consumer's app with the
+# consumer's NDK — apps on React Native <= 0.79 default to NDK 26, which
+# produced a 4 KB-aligned libNitroSound.so. Passing the linker flag directly
+# guarantees alignment on every NDK version (it is a no-op where already set).
+# set_property is used instead of target_link_options to stay compatible with
+# the declared cmake_minimum_required(3.9).
+set_property(TARGET ${PACKAGE_NAME} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-z,max-page-size=16384")
