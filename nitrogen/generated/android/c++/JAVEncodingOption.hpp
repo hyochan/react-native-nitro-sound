@@ -15,11 +15,11 @@ namespace margelo::nitro::sound {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ enum "AVEncodingOption" and the the Kotlin enum "AVEncodingOption".
+   * The C++ JNI bridge between the C++ enum "AVEncodingOption" and the Kotlin enum "AVEncodingOption".
    */
   struct JAVEncodingOption final: public jni::JavaClass<JAVEncodingOption> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AVEncodingOption;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/AVEncodingOption;";
 
   public:
     /**

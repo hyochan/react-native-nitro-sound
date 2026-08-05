@@ -15,11 +15,11 @@ namespace margelo::nitro::sound {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ enum "OutputFormatAndroidType" and the the Kotlin enum "OutputFormatAndroidType".
+   * The C++ JNI bridge between the C++ enum "OutputFormatAndroidType" and the Kotlin enum "OutputFormatAndroidType".
    */
   struct JOutputFormatAndroidType final: public jni::JavaClass<JOutputFormatAndroidType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/OutputFormatAndroidType;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/OutputFormatAndroidType;";
 
   public:
     /**
