@@ -507,7 +507,8 @@ class HybridSound : HybridSoundSpec() {
 
     override fun pausePlayer(): Promise<String> {
         return Promise.parallel {
-            mediaPlayer?.pause()
+            val player = mediaPlayer ?: throw Exception("No player instance")
+            player.pause()
             stopPlayTimer()
             "Player paused"
         }
@@ -515,7 +516,10 @@ class HybridSound : HybridSoundSpec() {
 
     override fun resumePlayer(): Promise<String> {
         return Promise.parallel {
-            mediaPlayer?.start()
+            // Rejecting instead of silently succeeding matches iOS; a released
+            // player otherwise makes resume look like a no-op with no error (#626).
+            val player = mediaPlayer ?: throw Exception("No player instance")
+            player.start()
             startPlayTimer()
             "Player resumed"
         }
@@ -523,15 +527,17 @@ class HybridSound : HybridSoundSpec() {
 
     override fun seekToPlayer(time: Double): Promise<String> {
         return Promise.parallel {
-            mediaPlayer?.seekTo(time.toInt())
+            val player = mediaPlayer ?: throw Exception("No player instance")
+            player.seekTo(time.toInt())
             "Seeked to ${time}ms"
         }
     }
 
     override fun setVolume(volume: Double): Promise<String> {
         return Promise.parallel {
+            val player = mediaPlayer ?: throw Exception("No player instance")
             val volumeFloat = volume.toFloat()
-            mediaPlayer?.setVolume(volumeFloat, volumeFloat)
+            player.setVolume(volumeFloat, volumeFloat)
             "Volume set to $volume"
         }
     }
