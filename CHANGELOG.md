@@ -1,29 +1,5 @@
 # Changelogs
 
-## [0.2.16] — 2026-08-05
-
-yarn add react-native-nitro-sound@0.2.16
-```
-
-### 🐛 Bug Fixes
-
-- support android.resource:// URIs in startPlayer ([#834](https://github.com/hyochan/react-native-nitro-sound/pull/834))
-- force 16 KB page-size alignment for libNitroSound.so ([#833](https://github.com/hyochan/react-native-nitro-sound/pull/833))
-- range-validate recording settings to survive corrupted values ([#832](https://github.com/hyochan/react-native-nitro-sound/pull/832))
-- make stopRecorder idempotent ([#831](https://github.com/hyochan/react-native-nitro-sound/pull/831))
-- make pause and resume reliable for playback ([#830](https://github.com/hyochan/react-native-nitro-sound/pull/830))
-
-### 📦 Dependency Updates
-
-24 dependency bump(s) — see the [full diff](https://github.com/hyochan/react-native-nitro-sound/compare/0.2.15...0.2.16) for details.
-
----
-
-**Full Changelog**: https://github.com/hyochan/react-native-nitro-sound/compare/0.2.15...0.2.16
-
----
-
-
 ## [0.2.15] — 2026-05-22
 
 yarn add react-native-nitro-sound@0.2.15
