@@ -10,7 +10,6 @@ package com.margelo.nitro.sound
 import androidx.annotation.Keep
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
-import dalvik.annotation.optimization.FastNative
 
 
 /**
@@ -59,7 +58,6 @@ class Func_void_RecordBackType_cxx: Func_void_RecordBackType {
   override fun invoke(recordingMeta: RecordBackType): Unit
     = invoke_cxx(recordingMeta)
 
-  @FastNative
   private external fun invoke_cxx(recordingMeta: RecordBackType): Unit
 }
 

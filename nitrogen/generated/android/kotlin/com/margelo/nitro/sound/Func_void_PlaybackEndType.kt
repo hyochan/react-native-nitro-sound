@@ -10,7 +10,6 @@ package com.margelo.nitro.sound
 import androidx.annotation.Keep
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
-import dalvik.annotation.optimization.FastNative
 
 
 /**
@@ -59,7 +58,6 @@ class Func_void_PlaybackEndType_cxx: Func_void_PlaybackEndType {
   override fun invoke(playbackEndMeta: PlaybackEndType): Unit
     = invoke_cxx(playbackEndMeta)
 
-  @FastNative
   private external fun invoke_cxx(playbackEndMeta: PlaybackEndType): Unit
 }
 
