@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "envMode": "loose",
   "tasks": {
     "build:android": {
       "env": ["ORG_GRADLE_PROJECT_newArchEnabled"],
