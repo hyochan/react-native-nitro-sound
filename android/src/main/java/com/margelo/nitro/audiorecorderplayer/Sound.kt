@@ -288,7 +288,18 @@ class HybridSound : HybridSoundSpec() {
         // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                mediaRecorder?.apply {
+                val recorder = mediaRecorder
+                if (recorder == null) {
+                    // stopRecorder is idempotent: a second call after the recorder
+                    // was already stopped is a no-op instead of an error (#789).
+                    handler.post {
+                        stopRecordTimer()
+                    }
+                    promise.resolve("recorder already stopped")
+                    return@launch
+                }
+
+                recorder.apply {
                     stop()
                     release()
                 }
