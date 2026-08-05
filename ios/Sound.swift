@@ -743,12 +743,12 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     }
 
     // isFinite alone is not enough: a corrupted std::optional<double> can carry
-    // finite garbage (e.g. 5e-15 or 1e18) that passes the `> 0` check, reaches
-    // AudioQueueNew, and gets rejected as 'fmt?' — prepareToRecord() then fails,
-    // but only in optimized release builds (#766). Values outside the range any
-    // iOS codec accepts are dropped in favor of the quality-preset defaults.
+    // finite garbage (subnormals like 5e-324, or a plain wrong value) that passes
+    // the `> 0` check, reaches AudioQueueNew, and gets rejected as 'fmt?' —
+    // prepareToRecord() then fails, but only in optimized release builds (#766).
+    // Upstream tracking: mrousavy/nitro#1319 (still open). Values outside the
+    // range any iOS codec accepts are dropped in favor of the quality presets.
     private static let validSampleRateRange = 4_000.0...192_000.0
-    private static let validChannelRange = 1...8
     private static let validBitRateRange = 8_000...1_536_000
 
     private func validSampleRate(_ value: Double?) -> Double? {
@@ -756,8 +756,21 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         return v
     }
 
+    /// Upper bound for a requested channel count.
+    ///
+    /// A corrupted value can land inside a plausible range — release builds have
+    /// been observed recording 5-channel 5.0 surround files from a phone mic
+    /// (#741, #736), which a fixed 1...8 check would happily accept. Bounding by
+    /// what the current input route can actually deliver rejects that while
+    /// still allowing genuine multi-channel hardware. The floor of 2 keeps the
+    /// built-in mono mic (maximumInputNumberOfChannels == 1) working with the
+    /// stereo `.high` preset, which AVAudioRecorder upmixes as it always has.
+    private func maxAllowedChannels() -> Int {
+        max(2, AVAudioSession.sharedInstance().maximumInputNumberOfChannels)
+    }
+
     private func validChannelCount(_ value: Double?) -> Int? {
-        guard let v = safeInt(value), Self.validChannelRange.contains(v) else { return nil }
+        guard let v = safeInt(value), v >= 1, v <= maxAllowedChannels() else { return nil }
         return v
     }
 
