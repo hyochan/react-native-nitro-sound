@@ -422,8 +422,10 @@ class HybridSound : HybridSoundSpec() {
                         val headers = httpHeaders ?: emptyMap()
                         setDataSource(context, Uri.parse(uri), headers)
                     }
-                    uri.startsWith("content://") -> {
-                        // Handle content URI
+                    uri.startsWith("content://") || uri.startsWith("android.resource://") -> {
+                        // Content and bundled-resource URIs must resolve through a
+                        // Context; treating android.resource:// as a plain file path
+                        // fails with 'Prepare failed: status=0x1' (#751).
                         setDataSource(context, Uri.parse(uri))
                     }
                     uri.startsWith("file://") -> {
