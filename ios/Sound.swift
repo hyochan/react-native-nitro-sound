@@ -32,6 +32,10 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     private var playBackListener: ((PlayBackType) -> Void)?
     private var playbackEndListener: ((PlaybackEndType) -> Void)?
     private var didEmitPlaybackEnd = false
+    // AVAudioPlayer.isPlaying is false for both "paused" and "finished", so the
+    // play timer needs this to tell a user-initiated pause apart from the end
+    // of playback — otherwise pausing emits a spurious playback-end event.
+    private var isPausedByUser = false
 
     private var subscriptionDuration: TimeInterval = 0.06
     private var playbackRate: Double = 1.0 // default 1x
@@ -450,6 +454,8 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             do {
                 print("🎵 Starting player for URI: \(uri ?? "nil")")
 
+                self.isPausedByUser = false
+
                 // Setup audio session
                 let audioSession = AVAudioSession.sharedInstance()
                 print("🎵 Setting up audio session for playback...")
@@ -548,6 +554,8 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     public func stopPlayer() throws -> Promise<String> {
         let promise = Promise<String>()
 
+        self.isPausedByUser = false
+
         if let player = self.audioPlayer {
             player.stop()
             self.audioPlayer = nil
@@ -570,10 +578,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         let promise = Promise<String>()
 
         if let player = self.audioPlayer {
+            // Set before pause() so a timer tick that observes isPlaying == false
+            // never mistakes this pause for the end of playback.
+            self.isPausedByUser = true
             player.pause()
             self.stopPlayTimer()
             promise.resolve(withResult: "Player paused")
         } else if let node = self.audioPlayerNode {
+            self.isPausedByUser = true
             node.pause()
             self.stopPlayTimer()
             promise.resolve(withResult: "Player paused")
@@ -588,6 +600,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         let promise = Promise<String>()
 
         if let player = self.audioPlayer {
+            self.isPausedByUser = false
             player.enableRate = true
             player.rate = Float(self.playbackRate)
             player.play()
@@ -596,6 +609,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             }
             promise.resolve(withResult: "Player resumed")
         } else if let node = self.audioPlayerNode {
+            self.isPausedByUser = false
             node.play()
             DispatchQueue.main.async {
                 self.startPlayTimer()
@@ -950,6 +964,15 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
                 // Check if player is still playing
                 if !player.isPlaying {
+                    // A user-initiated pause also reports isPlaying == false; it must
+                    // not emit playback-end events or apps treat the pause as the
+                    // track finishing and tear the player down (#819).
+                    if self.isPausedByUser {
+                        print("🎵 Play timer callback: player paused by user, stopping timer without end events")
+                        self.stopPlayTimer()
+                        return
+                    }
+
                     print("🎵 Play timer callback: player stopped, stopping timer")
 
                     // Send final callback if duration is available
