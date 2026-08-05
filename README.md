@@ -258,7 +258,7 @@ if (Platform.OS === 'android') {
 |                           |            `boolean?` meteringEnabled            |                   |                                                       |
 | pauseRecorder             |                                                  | `Promise<string>` | Pause recording                                       |
 | resumeRecorder            |                                                  | `Promise<string>` | Resume recording                                      |
-| stopRecorder              |                                                  | `Promise<string>` | Stop recording and return file path                   |
+| stopRecorder              |                                                  | `Promise<string>` | Stop recording and return file path (idempotent — extra calls resolve with `"recorder already stopped"`) |
 | startPlayer               | `string?` uri, `Record<string, string>?` headers | `Promise<string>` | Start playback with optional URI and HTTP headers     |
 | stopPlayer                |                                                  | `Promise<string>` | Stop playback                                         |
 | pausePlayer               |                                                  | `Promise<string>` | Pause playback                                        |
@@ -510,6 +510,20 @@ Notes:
 
 > **Tip**: Store the file path returned by `startRecorder()` immediately for later use in playback or file management.
 
+## Supported Playback Sources
+
+`startPlayer(uri)` accepts the following URI forms:
+
+| Source                                       | iOS | Android | Notes                                                          |
+| :------------------------------------------- | :-: | :-----: | :------------------------------------------------------------- |
+| Absolute file path (`/data/.../sound.mp4`)   | ✅  |   ✅    | e.g. the path returned by `startRecorder()`                    |
+| `file://` URI                                | ✅  |   ✅    |                                                                |
+| `http(s)://` remote URL                      | ✅  |   ✅    | Optional HTTP headers are supported on Android                 |
+| `content://` URI                             | —   |   ✅    | Android content providers (document picker, media store)       |
+| `android.resource://<appId>/raw/<name>`      | —   |   ✅    | Bundled `res/raw` resources (v0.2.16+) — see note below        |
+
+> **Bundled sounds in Android release builds**: in debug builds Metro serves `require('./sound.mp3')` assets over HTTP, but in release builds `Image.resolveAssetSource()` returns a resource *name*, not a playable path. For sounds shipped with your app, place the file in `android/app/src/main/res/raw/` and play it via `android.resource://<applicationId>/raw/<filename-without-extension>` (or copy the asset to a real file first). On iOS, bundle the file with the app and resolve its path via the main bundle.
+
 ## Web Platform Support
 
 ### Features
@@ -696,9 +710,23 @@ Because this repo uses a Yarn workspace, run everything from the repository root
 
 ## Troubleshooting
 
+### Recording fails only in iOS release/TestFlight builds
+
+Symptoms: `Recording setup failed: Failed to prepare recorder` or `Unknown std::runtime_error` in production while debug builds work fine.
+
+Root cause: in optimized release builds, optional numeric settings could arrive corrupted through the native interop and poison the recorder configuration (`AudioQueueNew` rejects it as `kAudioFormatUnsupportedDataFormatError`). **Fixed in v0.2.16** — recording settings are now range-validated and the underlying interop bug is fixed in the bundled nitro-modules version. If you see this on an older version, upgrade first.
+
+### Android: sound plays in debug but not in release builds
+
+Release builds don't serve Metro assets over HTTP, so paths that worked in debug (from `Image.resolveAssetSource`) are not real files anymore. Use a bundled resource URI instead — see [Supported Playback Sources](#supported-playback-sources). `android.resource://` URIs are supported from v0.2.16.
+
+### Google Play warning: library doesn't support 16 KB page sizes
+
+Fixed in v0.2.16 — `libNitroSound.so` is linked with 16 KB page alignment on every NDK version. On older library versions, building your app with React Native 0.80+ (NDK r27) also resolves it.
+
 ### iOS Recording Error: "Unknown std::runtime_error"
 
-If you encounter this error when trying to record on iOS:
+If you encounter this error when trying to record on iOS (after upgrading to v0.2.16+, which fixes the most common production cause — see above):
 
 1. **Ensure microphone permissions are properly configured** in your `Info.plist`:
 
