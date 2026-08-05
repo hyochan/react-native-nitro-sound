@@ -428,7 +428,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                     }
                 }
             } else {
-                promise.reject(withError: RuntimeError.error(withMessage: "No recorder instance"))
+                // stopRecorder is idempotent: a second call after the recorder
+                // was already stopped is a no-op instead of an error (#789).
+                promise.resolve(withResult: "recorder already stopped")
             }
         }
 
