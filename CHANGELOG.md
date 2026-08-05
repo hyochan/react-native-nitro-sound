@@ -1,5 +1,22 @@
 # Changelogs
 
+## [0.2.17] — 2026-08-05
+
+yarn add react-native-nitro-sound@0.2.17
+```
+
+### 🐛 Bug Fixes
+
+- return the recording URI from repeated stopRecorder calls ([#837](https://github.com/hyochan/react-native-nitro-sound/pull/837))
+- bound channel count by what the input route supports ([#836](https://github.com/hyochan/react-native-nitro-sound/pull/836))
+
+---
+
+**Full Changelog**: https://github.com/hyochan/react-native-nitro-sound/compare/0.2.16...0.2.17
+
+---
+
+
 ## [0.2.16] — 2026-08-05
 
 yarn add react-native-nitro-sound@0.2.16
