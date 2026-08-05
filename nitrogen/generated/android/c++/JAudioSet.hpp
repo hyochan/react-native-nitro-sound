@@ -33,11 +33,11 @@ namespace margelo::nitro::sound {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ struct "AudioSet" and the the Kotlin data class "AudioSet".
+   * The C++ JNI bridge between the C++ struct "AudioSet" and the Kotlin data class "AudioSet".
    */
   struct JAudioSet final: public jni::JavaClass<JAudioSet> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AudioSet;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/AudioSet;";
 
   public:
     /**

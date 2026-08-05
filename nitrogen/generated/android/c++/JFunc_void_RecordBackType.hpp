@@ -26,7 +26,7 @@ namespace margelo::nitro::sound {
    */
   struct JFunc_void_RecordBackType: public jni::JavaClass<JFunc_void_RecordBackType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/Func_void_RecordBackType;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/Func_void_RecordBackType;";
 
   public:
     /**
@@ -62,7 +62,7 @@ namespace margelo::nitro::sound {
     }
 
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/Func_void_RecordBackType_cxx;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/Func_void_RecordBackType_cxx;";
     static void registerNatives() {
       registerHybrid({makeNativeMethod("invoke_cxx", JFunc_void_RecordBackType_cxx::invoke_cxx)});
     }

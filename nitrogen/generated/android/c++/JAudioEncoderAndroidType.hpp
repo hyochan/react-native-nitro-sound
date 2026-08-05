@@ -15,11 +15,11 @@ namespace margelo::nitro::sound {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ enum "AudioEncoderAndroidType" and the the Kotlin enum "AudioEncoderAndroidType".
+   * The C++ JNI bridge between the C++ enum "AudioEncoderAndroidType" and the Kotlin enum "AudioEncoderAndroidType".
    */
   struct JAudioEncoderAndroidType final: public jni::JavaClass<JAudioEncoderAndroidType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/AudioEncoderAndroidType;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/AudioEncoderAndroidType;";
 
   public:
     /**

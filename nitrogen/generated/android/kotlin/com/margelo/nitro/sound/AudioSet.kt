@@ -9,6 +9,7 @@ package com.margelo.nitro.sound
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import java.util.Objects
 
 
 /**
@@ -73,6 +74,52 @@ data class AudioSet(
   val IncludeBase64: Boolean?
 ) {
   /* primary constructor */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is AudioSet) return false
+    return Objects.deepEquals(this.AVEncoderAudioQualityKeyIOS, other.AVEncoderAudioQualityKeyIOS)
+      && Objects.deepEquals(this.AVModeIOS, other.AVModeIOS)
+      && Objects.deepEquals(this.AVEncodingOptionIOS, other.AVEncodingOptionIOS)
+      && Objects.deepEquals(this.AVFormatIDKeyIOS, other.AVFormatIDKeyIOS)
+      && Objects.deepEquals(this.AVNumberOfChannelsKeyIOS, other.AVNumberOfChannelsKeyIOS)
+      && Objects.deepEquals(this.AVLinearPCMBitDepthKeyIOS, other.AVLinearPCMBitDepthKeyIOS)
+      && Objects.deepEquals(this.AVLinearPCMIsBigEndianKeyIOS, other.AVLinearPCMIsBigEndianKeyIOS)
+      && Objects.deepEquals(this.AVLinearPCMIsFloatKeyIOS, other.AVLinearPCMIsFloatKeyIOS)
+      && Objects.deepEquals(this.AVLinearPCMIsNonInterleavedIOS, other.AVLinearPCMIsNonInterleavedIOS)
+      && Objects.deepEquals(this.AVSampleRateKeyIOS, other.AVSampleRateKeyIOS)
+      && Objects.deepEquals(this.AudioSourceAndroid, other.AudioSourceAndroid)
+      && Objects.deepEquals(this.OutputFormatAndroid, other.OutputFormatAndroid)
+      && Objects.deepEquals(this.AudioEncoderAndroid, other.AudioEncoderAndroid)
+      && Objects.deepEquals(this.AudioQuality, other.AudioQuality)
+      && Objects.deepEquals(this.AudioChannels, other.AudioChannels)
+      && Objects.deepEquals(this.AudioSamplingRate, other.AudioSamplingRate)
+      && Objects.deepEquals(this.AudioEncodingBitRate, other.AudioEncodingBitRate)
+      && Objects.deepEquals(this.IncludeBase64, other.IncludeBase64)
+  }
+
+  override fun hashCode(): Int {
+    return arrayOf<Any?>(
+      AVEncoderAudioQualityKeyIOS,
+      AVModeIOS,
+      AVEncodingOptionIOS,
+      AVFormatIDKeyIOS,
+      AVNumberOfChannelsKeyIOS,
+      AVLinearPCMBitDepthKeyIOS,
+      AVLinearPCMIsBigEndianKeyIOS,
+      AVLinearPCMIsFloatKeyIOS,
+      AVLinearPCMIsNonInterleavedIOS,
+      AVSampleRateKeyIOS,
+      AudioSourceAndroid,
+      OutputFormatAndroid,
+      AudioEncoderAndroid,
+      AudioQuality,
+      AudioChannels,
+      AudioSamplingRate,
+      AudioEncodingBitRate,
+      IncludeBase64
+    ).contentDeepHashCode()
+  }
 
   companion object {
     /**

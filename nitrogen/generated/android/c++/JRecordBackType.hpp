@@ -17,11 +17,11 @@ namespace margelo::nitro::sound {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ struct "RecordBackType" and the the Kotlin data class "RecordBackType".
+   * The C++ JNI bridge between the C++ struct "RecordBackType" and the Kotlin data class "RecordBackType".
    */
   struct JRecordBackType final: public jni::JavaClass<JRecordBackType> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/sound/RecordBackType;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/sound/RecordBackType;";
 
   public:
     /**
