@@ -75,22 +75,10 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
 
   const requestPermissions = async () => {
     if (Platform.OS !== 'android') return true;
-    const sdk = Platform.Version as number;
-    if (sdk >= 33) {
-      const res = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-      );
-      return res === PermissionsAndroid.RESULTS.GRANTED;
-    }
-    const grants = await PermissionsAndroid.requestMultiple([
-      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-    ]);
-    return (
-      grants['android.permission.RECORD_AUDIO'] ===
-      PermissionsAndroid.RESULTS.GRANTED
+    const result = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
     );
+    return result === PermissionsAndroid.RESULTS.GRANTED;
   };
 
   const onStartRecord = async () => {
@@ -156,7 +144,11 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+        <TouchableOpacity
+          testID="e2e-hook-back"
+          onPress={onBack}
+          style={styles.backBtn}
+        >
           <Text style={styles.backTxt}>{'< Back'}</Text>
         </TouchableOpacity>
         <Text style={styles.title}>NitroSound with Hook</Text>
@@ -166,6 +158,7 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
         <Text style={styles.sectionTitle}>Recorder</Text>
         <View style={styles.row}>
           <TouchableOpacity
+            testID="e2e-hook-record-start"
             style={[
               styles.btn,
               (isRecordLoading || isRecording) && styles.btnDisabled,
@@ -187,6 +180,7 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
             )}
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-hook-record-pause"
             style={[
               styles.btn,
               (isRecordLoading || !isRecording) && styles.btnDisabled,
@@ -197,6 +191,7 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
             <Text style={styles.btnTxt}>Pause</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-hook-record-resume"
             style={[
               styles.btn,
               (isRecordLoading || !isRecording) && styles.btnDisabled,
@@ -207,6 +202,7 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
             <Text style={styles.btnTxt}>Resume</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-hook-record-stop"
             style={[
               styles.btn,
               (!isRecording || isStopLoading) && styles.btnDisabled,
@@ -233,6 +229,12 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
         </Text>
         <Text style={styles.small}>
           Record Time: {mmssss(Math.floor(recordPosition))}
+        </Text>
+        <Text testID="e2e-hook-record-seconds" style={styles.small}>
+          Record Seconds: {Math.floor(recordPosition / 1000)}
+        </Text>
+        <Text testID="e2e-hook-record-progress" style={styles.small}>
+          Record Progress: {recordPosition >= 4000 ? 'Ready' : 'Waiting'}
         </Text>
 
         <View style={styles.sep} />
@@ -264,6 +266,7 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
         )}
         <View style={styles.row}>
           <TouchableOpacity
+            testID="e2e-hook-player-start"
             style={[
               styles.btn,
               (isPlayLoading || isPlaying) && styles.btnDisabled,
@@ -285,6 +288,7 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
             )}
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-hook-player-pause"
             style={[
               styles.btn,
               (isPlayLoading || !isPlaying) && styles.btnDisabled,
@@ -300,6 +304,7 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
             <Text style={styles.btnTxt}>Pause</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-hook-player-resume"
             style={[
               styles.btn,
               (isPlayLoading || isPlaying) && styles.btnDisabled,
@@ -315,6 +320,7 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
             <Text style={styles.btnTxt}>Resume</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-hook-player-stop"
             style={[
               styles.btn,
               (isPlayLoading || (!isPlaying && playbackPosition === 0)) &&

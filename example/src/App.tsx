@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, SafeAreaView, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { HomeScreen, type ScreenKey } from './screens/HomeScreen';
 import { SoundHookScreen } from './screens/SoundHookScreen';
 import { SoundHookStatesScreen } from './screens/SoundHookStatesScreen';
@@ -37,16 +37,11 @@ function AppInner() {
   );
 }
 
-const App = () =>
-  Platform.OS === 'ios' ? (
-    <SafeAreaView style={styles.container}>
-      <AppInner />
-    </SafeAreaView>
-  ) : (
-    <SafeAreaProvider>
-      <AppInner />
-    </SafeAreaProvider>
-  );
+const App = () => (
+  <SafeAreaProvider>
+    <AppInner />
+  </SafeAreaProvider>
+);
 
 export default App;
 

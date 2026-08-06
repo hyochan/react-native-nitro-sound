@@ -45,22 +45,10 @@ export function SoundHookStatesScreen({ onBack }: { onBack: () => void }) {
 
   const requestPermissions = async () => {
     if (Platform.OS !== 'android') return true;
-    const sdk = Platform.Version as number;
-    if (sdk >= 33) {
-      const res = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-      );
-      return res === PermissionsAndroid.RESULTS.GRANTED;
-    }
-    const grants = await PermissionsAndroid.requestMultiple([
-      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-    ]);
-    return (
-      grants['android.permission.RECORD_AUDIO'] ===
-      PermissionsAndroid.RESULTS.GRANTED
+    const result = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
     );
+    return result === PermissionsAndroid.RESULTS.GRANTED;
   };
 
   const onStartRecord = async () => {

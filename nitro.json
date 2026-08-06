@@ -9,9 +9,15 @@
   },
   "autolinking": {
     "Sound": {
-      "swift": "HybridSound",
-      "kotlin": "HybridSound"
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridSound"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridSound"
+      }
     }
   },
-  "ignorePaths": ["node_modules"]
+  "ignorePaths": ["**/node_modules/**"]
 }

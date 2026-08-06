@@ -132,7 +132,7 @@ public extension AudioSet {
 
   @inline(__always)
   var AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType? {
-    return self.__AVEncoderAudioQualityKeyIOS.has_value() ? self.__AVEncoderAudioQualityKeyIOS.pointee : nil
+    return self.__AVEncoderAudioQualityKeyIOS.value
   }
   
   @inline(__always)
@@ -164,7 +164,7 @@ public extension AudioSet {
   
   @inline(__always)
   var AVLinearPCMBitDepthKeyIOS: AVLinearPCMBitDepthKeyIOSType? {
-    return self.__AVLinearPCMBitDepthKeyIOS.has_value() ? self.__AVLinearPCMBitDepthKeyIOS.pointee : nil
+    return self.__AVLinearPCMBitDepthKeyIOS.value
   }
   
   @inline(__always)
@@ -217,17 +217,17 @@ public extension AudioSet {
   
   @inline(__always)
   var AudioSourceAndroid: AudioSourceAndroidType? {
-    return self.__AudioSourceAndroid.has_value() ? self.__AudioSourceAndroid.pointee : nil
+    return self.__AudioSourceAndroid.value
   }
   
   @inline(__always)
   var OutputFormatAndroid: OutputFormatAndroidType? {
-    return self.__OutputFormatAndroid.has_value() ? self.__OutputFormatAndroid.pointee : nil
+    return self.__OutputFormatAndroid.value
   }
   
   @inline(__always)
   var AudioEncoderAndroid: AudioEncoderAndroidType? {
-    return self.__AudioEncoderAndroid.has_value() ? self.__AudioEncoderAndroid.pointee : nil
+    return self.__AudioEncoderAndroid.value
   }
   
   @inline(__always)
