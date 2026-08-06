@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Platform,
-  PermissionsAndroid,
   Switch,
   ScrollView,
   Alert,
@@ -18,6 +16,7 @@ import {
   AudioSourceAndroidType,
   AVEncoderAudioQualityIOSType,
 } from 'react-native-nitro-sound';
+import { requestMicrophonePermission } from '../utils/permissions';
 
 export function CompatibilityScreen({ onBack }: { onBack: () => void }) {
   const [mountVideo, setMountVideo] = useState(true);
@@ -62,18 +61,10 @@ export function CompatibilityScreen({ onBack }: { onBack: () => void }) {
     },
   });
 
-  const requestPermissions = async () => {
-    if (Platform.OS !== 'android') return true;
-    const result = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-    );
-    return result === PermissionsAndroid.RESULTS.GRANTED;
-  };
-
   const handleStartRecord = async () => {
     setRecordError(null);
     try {
-      if (!(await requestPermissions())) {
+      if (!(await requestMicrophonePermission())) {
         Alert.alert('Permission required', 'Microphone permission needed');
         return;
       }

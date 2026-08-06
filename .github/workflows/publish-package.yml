@@ -50,7 +50,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: 'yarn'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Enable Corepack
@@ -112,12 +111,22 @@ jobs:
           git add CHANGELOG.md
           git commit --amend --no-edit
 
-          # npm version tagged the pre-amend commit. Recreate the annotated tag
-          # so the release tag includes the generated changelog as well.
-          git tag --force --annotate "$NEW_VERSION" --message "$NEW_VERSION" HEAD
-
       - name: Prepare package (build + codegen)
         run: yarn prepare
+
+      - name: Verify release tree and retarget tag
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            echo "yarn prepare changed the release tree; refusing to tag it." >&2
+            exit 1
+          fi
+
+          # npm version tagged the pre-amend commit. Recreate the annotated tag
+          # only after the changelog and prepared package tree are verified.
+          git tag --force --annotate "$NEW_VERSION" --message "$NEW_VERSION" HEAD
 
       - name: Push commit and tags
         run: |

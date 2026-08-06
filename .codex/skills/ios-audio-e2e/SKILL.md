@@ -24,8 +24,8 @@ an iOS runtime pass from a simulator compile alone.
 1. Read `AGENTS.md`, `.github/workflows/ci-ios.yml`, the changed Swift/spec/TS
    files, and the relevant example screen.
 2. Record `git status --short --branch`; do not discard existing changes.
-3. Run `xcodebuild -version` and `xcrun simctl list devices available` or
-   `xcrun devicectl list devices` for a physical device.
+3. Run `xcodebuild -version` and `xcrun devicectl list devices`; select a
+   physical iPhone. Use `$simulator-audio-e2e` for virtual-device coverage.
 4. Confirm `example/ios/SoundExample/Info.plist` contains a microphone usage
    description and identify the selected destination.
 5. Run `yarn install --immutable`, `yarn prepare`, and
@@ -57,8 +57,8 @@ Report this as `BUILD PASS` or `BUILD FAIL`, never as runtime E2E.
 
 After microphone approval, run the smallest matrix covering the change:
 
-1. Install and launch the example on the selected iPhone or a simulator with a
-   known audio input.
+1. Install and launch the example on the selected physical iPhone. Never report
+   device-backed runtime evidence from this skill using a Simulator.
 2. Grant microphone permission through the system prompt.
 3. Start recording; require a resolved URI, `isRecording`, and increasing
    millisecond callbacks.

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+script_dir="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "$script_dir/../../../.." && pwd -P)"
 cd "$repo_root"
 
 echo "Repository: $repo_root"
@@ -14,11 +15,17 @@ if command -v xcrun >/dev/null 2>&1; then
   xcrun simctl list devices available
 fi
 
-android_sdk="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/Library/Android/sdk}}"
+android_sdk="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+if [[ -z "$android_sdk" ]]; then
+  case "$(uname -s)" in
+    Darwin) android_sdk="${HOME:?}/Library/Android/sdk" ;;
+    Linux) android_sdk="${HOME:?}/Android/Sdk" ;;
+  esac
+fi
 
 if command -v adb >/dev/null 2>&1; then
   adb_bin="$(command -v adb)"
-elif [[ -x "$android_sdk/platform-tools/adb" ]]; then
+elif [[ -n "$android_sdk" && -x "$android_sdk/platform-tools/adb" ]]; then
   adb_bin="$android_sdk/platform-tools/adb"
 fi
 
@@ -29,7 +36,7 @@ fi
 
 if command -v emulator >/dev/null 2>&1; then
   emulator_bin="$(command -v emulator)"
-elif [[ -x "$android_sdk/emulator/emulator" ]]; then
+elif [[ -n "$android_sdk" && -x "$android_sdk/emulator/emulator" ]]; then
   emulator_bin="$android_sdk/emulator/emulator"
 fi
 

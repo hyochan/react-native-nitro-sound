@@ -67,7 +67,7 @@ Write to `knowledge/_claude-context/context.md` with these sections:
 
 ## Public API
 
-<Enumerate from src/index.ts — one line per export>
+<Enumerate from src/index.tsx and src/index.web.tsx — one line per export>
 
 ## Nitro Spec Surface
 

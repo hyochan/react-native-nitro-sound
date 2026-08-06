@@ -217,7 +217,7 @@ Closes #774
 
 **Dep bump:**
 
-```
+```text
 chore(deps): bump react-native-nitro-modules to 0.36.5
 
 Minor patch release. No API changes.

@@ -86,6 +86,8 @@ states observed, JUnit result, and relevant redacted log findings. List every
 untested device-only row.
 
 Terminate only Metro/emulators started by this run. Leave user-owned devices
-and processes intact. Remove the created recording or uninstall the cleared
-test app when practical; artifacts under `e2e/artifacts/` are disposable and
-ignored by Git.
+and processes intact. Use the guarded runner's mandatory cleanup and verify
+that no recording remains in the selected app container or `e2e/artifacts/`.
+Report `RUNTIME BLOCKED` if cleanup fails or cannot be confirmed. JUnit,
+screenshots, debug output, and redacted logs under `e2e/artifacts/` remain
+disposable and ignored by Git.

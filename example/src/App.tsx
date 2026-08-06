@@ -16,7 +16,12 @@ function AppInner() {
   const insets = useSafeAreaContext();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {screen === 'Home' && <HomeScreen onNavigate={(k) => setScreen(k)} />}
       {screen === 'SoundHook' && (
         <SoundHookScreen onBack={() => setScreen('Home')} />

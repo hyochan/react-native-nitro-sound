@@ -14,7 +14,7 @@ Before editing, read root `AGENTS.md` and the instructions nearest the changed
 path. Use these files as primary evidence:
 
 - Public API: `src/index.tsx`, `src/index.web.tsx`, and `src/specs/*.nitro.ts`
-- Native behavior: `ios/*.swift` and `android/src/main/**/*.kt`
+- Native behavior: `ios/**/*.swift` and `android/**/*.{kt,cpp,h,hpp}`
 - Generated bindings: `nitrogen/generated/**`
 - Build and release behavior: `package.json` and `.github/workflows/*.yml`
 - User documentation: `README.md`, `docs/*.md`, and `CHANGELOG.md`
@@ -51,7 +51,7 @@ release documentation. Use `$review-self` for an independent final pass and
 - Never hand-edit `nitrogen/generated/**`. Regenerate with `yarn nitrogen` or
   run the complete build/codegen flow with `yarn prepare`, then inspect the
   generated diff.
-- Keep TypeScript, Web, Swift, and Kotlin behavior aligned unless the public
+- Keep TypeScript, Web, Swift, Kotlin, and C++ behavior aligned unless the public
   documentation explicitly identifies a platform limitation.
 - Preserve millisecond units for record and playback event positions.
 - Check listener registration, removal, promise settlement, cleanup, and

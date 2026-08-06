@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
-  PermissionsAndroid,
   Alert,
   ScrollView,
   ActivityIndicator,
@@ -17,6 +16,7 @@ import {
   AudioSourceAndroidType,
   AVEncoderAudioQualityIOSType,
 } from 'react-native-nitro-sound';
+import { requestMicrophonePermission } from '../utils/permissions';
 
 export function SoundHookStatesScreen({ onBack }: { onBack: () => void }) {
   const [recordingPath, setRecordingPath] = useState('');
@@ -43,16 +43,8 @@ export function SoundHookStatesScreen({ onBack }: { onBack: () => void }) {
     mmssss,
   } = useSoundWithStates();
 
-  const requestPermissions = async () => {
-    if (Platform.OS !== 'android') return true;
-    const result = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-    );
-    return result === PermissionsAndroid.RESULTS.GRANTED;
-  };
-
   const onStartRecord = async () => {
-    if (!(await requestPermissions())) {
+    if (!(await requestMicrophonePermission())) {
       Alert.alert('Permission required', 'Microphone permission needed');
       return;
     }

@@ -17,7 +17,12 @@ for skill in \
   rebase-main \
   review-pr \
   review-self; do
-  ln -sfn "$repo_root/.codex/skills/$skill" "$skills_dir/$skill"
+  skill_source="$repo_root/.codex/skills/$skill"
+  if [[ ! -d "$skill_source" ]]; then
+    echo "Missing canonical Codex skill: $skill_source" >&2
+    exit 1
+  fi
+  ln -sfn "$skill_source" "$skills_dir/$skill"
   echo "Installed Codex skill: $skill"
 done
 

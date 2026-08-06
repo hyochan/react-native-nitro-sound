@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
-  PermissionsAndroid,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
@@ -17,6 +16,7 @@ import {
   AudioSourceAndroidType,
   AVEncoderAudioQualityIOSType,
 } from 'react-native-nitro-sound';
+import { requestMicrophonePermission } from '../utils/permissions';
 
 export function SoundHookScreen({ onBack }: { onBack: () => void }) {
   const [recordingPath, setRecordingPath] = useState('');
@@ -73,16 +73,8 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
     },
   });
 
-  const requestPermissions = async () => {
-    if (Platform.OS !== 'android') return true;
-    const result = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-    );
-    return result === PermissionsAndroid.RESULTS.GRANTED;
-  };
-
   const onStartRecord = async () => {
-    if (!(await requestPermissions())) {
+    if (!(await requestMicrophonePermission())) {
       Alert.alert('Permission required', 'Microphone permission needed');
       return;
     }
@@ -234,7 +226,7 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
           Record Seconds: {Math.floor(recordPosition / 1000)}
         </Text>
         <Text testID="e2e-hook-record-progress" style={styles.small}>
-          Record Progress: {recordPosition >= 4000 ? 'Ready' : 'Waiting'}
+          Record Progress: {Math.floor(recordPosition / 1000)}s
         </Text>
 
         <View style={styles.sep} />

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
-  PermissionsAndroid,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
@@ -17,6 +16,7 @@ import {
   AudioSourceAndroidType,
   AVEncoderAudioQualityIOSType,
 } from 'react-native-nitro-sound';
+import { requestMicrophonePermission } from '../utils/permissions';
 
 export function SoundScreen({ onBack }: { onBack: () => void }) {
   const soundRef = useRef(createSound());
@@ -33,16 +33,8 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
   const [loadingMessage, setLoadingMessage] = useState('Loading...');
   const [isPlayLoading, setIsPlayLoading] = useState(false);
 
-  const requestPermissions = async () => {
-    if (Platform.OS !== 'android') return true;
-    const result = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-    );
-    return result === PermissionsAndroid.RESULTS.GRANTED;
-  };
-
   const onStartRecord = async () => {
-    if (!(await requestPermissions())) {
+    if (!(await requestMicrophonePermission())) {
       Alert.alert('Permission required', 'Microphone permission needed');
       return;
     }
@@ -178,7 +170,9 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
               styles.btn,
               (isRecordLoading || !isRecording) && styles.btnDisabled,
             ]}
-            onPress={() => soundRef.current.pauseRecorder()}
+            onPress={() => {
+              soundRef.current.pauseRecorder().catch(() => {});
+            }}
             disabled={isRecordLoading || !isRecording}
           >
             <Text style={styles.btnTxt}>Pause</Text>
@@ -189,7 +183,9 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
               styles.btn,
               (isRecordLoading || !isRecording) && styles.btnDisabled,
             ]}
-            onPress={() => soundRef.current.resumeRecorder()}
+            onPress={() => {
+              soundRef.current.resumeRecorder().catch(() => {});
+            }}
             disabled={isRecordLoading || !isRecording}
           >
             <Text style={styles.btnTxt}>Resume</Text>
@@ -222,7 +218,7 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
         </Text>
         <Text style={styles.small}>Record Time: {ms(recordPosition)}</Text>
         <Text testID="e2e-direct-record-progress" style={styles.small}>
-          Record Progress: {recordPosition >= 4000 ? 'Ready' : 'Waiting'}
+          Record Progress: {Math.floor(recordPosition / 1000)}s
         </Text>
 
         <View style={styles.sep} />
