@@ -112,6 +112,10 @@ jobs:
           git add CHANGELOG.md
           git commit --amend --no-edit
 
+          # npm version tagged the pre-amend commit. Recreate the annotated tag
+          # so the release tag includes the generated changelog as well.
+          git tag --force --annotate "$NEW_VERSION" --message "$NEW_VERSION" HEAD
+
       - name: Prepare package (build + codegen)
         run: yarn prepare
 
