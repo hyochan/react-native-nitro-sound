@@ -1,0 +1,99 @@
+appId: sound.example
+name: Android emulator audio regression
+tags:
+  - audio
+  - emulator
+  - android
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible: Nitro Sound
+    timeout: 60000
+- tapOn:
+    id: e2e-home-direct
+- assertVisible: Direct NitroSound Usage
+- tapOn:
+    id: e2e-direct-record-start
+- extendedWaitUntil:
+    visible: "Recording: Yes"
+    timeout: 15000
+- tapOn:
+    id: e2e-direct-record-pause
+- tapOn:
+    id: e2e-direct-record-resume
+- extendedWaitUntil:
+    visible: "Record Progress: Ready"
+    timeout: 15000
+- tapOn:
+    id: e2e-direct-record-stop
+- assertVisible: Recording Stopped
+- tapOn: OK
+- extendedWaitUntil:
+    visible: "Recording: No"
+    timeout: 15000
+- assertVisible: "File: .*"
+- tapOn:
+    id: e2e-direct-player-start
+    waitToSettleTimeoutMs: 0
+- extendedWaitUntil:
+    visible: "Playing: Yes"
+    timeout: 15000
+- tapOn:
+    id: e2e-direct-player-pause
+    waitToSettleTimeoutMs: 0
+- assertVisible: "Playing: No"
+- tapOn:
+    id: e2e-direct-player-resume
+    waitToSettleTimeoutMs: 0
+- assertVisible: "Playing: Yes"
+- tapOn:
+    id: e2e-direct-player-stop
+    waitToSettleTimeoutMs: 0
+- assertVisible: "Playing: No"
+- tapOn:
+    id: e2e-direct-back
+- tapOn:
+    id: e2e-home-hook
+- assertVisible: NitroSound with Hook
+- tapOn:
+    id: e2e-hook-record-start
+- extendedWaitUntil:
+    visible: "Recording: Yes"
+    timeout: 15000
+- extendedWaitUntil:
+    visible: "Record Progress: Ready"
+    timeout: 15000
+- tapOn:
+    id: e2e-hook-record-pause
+- tapOn:
+    id: e2e-hook-record-resume
+- tapOn:
+    id: e2e-hook-record-stop
+- assertVisible: Recording Stopped
+- tapOn: OK
+- extendedWaitUntil:
+    visible: "Recording: No"
+    timeout: 15000
+- assertVisible: "File: .*"
+- tapOn:
+    id: e2e-hook-player-start
+    waitToSettleTimeoutMs: 0
+- extendedWaitUntil:
+    visible: "Playing: Yes"
+    timeout: 15000
+- tapOn:
+    id: e2e-hook-player-pause
+    waitToSettleTimeoutMs: 0
+- assertVisible: "Playing: No"
+- tapOn:
+    id: e2e-hook-player-resume
+    waitToSettleTimeoutMs: 0
+- assertVisible: "Playing: Yes"
+- tapOn:
+    id: e2e-hook-player-stop
+    waitToSettleTimeoutMs: 0
+- assertVisible: "Playing: No"
+- takeScreenshot: audio-android-complete
