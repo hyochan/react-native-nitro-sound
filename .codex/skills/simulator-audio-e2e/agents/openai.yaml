@@ -1,0 +1,4 @@
+interface:
+  display_name: "Simulator Audio E2E"
+  short_description: "Run virtual-device audio regression tests"
+  default_prompt: "Use $simulator-audio-e2e to build the example app and verify recorder/player features on explicit iOS Simulators or Android emulators."

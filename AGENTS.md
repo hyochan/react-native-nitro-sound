@@ -39,3 +39,14 @@
 
 - Bridge is implemented with `react-native-nitro-modules`. Define the surface in `src/specs/*.nitro.ts`, implement natively (Kotlin/Swift), then regenerate with `yarn nitrogen`/`yarn prepare`.
 - Android/iOS permissions: verify microphone access during local testing (see example app configuration).
+
+## AI Workflow & Skills
+
+- Canonical cross-agent skills live in `.codex/skills/*/SKILL.md`; Claude Code discovery wrappers live in `.claude/skills/*/SKILL.md` and must point back to the canonical files.
+- Route repository maintenance through `$nitro-sound-workflows`. Detailed command procedures live in `.claude/commands/` for PR review, audits, knowledge compilation, verification, E2E, releases, issue resolution, dependency upgrades, and commit/PR work.
+- Use `$ios-audio-e2e` and `$android-audio-e2e` for device-backed audio claims. Compilation alone is not runtime verification.
+- Use `$simulator-audio-e2e` for guarded Maestro recorder/player regression runs on explicitly selected iOS Simulators and Android emulators.
+- Use `$rebase-main` to preserve staged, unstaged, untracked, ignored, and generated work during synchronization. Never use destructive reset/clean shortcuts.
+- Use `$review-self` for a final independent pass and `$generate-doc` whenever public exports, Nitro specs, platform behavior, compatibility, or releases change.
+- Internal workflow-only changes under `.claude/`, `.codex/`, `AGENTS.md`, or `knowledge/_claude-context/` stay local unless the user explicitly requests commit, push, PR, or merge.
+- Install the repository Codex skills for automatic discovery with `.codex/scripts/install-skills.sh`.

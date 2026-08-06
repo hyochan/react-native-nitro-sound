@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Android Audio E2E'
+  short_description: 'Verify Android recording and playback flows'
+  default_prompt: 'Use $android-audio-e2e to verify recording, playback, permissions, and lifecycle behavior in the Android example app.'

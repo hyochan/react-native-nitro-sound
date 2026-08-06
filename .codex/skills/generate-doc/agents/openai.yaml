@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Generate Nitro Sound Docs'
+  short_description: 'Keep API and release documentation accurate'
+  default_prompt: 'Use $generate-doc to update React Native Nitro Sound documentation from the current API and release evidence.'

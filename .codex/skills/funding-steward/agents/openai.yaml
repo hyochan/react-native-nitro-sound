@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Funding Steward'
+  short_description: 'Maintain project funding and supporter messaging'
+  default_prompt: 'Use $funding-steward to update the project funding links or prepare a supporter-facing maintenance update.'

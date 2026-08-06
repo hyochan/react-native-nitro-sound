@@ -1,0 +1,4 @@
+interface:
+  display_name: 'iOS Audio E2E'
+  short_description: 'Verify iOS recording and playback end to end'
+  default_prompt: 'Use $ios-audio-e2e to verify recording and playback in the iOS example app with device-backed evidence.'

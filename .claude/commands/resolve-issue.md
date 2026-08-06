@@ -44,21 +44,21 @@ gh issue edit $ISSUE_NUMBER --repo hyochan/react-native-nitro-sound \
 
 **Label selection guide:**
 
-| Condition                                          | Label                          |
-| -------------------------------------------------- | ------------------------------ |
-| Bug report / crash                                 | `🐛 bug`                        |
-| New feature request                                | `🍗 enhancement`                |
-| iOS-only (mentions iOS, StoreKit, AVAudioSession)  | `📱 iOS`                        |
-| Android-only (mentions Android, MediaRecorder)     | `🤖 android`                    |
-| Build / Gradle / Xcode compile failure             | `👷‍♀️ build`                      |
-| Needs reproduction or more info                    | `ℹ needs more info`            |
-| Needs deeper investigation                         | `🕵️‍♂️ need more investigation`    |
-| Community help welcome                             | `🙏 help wanted`                |
-| Refers to legacy `react-native-audio-recorder-player` API only | `🗑 stale-legacy`   |
-| Breaking change                                    | `⚡️ breaking`                   |
-| Refactor                                           | `🝤 refactor`                  |
-| Documentation                                      | `📖 documentation`              |
-| CI/CD                                              | `💨 ci`                         |
+| Condition                                                      | Label                        |
+| -------------------------------------------------------------- | ---------------------------- |
+| Bug report / crash                                             | `🐛 bug`                     |
+| New feature request                                            | `🍗 enhancement`             |
+| iOS-only (mentions iOS, StoreKit, AVAudioSession)              | `📱 iOS`                     |
+| Android-only (mentions Android, MediaRecorder)                 | `🤖 android`                 |
+| Build / Gradle / Xcode compile failure                         | `👷‍♀️ build`                   |
+| Needs reproduction or more info                                | `ℹ needs more info`         |
+| Needs deeper investigation                                     | `🕵️‍♂️ need more investigation` |
+| Community help welcome                                         | `🙏 help wanted`             |
+| Refers to legacy `react-native-audio-recorder-player` API only | `🗑 stale-legacy`            |
+| Breaking change                                                | `⚡️ breaking`               |
+| Refactor                                                       | `🝤 refactor`                 |
+| Documentation                                                  | `📖 documentation`           |
+| CI/CD                                                          | `💨 ci`                      |
 
 ### 3. Analyze and Decide
 
@@ -76,9 +76,15 @@ Classify the issue:
 #### 4a. Create a fix branch
 
 ```bash
-git checkout main && git pull
+git status --short --branch
+git fetch origin main
+git checkout main
+git merge --ff-only origin/main
 git checkout -b fix/<scope>-<short-description>
 ```
+
+Stop before switching when local changes are not safely preserved. Use
+`$rebase-main` when the fix continues from an existing work branch.
 
 **Scope naming:**
 
@@ -97,12 +103,13 @@ git checkout -b fix/<scope>-<short-description>
 3. Implement the fix.
 4. Run build/verify commands for the area touched:
 
-| Area touched             | Commands                                                                  |
-| ------------------------ | ------------------------------------------------------------------------- |
-| TypeScript (`src/`)      | `yarn typecheck && yarn lint`                                             |
-| iOS (`ios/`)             | `cd example/ios && pod install && xcodebuild -workspace NitroSoundExample.xcworkspace -scheme NitroSoundExample -configuration Debug -sdk iphonesimulator build` |
-| Android (`android/`)     | `cd example/android && ./gradlew :app:assembleDebug`                      |
-| Nitrogen specs           | `yarn specs` (regenerate nitrogen) then run iOS & Android builds          |
+| Area touched         | Commands                                                                                  |
+| -------------------- | ----------------------------------------------------------------------------------------- |
+| TypeScript (`src/`)  | `yarn typecheck && yarn lint && yarn test`                                                |
+| Web                  | `yarn build:web`                                                                          |
+| iOS (`ios/`)         | Mirror `.github/workflows/ci-ios.yml` with workspace and scheme `SoundExample`            |
+| Android (`android/`) | `yarn turbo run build:android --cache-dir=.turbo/android`                                 |
+| Nitrogen specs       | `yarn prepare`, inspect generated output, then run iOS, Android, Web, and baseline checks |
 
 #### 4c. Commit and push
 
@@ -112,9 +119,7 @@ git commit -m "fix(<scope>): <description>
 
 Closes #$ISSUE_NUMBER
 
-🤖 Autogenerated by Claude — react-native-nitro-sound is an AI-native
-maintained repo. See README for how this works.
-Co-Authored-By: Claude <noreply@anthropic.com>"
+🤖 AI-assisted maintenance. See README for how this works."
 git push -u origin <branch-name>
 ```
 
@@ -132,7 +137,7 @@ Closes #$ISSUE_NUMBER
 - [ ] iOS example builds
 - [ ] Android example builds
 
-🤖 Autogenerated by Claude (AI-native maintenance).
+🤖 AI-assisted maintenance.
 EOF
 )"
 ```
@@ -163,7 +168,9 @@ gh issue comment $ISSUE_NUMBER --repo hyochan/react-native-nitro-sound --body "$
 
 Fix is up in #<PR_NUMBER>.
 
-> **Note:** This repo is maintained by Claude as an AI-native project. Hyo triages direction; fixes and dep bumps are autogenerated. See the README for details.
+> **Note:** This is an AI-native maintained project. Hyo retains direction and
+> final authority; AI assistants help with routine triage, fixes, and dependency
+> work. See the README for details.
 EOF
 )"
 ```

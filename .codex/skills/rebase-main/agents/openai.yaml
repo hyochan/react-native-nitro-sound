@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Rebase Main'
+  short_description: 'Safely rebase a work branch onto main'
+  default_prompt: 'Use $rebase-main to update local main and safely rebase the current branch onto it.'
