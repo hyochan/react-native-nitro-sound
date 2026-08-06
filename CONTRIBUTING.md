@@ -9,11 +9,14 @@
 
 ## Pull request(PR)
 
-- Do not modify the code in the `main` branch.
-- PR allows only the `dev` branch.
-- It is useful to use a topic branch that has the parent `dev` as its parent.
+- Do not modify code directly on `main`.
+- Create a topic branch from the latest `main` and open a pull request back to
+  `main`.
 
 ## Development Setup
+
+Install Node.js 22, enable Corepack for the repository-pinned Yarn 4 release,
+and use Ruby 3.2 or newer with Bundler for CocoaPods.
 
 To contribute to this project, follow these steps to set up your development environment:
 
@@ -56,9 +59,9 @@ yarn example build:web
 
 #### iOS Development
 
-- macOS with Xcode 14.0 or later
-- iOS 13.0+ deployment target
-- CocoaPods installed (`gem install cocoapods`)
+- macOS with Xcode 16.1 or later
+- iOS 15.1+ deployment target
+- Ruby 3.2+ and CocoaPods installed through `bundle install`
 - Run on simulator: `yarn example ios`
 - Run on device: Open `example/ios/SoundExample.xcworkspace` in Xcode
 
