@@ -114,7 +114,7 @@ single promise settlement, and exactly one terminal playback transition.
 ## Maintenance Workflows
 
 - Router: `$nitro-sound-workflows`
-- PR feedback: `/review-pr`
+- PR feedback and monitoring: `$review-pr` (`/review-pr` is the Claude adapter)
 - Audit: `/audit-code`
 - Full checks: `/verify-all`
 - Device/browser regression: `/e2e-tests`

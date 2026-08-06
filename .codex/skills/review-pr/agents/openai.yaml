@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review PR"
+  short_description: "Review PR feedback until the head is clean"
+  default_prompt: "Use $review-pr to inspect a pull request, fix valid findings, and monitor it until clean."

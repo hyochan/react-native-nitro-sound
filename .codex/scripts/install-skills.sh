@@ -15,6 +15,7 @@ for skill in \
   simulator-audio-e2e \
   funding-steward \
   rebase-main \
+  review-pr \
   review-self; do
   ln -sfn "$repo_root/.codex/skills/$skill" "$skills_dir/$skill"
   echo "Installed Codex skill: $skill"

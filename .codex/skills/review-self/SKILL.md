@@ -46,7 +46,7 @@ fix in-scope defects, and prove the result with the smallest complete checks.
 7. Use subagents only when the user explicitly requests delegated or parallel
    review work.
 
-If this skill is the fallback for `.claude/commands/review-pr.md`, run exactly
+If this skill is the fallback for `$review-pr`, run exactly
 one round for the supplied head and return findings, fixes, checks, and a clean
 or blocked result. Leave reviewer requests, GitHub replies, thread resolution,
 and polling with the calling workflow.

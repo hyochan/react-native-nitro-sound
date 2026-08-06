@@ -47,6 +47,7 @@
 - Use `$ios-audio-e2e` and `$android-audio-e2e` for device-backed audio claims. Compilation alone is not runtime verification.
 - Use `$simulator-audio-e2e` for guarded Maestro recorder/player regression runs on explicitly selected iOS Simulators and Android emulators.
 - Use `$rebase-main` to preserve staged, unstaged, untracked, ignored, and generated work during synchronization. Never use destructive reset/clean shortcuts.
+- Use `$review-pr` to classify and resolve PR feedback, fall back to `$review-self` when automated review is unavailable, and poll through a real five-minute wake-up until the exact head is stable.
 - Use `$review-self` for a final independent pass and `$generate-doc` whenever public exports, Nitro specs, platform behavior, compatibility, or releases change.
 - Internal workflow-only changes under `.claude/`, `.codex/`, `AGENTS.md`, or `knowledge/_claude-context/` stay local unless the user explicitly requests commit, push, PR, or merge.
 - Install the repository Codex skills for automatic discovery with `.codex/scripts/install-skills.sh`.

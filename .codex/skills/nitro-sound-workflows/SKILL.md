@@ -26,7 +26,8 @@ Do not restate a rule when one of those files already defines it precisely.
 
 Read and follow the matching command file:
 
-- PR feedback or review threads: `.claude/commands/review-pr.md`
+- PR feedback, CI findings, or review monitoring: `$review-pr`; the legacy
+  slash-command adapter is `.claude/commands/review-pr.md`
 - Broad code and API audit: `.claude/commands/audit-code.md`
 - Rebuild compact AI context: `.claude/commands/compile-knowledge.md`
 - Resolve a GitHub issue: `.claude/commands/resolve-issue.md`
