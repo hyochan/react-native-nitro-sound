@@ -2,6 +2,7 @@
 
 ## [0.2.17] — 2026-08-05
 
+```sh
 yarn add react-native-nitro-sound@0.2.17
 ```
 
@@ -19,6 +20,7 @@ yarn add react-native-nitro-sound@0.2.17
 
 ## [0.2.16] — 2026-08-05
 
+```sh
 yarn add react-native-nitro-sound@0.2.16
 ```
 
@@ -43,6 +45,7 @@ yarn add react-native-nitro-sound@0.2.16
 
 ## [0.2.15] — 2026-05-22
 
+```sh
 yarn add react-native-nitro-sound@0.2.15
 ```
 
@@ -63,6 +66,7 @@ This release contains dependency updates and internal improvements only.
 
 ## [0.2.14] — 2026-04-25
 
+```sh
 yarn add react-native-nitro-sound@0.2.14
 ```
 
@@ -83,6 +87,7 @@ yarn add react-native-nitro-sound@0.2.14
 
 ## [0.2.13] — 2026-04-17
 
+```sh
 yarn add react-native-nitro-sound@0.2.13
 ```
 
@@ -92,7 +97,7 @@ This release contains dependency updates and internal improvements only.
 
 ---
 
-**Full Changelog**: https://github.com/hyochan/react-native-nitro-sound/compare/0.2.13...0.2.13
+**Full Changelog**: https://github.com/hyochan/react-native-nitro-sound/compare/0.2.12...0.2.13
 
 ---
 

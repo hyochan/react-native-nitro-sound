@@ -111,9 +111,9 @@ jobs:
           gh issue comment "$ISSUE" \
             --repo "${{ github.repository }}" \
             --body "🤖 AI dispatch queued: \`$CMD\` (target: \`$TGT\`).
-Claude will pick this up shortly. Notes: ${NOTES:-(none)}.
+          Claude will pick this up shortly. Notes: ${NOTES:-(none)}.
 
-_This repo is maintained in an AI-native workflow — see README._"
+          _This repo is maintained in an AI-native workflow — see README._"
 
       - name: Emit repository_dispatch for the Claude agent to pick up
         if: steps.intent.outputs.no-ai-command != 'true'

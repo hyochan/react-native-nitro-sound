@@ -1,5 +1,5 @@
 name: Setup
-description: Setup Node.js and install dependencies
+description: Setup the repository-pinned Node.js and Yarn toolchain
 
 runs:
   using: composite
@@ -10,11 +10,8 @@ runs:
         node-version-file: .nvmrc
         cache: 'yarn'
 
-    - name: Install dependencies
+    - name: Enable Corepack
       shell: bash
       run: |
-        set -e
-        yarn install --immutable || (
-          echo "Immutable install failed — updating lockfile (CI-only)" &&
-          yarn install --mode=update-lockfile
-        )
+        corepack enable
+        yarn --version

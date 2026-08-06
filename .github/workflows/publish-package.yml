@@ -49,15 +49,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version-file: .nvmrc
+          cache: 'yarn'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Install dependencies
-        run: |
-          yarn install --immutable || (
-            echo "Immutable install failed — updating lockfile (CI-only)" &&
-            yarn install --mode=update-lockfile
-          )
+        run: yarn install --immutable
 
       - name: Configure Git user
         run: |
@@ -98,8 +98,9 @@ jobs:
             echo ""
             echo "## [$NEW_VERSION] — $DATE"
             echo ""
-            # Strip the "## Installation" header block (first 5 lines) — CHANGELOG only needs content
-            tail -n +6 /tmp/release-notes.md
+            # Strip the complete Installation section through its closing code
+            # fence without depending on a fixed number of lines.
+            sed '1,/^```$/d' /tmp/release-notes.md
             echo ""
             echo "---"
             echo ""
@@ -119,9 +120,8 @@ jobs:
           git push --follow-tags
 
       - name: Ensure npm CLI v11.5.1 or later (required for OIDC)
-        # Pinned to npm 11: npm@latest is now npm 12, which requires Node >= 22.22
-        # while this job runs Node 20 (EBADENGINE). npm 11.5.1+ satisfies the
-        # OIDC trusted-publishing requirement.
+        # Keep the reviewed npm major stable; npm 11.5.1+ satisfies the OIDC
+        # trusted-publishing requirement and is supported by the pinned Node 22.
         run: npm install -g npm@11
 
       - name: Publish to npm with OIDC trusted publishing
