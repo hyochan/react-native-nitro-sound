@@ -12598,7 +12598,7 @@ __metadata:
     react-native-builder-bob: "npm:0.43.0"
     react-native-nitro-modules: "npm:0.36.5"
     release-it: "npm:^21.0.1"
-    tsx: "npm:^4.23.9"
+    tsx: "npm:^4.23.10"
     turbo: "npm:^2.10.8"
     typescript: "npm:~5.9.3"
   peerDependencies:
@@ -14047,9 +14047,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:^4.23.9":
-  version: 4.23.9
-  resolution: "tsx@npm:4.23.9"
+"tsx@npm:^4.23.10":
+  version: 4.23.10
+  resolution: "tsx@npm:4.23.10"
   dependencies:
     esbuild: "npm:~0.28.0"
     fsevents: "npm:~2.3.3"
@@ -14058,7 +14058,7 @@ __metadata:
       optional: true
   bin:
     tsx: dist/cli.mjs
-  checksum: 10/8198e733ae6fc6ef7bc34b526e031d4070aaccaafc6256ff042c113c07aaac372ee6e3adc1c62376be626de038b0e8f798aae94ec77f3c58e7613962208ab72d
+  checksum: 10/fd9d29d5fed7d8a8a0e0441004e77f6d3f8d15e8d3832c889f06f2a9a138c36bef0a31a5816d75485aee6cba07bf5f56693c534f661a3262fa9776ea22bf5322
   languageName: node
   linkType: hard
 
