@@ -7,9 +7,9 @@ from the example app; visible text is asserted only for user-observable state.
 | Area | Required proof |
 | --- | --- |
 | Launch | Home title renders after a clean app launch. |
-| Direct recorder | Start resolves, a numeric callback reaches at least one second, pause and resume accept input, stop returns to `Recording: No`. |
+| Direct recorder | Start resolves, a numeric callback reaches at least six seconds, pause and resume accept input, stop returns to `Recording: No`. |
 | Direct player | Play reaches `Playing: Yes`; pause, resume, and stop each reach the expected state. |
-| Hook recorder | The `useSound` screen first exposes a 1–3 second callback and then reaches at least four seconds, proving increasing callback state before pause/resume/stop and the returned file path. |
+| Hook recorder | The `useSound` screen persists proof that a callback crossed the 1–3 second window and then reaches at least six seconds, proving increasing callback state before pause/resume/stop and the returned file path. |
 | Hook player | The hook repeats play/pause/resume/stop with callback-driven state. |
 | Errors | No permission, start, stop, or playback error alert may be dismissed silently. |
 

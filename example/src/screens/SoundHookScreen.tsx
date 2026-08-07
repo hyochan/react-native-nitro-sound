@@ -27,6 +27,8 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
   const [duration, setDuration] = useState(0);
   const [playbackPosition, setPlaybackPosition] = useState(0);
   const [recordPosition, setRecordPosition] = useState(0);
+  const [hasObservedEarlyRecordProgress, setHasObservedEarlyRecordProgress] =
+    useState(false);
   const [isRecordLoading, setIsRecordLoading] = useState(false);
   const [isStopLoading, setIsStopLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Loading...');
@@ -49,8 +51,12 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
     mmssss,
   } = useSound({
     onRecord: (e) => {
+      const currentPosition = e.currentPosition ?? 0;
       setIsRecording(e.isRecording ?? true);
-      setRecordPosition(e.currentPosition ?? 0);
+      setRecordPosition(currentPosition);
+      if (currentPosition >= 1000 && currentPosition < 4000) {
+        setHasObservedEarlyRecordProgress(true);
+      }
     },
     onPlayback: (e) => {
       setDuration(e.duration);
@@ -89,6 +95,7 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
     try {
       setIsRecordLoading(true);
       setLoadingMessage('Loading...');
+      setHasObservedEarlyRecordProgress(false);
       const uri = await startRecorder(undefined, audioSet, true);
       setRecordingPath(uri);
       setIsRecording(true);
@@ -227,6 +234,9 @@ export function SoundHookScreen({ onBack }: { onBack: () => void }) {
         </Text>
         <Text testID="e2e-hook-record-progress" style={styles.small}>
           Record Progress: {Math.floor(recordPosition / 1000)}s
+        </Text>
+        <Text testID="e2e-hook-record-early-progress" style={styles.small}>
+          Early Record Progress: {hasObservedEarlyRecordProgress ? 'Yes' : 'No'}
         </Text>
 
         <View style={styles.sep} />

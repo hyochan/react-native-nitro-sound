@@ -60,6 +60,7 @@ cleanup_recordings() {
 
   if [[ "$platform" == "ios" ]]; then
     local app_container
+    xcrun simctl terminate "$device_id" "$app_id" >/dev/null 2>&1 || true
     app_container="$(xcrun simctl get_app_container "$device_id" "$app_id" data 2>/dev/null || true)"
     if [[ -n "$app_container" && -d "$app_container" ]]; then
       find "$app_container" -type f \
@@ -76,6 +77,7 @@ cleanup_recordings() {
       cleanup_failed=1
     fi
   elif "$adb_bin" -s "$device_id" shell pm path "$app_id" >/dev/null 2>&1; then
+    "$adb_bin" -s "$device_id" shell am force-stop "$app_id" >/dev/null 2>&1 || true
     if ! "$adb_bin" -s "$device_id" shell pm clear "$app_id" >/dev/null; then
       echo "Recording cleanup failed for the Android app data." >&2
       cleanup_failed=1
