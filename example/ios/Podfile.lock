@@ -26,7 +26,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - NitroSound (0.2.17):
+  - NitroSound (0.2.18):
     - hermes-engine
     - NitroModules
     - RCTRequired
@@ -2304,7 +2304,7 @@ SPEC CHECKSUMS:
   FBLazyVector: 3c3be9a019176b5699455f7f66c5444b78a411c6
   hermes-engine: ce9e11fa07ad54f14cc03a534d6b5bed5d84bcc2
   NitroModules: 452230d9b63c6c3f59dd97eeaa27ec3449271d4a
-  NitroSound: 0dc18406ce6af752e200bc464580260f4b01556f
+  NitroSound: c9a048a38022356b820df707ba8358ba21cbcd79
   RCTDeprecation: bccb6545c26db881ecddfd83a3f9ea82aba1605f
   RCTRequired: b2f74764d596fc0051f00fee94b49bf41a6f7f5a
   RCTSwiftUI: c6d6a31b849b9dfa64c33b55dc91ac15dd55774c
