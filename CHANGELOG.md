@@ -1,5 +1,19 @@
 # Changelogs
 
+## [0.2.18] — 2026-08-07
+
+
+### 🔧 Maintenance Release
+
+This release contains dependency updates and internal improvements only.
+
+---
+
+**Full Changelog**: https://github.com/hyochan/react-native-nitro-sound/compare/0.2.17...0.2.18
+
+---
+
+
 ## [0.2.17] — 2026-08-05
 
 ```sh
