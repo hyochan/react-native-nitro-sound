@@ -2,6 +2,8 @@
 
 This plugin automatically configures your Expo project for using react-native-nitro-sound.
 
+Requires Expo SDK 50 or newer.
+
 ## What it does
 
 ### Android
@@ -50,6 +52,6 @@ To build the plugin:
 
 ```bash
 cd plugin
-npm install
-npm run build
+bun install
+bun run build
 ```

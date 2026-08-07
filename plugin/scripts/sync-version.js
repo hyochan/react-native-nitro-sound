@@ -7,7 +7,8 @@ const version = rootPkg.version;
 
 // Generate version.ts content
 const versionContent = `// This file is auto-generated. Do not edit manually.
-export const version = '${version}';`;
+export const version = '${version}';
+`;
 
 // Write to version.ts
 const versionPath = path.join(__dirname, '../src/version.ts');
