@@ -59,7 +59,7 @@ yarn example build:web
 
 #### iOS Development
 
-- macOS with Xcode 16.1 or later
+- macOS with Xcode 26.0 or later
 - iOS 15.1+ deployment target
 - Ruby 3.2+ and CocoaPods installed through `bundle install`
 - Run on simulator: `yarn example ios`
