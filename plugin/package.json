@@ -20,14 +20,14 @@
   "author": "",
   "license": "MIT",
   "peerDependencies": {
-    "expo": ">=47.0.0"
+    "expo": ">=50.0.0"
   },
   "dependencies": {
-    "expo": ">=47.0.0"
+    "expo": ">=50.0.0"
   },
   "devDependencies": {
-    "@types/node": "^18.0.0",
-    "typescript": "^5.0.0"
+    "@types/node": "^22.20.1",
+    "typescript": "^5.9.3"
   },
   "files": [
     "build",
