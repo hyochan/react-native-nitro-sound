@@ -34,6 +34,7 @@ regenerated before native builds or publication.
 - Nitrogen: `0.36.5`
 - Example React Native: `0.86.2`; Expo `57.0.9`
 - iOS minimum: `15.1`; Android minimum: `24`
+- Xcode minimum: `26.0`; iOS CI: macOS `15` with Xcode `26.3`
 - Native toolchain: CocoaPods `1.17.0`, compile/target SDK `36`, Gradle
   `9.3.1`, Kotlin `2.1.20`
 
@@ -84,8 +85,9 @@ single promise settlement, and exactly one terminal playback transition.
 - Recording and playback behavior involving interruption, routing, background
   state, or Release-only Swift/C++ bridging needs device or configuration-
   specific evidence.
-- The CI build runs `yarn prepare`, `fix-nitrogen-swift.sh`, Pods, and the
-  `SoundExample` simulator workspace build.
+- The CI build runs on macOS 15 with Xcode 26.3, then runs `yarn prepare`,
+  `fix-nitrogen-swift.sh`, Pods, and the `SoundExample` simulator workspace
+  build.
 
 ### Android
 

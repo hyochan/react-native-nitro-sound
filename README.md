@@ -19,7 +19,7 @@
 >
 > ➡️ To nudge the AI maintainer on an issue from the GitHub mobile app, just comment `/ai resolve-issue` on the issue. Supported commands: `/ai resolve-issue`, `/ai upgrade-deps`, `/ai compile-knowledge`, `/ai triage-all`.
 
-> ℹ️ **Swift 6 build warning**: If Xcode shows `function type mismatch … has_value` errors (see [#718](https://github.com/hyochan/react-native-nitro-sound/issues/718)), upgrade to Xcode 16.4 or newer. The workaround and cleanup steps are documented in the [FAQ](docs/FAQ.md#swift-6-compile-error-function-type-mismatch--has_value-718).
+> ℹ️ **Swift 6 build requirement**: Use Xcode 26.0 or newer. Earlier Apple toolchains can crash or emit `function type mismatch … has_value` errors while compiling generated Nitrogen bindings (see [#718](https://github.com/hyochan/react-native-nitro-sound/issues/718)). Upgrade and cleanup steps are documented in the [FAQ](docs/FAQ.md#swift-6-compile-error-function-type-mismatch--has_value-718).
 
 <img src="https://github.com/user-attachments/assets/81ce7b7b-0b7d-413b-8a26-505372349ecb" width="70%" alt="Logo" />
 
@@ -45,7 +45,7 @@
 
 - React Native: >= 0.79 (0.86.2 is the repository's verified baseline)
 - iOS: Deployment Target >= 15.1
-  - Note: With RN 0.81+, build using Xcode >= 16.1.
+  - Xcode >= 26.0 is required to compile the generated Swift/Nitrogen bindings reliably.
 - Android: minSdk >= 24 (JDK 17 recommended; compileSdk 36 recommended)
   - Note: RN 0.82+ requires Gradle 9.0+
 - New Architecture: optional (Nitro works on both old and new arch; RN 0.82+ is New Architecture only)
@@ -130,7 +130,7 @@ After installing the packages, follow these steps:
    ```
 
    - If resolution fails, try `npx pod-install --repo-update`.
-   - RN 0.81+ requires Xcode >= 16.1 to build.
+   - Use Xcode >= 26.0; earlier toolchains are not supported for this package's generated Swift/Nitrogen bindings.
 
 2. **Android Setup**:
    No additional steps required. The module uses autolinking.
