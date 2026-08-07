@@ -2,17 +2,6 @@ import Foundation
 import AVFoundation
 import NitroModules
 
-private extension AVAudioSession.CategoryOptions {
-    static var bluetoothHFPCompatible: AVAudioSession.CategoryOptions {
-        #if compiler(>=6.2)
-        return .allowBluetoothHFP
-        #else
-        // Xcode 16.x exposes the same HFP route option under its legacy name.
-        return .allowBluetooth
-        #endif
-    }
-}
-
 final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     // MARK: - Audio Quality Presets (matching Android implementation)
     private struct QualitySettings {
@@ -76,7 +65,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
                 try self.recordingSession?.setCategory(.playAndRecord,
                                                      mode: sessionMode,
-                                                     options: [.defaultToSpeaker, .bluetoothHFPCompatible])
+                                                     options: [.defaultToSpeaker, .allowBluetooth])
                 try self.recordingSession?.setActive(true)
 
                 print("🎙️ Audio session set up successfully")
@@ -198,7 +187,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                                 do {
                                     // Reuse existing session instance (singleton)
                                     let sessionMode = audioSets?.AVModeIOS.map(self.getAudioSessionMode) ?? .default
-                                    try audioSession.setCategory(.playAndRecord, mode: sessionMode, options: [.defaultToSpeaker, .bluetoothHFPCompatible, .mixWithOthers])
+                                    try audioSession.setCategory(.playAndRecord, mode: sessionMode, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
                                     try audioSession.setActive(true, options: [])
                                     print("🎙️ ✅ Audio session recovered successfully")
                                 } catch {
@@ -212,7 +201,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                                 do {
                                     let sessionMode = audioSets?.AVModeIOS.map(self.getAudioSessionMode) ?? .default
                                     try audioSession.setActive(false, options: .notifyOthersOnDeactivation)
-                                    try audioSession.setCategory(.playAndRecord, mode: sessionMode, options: [.defaultToSpeaker, .bluetoothHFPCompatible])
+                                    try audioSession.setCategory(.playAndRecord, mode: sessionMode, options: [.defaultToSpeaker, .allowBluetooth])
                                     try audioSession.setActive(true)
                                     print("🎙️ ✅ Forced immediate session takeover")
                                 } catch {
@@ -259,7 +248,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                                     let sessionMode = audioSets?.AVModeIOS.map(self.getAudioSessionMode) ?? .default
                                     try audioSession.setCategory(.playAndRecord,
                                                                mode: sessionMode,
-                                                               options: [.defaultToSpeaker, .bluetoothHFPCompatible])
+                                                               options: [.defaultToSpeaker, .allowBluetooth])
                                     try audioSession.setActive(true)
                                     print("🎙️ Audio session fully reset for retry")
                                 } catch {
@@ -320,7 +309,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                                         let sessionMode = audioSets?.AVModeIOS.map(self.getAudioSessionMode) ?? .default
                                         try audioSession.setCategory(.playAndRecord,
                                                                    mode: sessionMode,
-                                                                   options: [.defaultToSpeaker, .bluetoothHFPCompatible, .mixWithOthers])
+                                                                   options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
                                         try audioSession.setActive(true, options: [])
                                     } catch {
                                         print("🎙️ Warning: Could not set mixing category: \(error)")
@@ -332,7 +321,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                                             let sessionMode = audioSets?.AVModeIOS.map(self.getAudioSessionMode) ?? .default
                                             try audioSession.setCategory(.playAndRecord,
                                                                        mode: sessionMode,
-                                                                       options: [.defaultToSpeaker, .bluetoothHFPCompatible])
+                                                                       options: [.defaultToSpeaker, .allowBluetooth])
                                             try audioSession.setActive(true)
                                             print("🎙️ Audio session corrected and exclusively activated")
                                         } catch let error as NSError {
