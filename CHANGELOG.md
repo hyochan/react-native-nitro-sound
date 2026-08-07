@@ -2,10 +2,25 @@
 
 ## [0.2.18] — 2026-08-07
 
+```sh
+yarn add react-native-nitro-sound@0.2.18
+```
 
-### 🔧 Maintenance Release
+### 🐛 Reliability fixes
 
-This release contains dependency updates and internal improvements only.
+- Harden Android `MediaPlayer` ownership and cleanup so stale callbacks from replaced players cannot settle newer playback operations. ([#838](https://github.com/hyochan/react-native-nitro-sound/pull/838))
+- Use the current iOS Bluetooth HFP audio-session category option consistently across recorder and player setup. ([#838](https://github.com/hyochan/react-native-nitro-sound/pull/838))
+- Remove obsolete Android external-storage permission requests and consolidate microphone permission handling in the example app. ([#838](https://github.com/hyochan/react-native-nitro-sound/pull/838))
+
+### ⚙️ Compatibility and tooling
+
+- Move the supported iOS build baseline to Xcode 26.0+ and align CI, CocoaPods setup, and compatibility documentation.
+- Align development and example tooling with Node 22, Yarn 4.18, React Native 0.86.2, and Nitro 0.36.5. The published peer dependency now requires `react-native-nitro-modules >=0.36.5`.
+
+### 🧪 Verification
+
+- Expand native and Web unit coverage and add guarded Simulator audio regression flows for recorder and player state transitions.
+- The iOS Simulator lane covered record, pause/resume, stop, play, pause/resume, and stop. Bluetooth routing, interruptions, backgrounding, route changes, audio focus, physical-device-only behavior, and audible fidelity remain outside Simulator coverage.
 
 ---
 
