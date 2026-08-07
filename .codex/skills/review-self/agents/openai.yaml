@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Review Self'
+  short_description: 'Review current work until it is stable'
+  default_prompt: 'Use $review-self to review the current work, fix actionable findings, and recheck it until stable.'

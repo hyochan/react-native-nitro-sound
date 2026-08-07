@@ -39,12 +39,17 @@ const REPO = 'hyochan/react-native-nitro-sound';
 let prevTag;
 try {
   // npm version has already tagged HEAD, so look at HEAD^ to find the previous release tag
-  prevTag = execSync('git describe --tags --abbrev=0 HEAD^', { stdio: ['pipe', 'pipe', 'pipe'] })
+  prevTag = execSync('git describe --tags --abbrev=0 HEAD^', {
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
     .toString()
     .trim();
 } catch {
   // Fallback: first commit
-  prevTag = execSync('git rev-list --max-parents=0 HEAD').toString().trim().slice(0, 7);
+  prevTag = execSync('git rev-list --max-parents=0 HEAD')
+    .toString()
+    .trim()
+    .slice(0, 7);
 }
 
 // ─── 2. Collect commits since previous tag ───────────────────────────────────
@@ -71,10 +76,10 @@ const commits = rawLog
 // ─── 3. Categorise ───────────────────────────────────────────────────────────
 const cats = {
   breaking: [],
-  bugFix:   [],
-  feature:  [],
-  perf:     [],
-  deps:     [],
+  bugFix: [],
+  feature: [],
+  perf: [],
+  deps: [],
 };
 
 for (const c of commits) {
@@ -87,14 +92,27 @@ for (const c of commits) {
   }
 
   // Dependency bumps (dependabot / renovate style)
-  if (/^chore\(deps(-dev)?\)/.test(s) || /^build\(deps\)/.test(s) || /bump .+ from .+ to /i.test(s)) {
+  if (
+    /^chore\(deps(-dev)?\)/.test(s) ||
+    /^build\(deps\)/.test(s) ||
+    /bump .+ from .+ to /i.test(s)
+  ) {
     cats.deps.push(c);
     continue;
   }
 
-  if (/^fix[:(]/.test(s))  { cats.bugFix.push(c);  continue; }
-  if (/^feat[:(]/.test(s)) { cats.feature.push(c); continue; }
-  if (/^perf[:(]/.test(s)) { cats.perf.push(c);    continue; }
+  if (/^fix[:(]/.test(s)) {
+    cats.bugFix.push(c);
+    continue;
+  }
+  if (/^feat[:(]/.test(s)) {
+    cats.feature.push(c);
+    continue;
+  }
+  if (/^perf[:(]/.test(s)) {
+    cats.perf.push(c);
+    continue;
+  }
 
   // ci, docs, chore, refactor, test → omit from user-facing notes
 }
@@ -104,7 +122,10 @@ for (const c of commits) {
 /** Strip conventional-commit prefix and return clean title. */
 function cleanTitle(subject) {
   return subject
-    .replace(/^(fix|feat|perf|ci|docs|refactor|chore|build)(\([^)]+\))?!?:\s*/i, '')
+    .replace(
+      /^(fix|feat|perf|ci|docs|refactor|chore|build)(\([^)]+\))?!?:\s*/i,
+      ''
+    )
     .replace(/\s*\(#\d+\)\s*$/, '')
     .trim();
 }
@@ -112,9 +133,7 @@ function cleanTitle(subject) {
 /** Extract " ([#123](...)) " link from subject if a PR number is present. */
 function prLink(subject) {
   const m = subject.match(/\(#(\d+)\)\s*$/);
-  return m
-    ? ` ([#${m[1]}](https://github.com/${REPO}/pull/${m[1]}))`
-    : '';
+  return m ? ` ([#${m[1]}](https://github.com/${REPO}/pull/${m[1]}))` : '';
 }
 
 function renderSection(title, items) {
@@ -128,7 +147,11 @@ function renderSection(title, items) {
 
 // ─── 5. Build output ──────────────────────────────────────────────────────────
 const hasUserFacingChanges =
-  cats.breaking.length + cats.bugFix.length + cats.feature.length + cats.perf.length > 0;
+  cats.breaking.length +
+    cats.bugFix.length +
+    cats.feature.length +
+    cats.perf.length >
+  0;
 
 let body = '';
 
@@ -142,9 +165,9 @@ if (!hasUserFacingChanges) {
   body += `This release contains dependency updates and internal improvements only.\n\n`;
 } else {
   body += renderSection('⚡️ Breaking Changes', cats.breaking);
-  body += renderSection('🐛 Bug Fixes',        cats.bugFix);
-  body += renderSection('✨ New Features',      cats.feature);
-  body += renderSection('⚡ Performance',       cats.perf);
+  body += renderSection('🐛 Bug Fixes', cats.bugFix);
+  body += renderSection('✨ New Features', cats.feature);
+  body += renderSection('⚡ Performance', cats.perf);
 }
 
 if (cats.deps.length) {

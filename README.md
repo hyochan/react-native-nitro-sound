@@ -19,7 +19,7 @@
 >
 > ➡️ To nudge the AI maintainer on an issue from the GitHub mobile app, just comment `/ai resolve-issue` on the issue. Supported commands: `/ai resolve-issue`, `/ai upgrade-deps`, `/ai compile-knowledge`, `/ai triage-all`.
 
-> ℹ️ **Swift 6 build warning**: If Xcode shows `function type mismatch … has_value` errors (see [#718](https://github.com/hyochan/react-native-nitro-sound/issues/718)), upgrade to Xcode 16.4 or newer. The workaround and cleanup steps are documented in the [FAQ](docs/FAQ.md#swift-6-compile-error-function-type-mismatch--has_value-718).
+> ℹ️ **Swift 6 build requirement**: Use Xcode 26.0 or newer. Earlier Apple toolchains can crash or emit `function type mismatch … has_value` errors while compiling generated Nitrogen bindings (see [#718](https://github.com/hyochan/react-native-nitro-sound/issues/718)). Upgrade and cleanup steps are documented in the [FAQ](docs/FAQ.md#swift-6-compile-error-function-type-mismatch--has_value-718).
 
 <img src="https://github.com/user-attachments/assets/81ce7b7b-0b7d-413b-8a26-505372349ecb" width="70%" alt="Logo" />
 
@@ -43,9 +43,9 @@
 
 ### Requirements
 
-- React Native: >= 0.79 (0.82 recommended)
-- iOS: Deployment Target >= 13.0
-  - Note: With RN 0.81+, build using Xcode >= 16.1 (toolchain requirement; iOS runtime minimum remains 13.0)
+- React Native: >= 0.79 (0.86.2 is the repository's verified baseline)
+- iOS: Deployment Target >= 15.1
+  - Xcode >= 26.0 is required to compile the generated Swift/Nitrogen bindings reliably.
 - Android: minSdk >= 24 (JDK 17 recommended; compileSdk 36 recommended)
   - Note: RN 0.82+ requires Gradle 9.0+
 - New Architecture: optional (Nitro works on both old and new arch; RN 0.82+ is New Architecture only)
@@ -116,7 +116,7 @@ If you're migrating from `react-native-audio-recorder-player` (version 3.x or ea
 2. **Align React Native dependencies (recommended)**:
 
    ```sh
-   npx @rnx-kit/align-deps --requirements react-native@0.81 --write
+   npx @rnx-kit/align-deps --requirements react-native@0.86 --write
    ```
 
 ## Post Installation
@@ -130,7 +130,7 @@ After installing the packages, follow these steps:
    ```
 
    - If resolution fails, try `npx pod-install --repo-update`.
-   - RN 0.81+ requires Xcode >= 16.1 to build.
+   - Use Xcode >= 26.0; earlier toolchains are not supported for this package's generated Swift/Nitrogen bindings.
 
 2. **Android Setup**:
    No additional steps required. The module uses autolinking.
@@ -168,10 +168,10 @@ After installing the packages, follow these steps:
    <string>Give $(PRODUCT_NAME) permission to use your microphone. Your record wont be shared without your permission.</string>
    ```
 
-2. **Minimum iOS Version**: Ensure your minimum deployment target is iOS 13.0 or higher in your `Podfile`:
+2. **Minimum iOS Version**: Ensure your minimum deployment target is iOS 15.1 or higher in your `Podfile`:
 
    ```ruby
-   platform :ios, '13.0'
+   platform :ios, '15.1'
    ```
 
 ### Android Configuration
@@ -181,13 +181,9 @@ On _Android_ you need to add permissions to `AndroidManifest.xml`:
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.RECORD_AUDIO" />
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 ```
 
-Also, android above `Marshmallow` needs runtime permission to record audio. Below are two approaches:
-
-**Minimal Approach (Recommended for Android 13+):**
+Android 6.0 and newer also require the microphone permission at runtime:
 
 ```ts
 if (Platform.OS === 'android') {
@@ -216,36 +212,7 @@ if (Platform.OS === 'android') {
 }
 ```
 
-**Full Permissions Approach (For older Android versions):**
-
-```ts
-if (Platform.OS === 'android') {
-  try {
-    const grants = await PermissionsAndroid.requestMultiple([
-      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-    ]);
-
-    if (
-      grants['android.permission.WRITE_EXTERNAL_STORAGE'] ===
-        PermissionsAndroid.RESULTS.GRANTED &&
-      grants['android.permission.READ_EXTERNAL_STORAGE'] ===
-        PermissionsAndroid.RESULTS.GRANTED &&
-      grants['android.permission.RECORD_AUDIO'] ===
-        PermissionsAndroid.RESULTS.GRANTED
-    ) {
-      console.log('All permissions granted');
-    } else {
-      console.log('All required permissions not granted');
-      return;
-    }
-  } catch (err) {
-    console.warn(err);
-    return;
-  }
-}
-```
+The default recording path is app-private storage, so legacy external-storage permissions are not required. If your app supplies a custom shared-storage URI, request only the media access that URI needs and follow current Android scoped-storage guidance.
 
 ## Methods
 
@@ -714,7 +681,7 @@ Because this repo uses a Yarn workspace, run everything from the repository root
 
 Symptoms: `Recording setup failed: Failed to prepare recorder` or `Unknown std::runtime_error` in production while debug builds work fine.
 
-Root cause: in optimized release builds, optional numeric settings could arrive corrupted through the native interop and poison the recorder configuration (`AudioQueueNew` rejects it as `kAudioFormatUnsupportedDataFormatError`). **Fixed in v0.2.16** — recording settings are now range-validated and the underlying interop bug is fixed in the bundled nitro-modules version. If you see this on an older version, upgrade first.
+Root cause: in optimized release builds, optional numeric settings can arrive corrupted through the native interop and poison the recorder configuration (`AudioQueueNew` rejects it as `kAudioFormatUnsupportedDataFormatError`). **Mitigated in v0.2.17** — v0.2.16 added range validation, and v0.2.17 also caps the requested channel count to the active input route so rejected values fall back to safe presets. The [upstream optional-interop issue](https://github.com/mrousavy/nitro/issues/1319) remains open; this library applies defensive validation rather than claiming the bridge bug is fixed. If you see this on an older version, upgrade first.
 
 ### Android: sound plays in debug but not in release builds
 
@@ -757,7 +724,7 @@ If you encounter this error when trying to record on iOS (after upgrading to v0.
   - If you see `:react-native:generateCodegenSchemaFromJavaScript` failing, this comes from RN's Gradle plugin (not Nitro). Ensure RN >= 0.79 (0.81 recommended) and JDK 17, then align and clean:
 
     ```sh
-    npx @rnx-kit/align-deps --requirements react-native@0.81 --write
+    npx @rnx-kit/align-deps --requirements react-native@0.86 --write
     rm -rf node_modules android/.gradle
     yarn
     cd android && ./gradlew clean assembleDebug

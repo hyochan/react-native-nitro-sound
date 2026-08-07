@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
-  PermissionsAndroid,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
@@ -17,6 +16,7 @@ import {
   AudioSourceAndroidType,
   AVEncoderAudioQualityIOSType,
 } from 'react-native-nitro-sound';
+import { requestMicrophonePermission } from '../utils/permissions';
 
 export function SoundScreen({ onBack }: { onBack: () => void }) {
   const soundRef = useRef(createSound());
@@ -33,28 +33,8 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
   const [loadingMessage, setLoadingMessage] = useState('Loading...');
   const [isPlayLoading, setIsPlayLoading] = useState(false);
 
-  const requestPermissions = async () => {
-    if (Platform.OS !== 'android') return true;
-    const sdk = Platform.Version as number;
-    if (sdk >= 33) {
-      const res = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-      );
-      return res === PermissionsAndroid.RESULTS.GRANTED;
-    }
-    const grants = await PermissionsAndroid.requestMultiple([
-      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-    ]);
-    return (
-      grants['android.permission.RECORD_AUDIO'] ===
-      PermissionsAndroid.RESULTS.GRANTED
-    );
-  };
-
   const onStartRecord = async () => {
-    if (!(await requestPermissions())) {
+    if (!(await requestMicrophonePermission())) {
       Alert.alert('Permission required', 'Microphone permission needed');
       return;
     }
@@ -148,7 +128,11 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+        <TouchableOpacity
+          testID="e2e-direct-back"
+          onPress={onBack}
+          style={styles.backBtn}
+        >
           <Text style={styles.backTxt}>{'< Back'}</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Direct NitroSound Usage</Text>
@@ -159,6 +143,7 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
         <Text style={styles.sectionTitle}>Recorder</Text>
         <View style={styles.row}>
           <TouchableOpacity
+            testID="e2e-direct-record-start"
             style={[
               styles.btn,
               (isRecordLoading || isRecording) && styles.btnDisabled,
@@ -180,26 +165,33 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
             )}
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-direct-record-pause"
             style={[
               styles.btn,
               (isRecordLoading || !isRecording) && styles.btnDisabled,
             ]}
-            onPress={() => soundRef.current.pauseRecorder()}
+            onPress={() => {
+              soundRef.current.pauseRecorder().catch(() => {});
+            }}
             disabled={isRecordLoading || !isRecording}
           >
             <Text style={styles.btnTxt}>Pause</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-direct-record-resume"
             style={[
               styles.btn,
               (isRecordLoading || !isRecording) && styles.btnDisabled,
             ]}
-            onPress={() => soundRef.current.resumeRecorder()}
+            onPress={() => {
+              soundRef.current.resumeRecorder().catch(() => {});
+            }}
             disabled={isRecordLoading || !isRecording}
           >
             <Text style={styles.btnTxt}>Resume</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-direct-record-stop"
             style={[
               styles.btn,
               (!isRecording || isStopLoading) && styles.btnDisabled,
@@ -225,6 +217,9 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
           Recording: {isRecording ? 'Yes' : 'No'}
         </Text>
         <Text style={styles.small}>Record Time: {ms(recordPosition)}</Text>
+        <Text testID="e2e-direct-record-progress" style={styles.small}>
+          Record Progress: {Math.floor(recordPosition / 1000)}s
+        </Text>
 
         <View style={styles.sep} />
         <Text style={styles.sectionTitle}>Player</Text>
@@ -254,6 +249,7 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
         )}
         <View style={styles.row}>
           <TouchableOpacity
+            testID="e2e-direct-player-start"
             style={[
               styles.btn,
               (isPlayLoading || isPlaying) && styles.btnDisabled,
@@ -275,6 +271,7 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
             )}
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-direct-player-pause"
             style={[
               styles.btn,
               (isPlayLoading || !isPlaying) && styles.btnDisabled,
@@ -290,6 +287,7 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
             <Text style={styles.btnTxt}>Pause</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-direct-player-resume"
             style={[
               styles.btn,
               (isPlayLoading || isPlaying) && styles.btnDisabled,
@@ -305,6 +303,7 @@ export function SoundScreen({ onBack }: { onBack: () => void }) {
             <Text style={styles.btnTxt}>Resume</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            testID="e2e-direct-player-stop"
             style={[
               styles.btn,
               (isPlayLoading || (!isPlaying && playbackPosition === 0)) &&

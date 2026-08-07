@@ -20,8 +20,7 @@ class SoundWebImpl implements SoundType {
   private playBackListener: ((playbackMeta: PlayBackType) => void) | null =
     null;
   private playbackEndListener:
-    | ((playbackEndMeta: PlaybackEndType) => void)
-    | null = null;
+    ((playbackEndMeta: PlaybackEndType) => void) | null = null;
   private recordingInterval: NodeJS.Timeout | null = null;
   private playbackInterval: NodeJS.Timeout | null = null;
   private subscriptionDuration: number = 10; // Default 10ms for faster updates

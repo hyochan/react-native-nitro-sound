@@ -36,6 +36,7 @@ export function HomeScreen({
       <Text style={styles.subtitle}>Choose a demo</Text>
 
       <TouchableOpacity
+        testID="e2e-home-hook"
         style={styles.item}
         onPress={() => onNavigate('SoundHook')}
       >
@@ -44,6 +45,7 @@ export function HomeScreen({
       </TouchableOpacity>
 
       <TouchableOpacity
+        testID="e2e-home-hook-states"
         style={styles.item}
         onPress={() => onNavigate('SoundHookStates')}
       >
@@ -52,6 +54,7 @@ export function HomeScreen({
       </TouchableOpacity>
 
       <TouchableOpacity
+        testID="e2e-home-direct"
         style={styles.item}
         onPress={() => onNavigate('SoundDirect')}
       >

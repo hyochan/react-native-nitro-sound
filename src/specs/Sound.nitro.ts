@@ -113,9 +113,7 @@ export interface CommonAudioSet {
 }
 
 export interface AudioSet
-  extends IOSAudioSet,
-    AndroidAudioSet,
-    CommonAudioSet {}
+  extends IOSAudioSet, AndroidAudioSet, CommonAudioSet {}
 
 export interface RecordBackType {
   isRecording?: boolean;
@@ -139,8 +137,10 @@ export type RecordBackListener = (recordingMeta: RecordBackType) => void;
 export type PlayBackListener = (playbackMeta: PlayBackType) => void;
 export type PlaybackEndListener = (playbackEndMeta: PlaybackEndType) => void;
 
-export interface Sound
-  extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
+export interface Sound extends HybridObject<{
+  ios: 'swift';
+  android: 'kotlin';
+}> {
   // Recording methods
   startRecorder(
     uri?: string,

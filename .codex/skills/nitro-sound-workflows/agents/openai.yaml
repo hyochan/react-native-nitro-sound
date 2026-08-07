@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Nitro Sound Workflows'
+  short_description: 'Run guarded Nitro Sound repository workflows'
+  default_prompt: 'Use $nitro-sound-workflows to complete this repository task with the correct native, generated-code, and verification safeguards.'

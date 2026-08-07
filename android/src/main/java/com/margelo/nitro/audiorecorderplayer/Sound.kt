@@ -32,6 +32,10 @@ class HybridSound : HybridSoundSpec() {
 
     private var recordTimer: Timer? = null
     private var playTimer: Timer? = null
+    private val mediaPlayerLock = Any()
+    private var preparingMediaPlayer: MediaPlayer? = null
+    private var playerStartCancellation: (() -> Unit)? = null
+    private var playerGeneration = 0L
 
     private var recordBackListener: ((recordingMeta: RecordBackType) -> Unit)? = null
     private var playBackListener: ((playbackMeta: PlayBackType) -> Unit)? = null
@@ -92,12 +96,12 @@ class HybridSound : HybridSoundSpec() {
     override fun startRecorder(
         uri: String?,
         audioSets: AudioSet?,
-        enableMetering: Boolean?
+        meteringEnabled: Boolean?
     ): Promise<String> {
         val promise = Promise<String>()
 
       // For audio metering
-      this.meteringEnabled = enableMetering ?: false
+      this.meteringEnabled = meteringEnabled ?: false
 
                 // Sanitize audioSets to ignore iOS-specific fields on Android to prevent crashes
         val sanitizedAudioSets = audioSets?.copy(
@@ -350,133 +354,244 @@ class HybridSound : HybridSoundSpec() {
         httpHeaders: Map<String, String>?
     ): Promise<String> {
         val promise = Promise<String>()
+        val isPromiseSettled = java.util.concurrent.atomic.AtomicBoolean(false)
+        stopPlayTimer()
 
         // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
-            try {
-                if (uri == null) {
+            if (uri == null) {
+                if (isPromiseSettled.compareAndSet(false, true)) {
                     promise.reject(Exception("URI is required"))
-                    return@launch
                 }
+                return@launch
+            }
 
-                // Clean up any existing player first
-                mediaPlayer?.let { existingPlayer ->
-                    try {
-                        if (existingPlayer.isPlaying) {
-                            existingPlayer.stop()
-                        }
-                        existingPlayer.reset()
-                        existingPlayer.release()
-                    } catch (e: Exception) {
-                        // Ignore cleanup errors
-                    }
+            val player = MediaPlayer()
+            var generation = 0L
+            val rejectSuperseded = {
+                if (isPromiseSettled.compareAndSet(false, true)) {
+                    promise.reject(Exception("Player start was superseded"))
                 }
+            }
 
-                handler.post {
-                    stopPlayTimer()
-                }
+            val previousPlayer: MediaPlayer?
+            val previousPreparingPlayer: MediaPlayer?
+            val cancelPreviousStart: (() -> Unit)?
+            synchronized(mediaPlayerLock) {
+                generation = ++playerGeneration
+                previousPlayer = mediaPlayer
+                previousPreparingPlayer = preparingMediaPlayer
+                cancelPreviousStart = playerStartCancellation
+                mediaPlayer = null
+                preparingMediaPlayer = player
+                playerStartCancellation = rejectSuperseded
+            }
 
-            mediaPlayer = MediaPlayer().apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    setAudioAttributes(
-                        android.media.AudioAttributes.Builder()
-                            .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
-                            .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .build()
-                    )
-                } else {
-                    @Suppress("DEPRECATION")
-                    setAudioStreamType(AudioManager.STREAM_MUSIC)
-                }
+            cancelPreviousStart?.invoke()
+            previousPlayer?.let(::releaseMediaPlayer)
+            if (previousPreparingPlayer !== previousPlayer) {
+                previousPreparingPlayer?.let(::releaseMediaPlayer)
+            }
 
-                // Track if promise has been resolved to avoid double resolution
-                val isPromiseResolved = java.util.concurrent.atomic.AtomicBoolean(false)
-
-                // Set up error listener BEFORE any operations that might fail
-                setOnErrorListener { _, what, extra ->
-                    handler.post {
-                        stopPlayTimer()
-                        if (isPromiseResolved.compareAndSet(false, true)) {
-                            promise.reject(Exception("MediaPlayer error: what=$what, extra=$extra"))
-                        }
-                    }
-                    // Log error for debugging but don't try to reject promise again
-                    true
-                }
-
-                setOnCompletionListener { player ->
-                    handler.post {
-                        stopPlayTimer()
-
-                        // Get duration safely
-                        val safeDuration = try {
-                            player.duration.toDouble()
-                        } catch (e: IllegalStateException) {
-                            0.0
-                        }
-
-                        // Send final playback update
-                        playBackListener?.invoke(
-                            PlayBackType(
-                                isMuted = false,
-                                duration = safeDuration,
-                                currentPosition = safeDuration
-                            )
+            try {
+                player.apply {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        setAudioAttributes(
+                            android.media.AudioAttributes.Builder()
+                                .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+                                .build()
                         )
+                    } else {
+                        @Suppress("DEPRECATION")
+                        setAudioStreamType(AudioManager.STREAM_MUSIC)
+                    }
 
-                        // Send playback end event
-                        playbackEndListener?.invoke(
-                            PlaybackEndType(
-                                duration = safeDuration,
-                                currentPosition = safeDuration
-                            )
-                        )
-                    }
-                }
-
-                when {
-                    uri.startsWith("http") -> {
-                        // Handle network audio
-                        val headers = httpHeaders ?: emptyMap()
-                        setDataSource(context, Uri.parse(uri), headers)
-                    }
-                    uri.startsWith("content://") || uri.startsWith("android.resource://") -> {
-                        // Content and bundled-resource URIs must resolve through a
-                        // Context; treating android.resource:// as a plain file path
-                        // fails with 'Prepare failed: status=0x1' (#751).
-                        setDataSource(context, Uri.parse(uri))
-                    }
-                    uri.startsWith("file://") -> {
-                        // Handle file URI
-                        setDataSource(context, Uri.parse(uri))
-                    }
-                    else -> {
-                        // Handle local file paths
-                        setDataSource(uri)
-                    }
-                }
-
-                    // Prepare on IO thread
-                    prepare()
-
-                    // Start playback on main thread
-                    handler.post {
-                        try {
-                            if (isPromiseResolved.compareAndSet(false, true)) {
-                                start()
-                                startPlayTimer()
-                                promise.resolve(uri)
+                    setOnErrorListener { failedPlayer, what, extra ->
+                        handler.post {
+                            val isCurrent = synchronized(mediaPlayerLock) {
+                                if (
+                                    playerGeneration == generation &&
+                                    (
+                                        mediaPlayer === failedPlayer ||
+                                            preparingMediaPlayer === failedPlayer
+                                    )
+                                ) {
+                                    if (mediaPlayer === failedPlayer) mediaPlayer = null
+                                    if (preparingMediaPlayer === failedPlayer) {
+                                        preparingMediaPlayer = null
+                                    }
+                                    playerStartCancellation = null
+                                    playerGeneration++
+                                    true
+                                } else {
+                                    false
+                                }
                             }
-                        } catch (e: Exception) {
-                            // If start() fails, make sure we don't leave promise unresolved
-                            if (isPromiseResolved.compareAndSet(false, true)) {
-                                promise.reject(Exception("Failed to start MediaPlayer: ${e.message}", e))
+                            if (isCurrent) {
+                                stopPlayTimer()
+                                releaseMediaPlayer(failedPlayer)
+                                if (isPromiseSettled.compareAndSet(false, true)) {
+                                    promise.reject(
+                                        Exception("MediaPlayer error: what=$what, extra=$extra")
+                                    )
+                                }
                             }
                         }
+                        true
                     }
+
+                    setOnCompletionListener { completedPlayer ->
+                        val safeDuration = synchronized(mediaPlayerLock) {
+                            if (
+                                playerGeneration != generation ||
+                                mediaPlayer !== completedPlayer
+                            ) {
+                                return@setOnCompletionListener
+                            }
+                            try {
+                                completedPlayer.duration.toDouble()
+                            } catch (_: IllegalStateException) {
+                                0.0
+                            }
+                        }
+
+                        handler.post {
+                            val isActive = synchronized(mediaPlayerLock) {
+                                playerGeneration == generation &&
+                                    mediaPlayer === completedPlayer
+                            }
+                            if (!isActive) return@post
+
+                            stopPlayTimer()
+                            playBackListener?.invoke(
+                                PlayBackType(
+                                    isMuted = false,
+                                    duration = safeDuration,
+                                    currentPosition = safeDuration
+                                )
+                            )
+
+                            playbackEndListener?.invoke(
+                                PlaybackEndType(
+                                    duration = safeDuration,
+                                    currentPosition = safeDuration
+                                )
+                            )
+                        }
+                    }
+
+                    setOnPreparedListener { preparedPlayer ->
+                        handler.post {
+                            val shouldStart = synchronized(mediaPlayerLock) {
+                                if (
+                                    playerGeneration == generation &&
+                                    preparingMediaPlayer === preparedPlayer
+                                ) {
+                                    preparingMediaPlayer = null
+                                    mediaPlayer = preparedPlayer
+                                    true
+                                } else {
+                                    false
+                                }
+                            }
+
+                            if (!shouldStart) {
+                                releaseMediaPlayer(preparedPlayer)
+                                rejectSuperseded()
+                                return@post
+                            }
+
+                            try {
+                                preparedPlayer.start()
+
+                                val shouldResolve = synchronized(mediaPlayerLock) {
+                                    if (
+                                        playerGeneration == generation &&
+                                        mediaPlayer === preparedPlayer &&
+                                        isPromiseSettled.compareAndSet(false, true)
+                                    ) {
+                                        playerStartCancellation = null
+                                        startPlayTimer()
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                }
+
+                                if (shouldResolve) {
+                                    promise.resolve(uri)
+                                } else {
+                                    rejectSuperseded()
+                                }
+                            } catch (e: Exception) {
+                                val isCurrent = synchronized(mediaPlayerLock) {
+                                    if (
+                                        playerGeneration == generation &&
+                                        mediaPlayer === preparedPlayer
+                                    ) {
+                                        mediaPlayer = null
+                                        playerStartCancellation = null
+                                        playerGeneration++
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                }
+                                if (isCurrent) {
+                                    stopPlayTimer()
+                                    releaseMediaPlayer(preparedPlayer)
+                                }
+                                if (isPromiseSettled.compareAndSet(false, true)) {
+                                    promise.reject(
+                                        Exception("Failed to start MediaPlayer: ${e.message}", e)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    when {
+                        uri.startsWith("http") -> {
+                            val headers = httpHeaders ?: emptyMap()
+                            setDataSource(context, Uri.parse(uri), headers)
+                        }
+                        uri.startsWith("content://") || uri.startsWith("android.resource://") -> {
+                            setDataSource(context, Uri.parse(uri))
+                        }
+                        uri.startsWith("file://") -> {
+                            setDataSource(context, Uri.parse(uri))
+                        }
+                        else -> {
+                            setDataSource(uri)
+                        }
+                    }
+
+                    prepareAsync()
                 }
             } catch (e: Exception) {
-                promise.reject(e)
+                val isCurrent = synchronized(mediaPlayerLock) {
+                    if (
+                        playerGeneration == generation &&
+                        (
+                            mediaPlayer === player ||
+                                preparingMediaPlayer === player
+                        )
+                    ) {
+                        if (mediaPlayer === player) mediaPlayer = null
+                        if (preparingMediaPlayer === player) preparingMediaPlayer = null
+                        playerStartCancellation = null
+                        playerGeneration++
+                        true
+                    } else {
+                        false
+                    }
+                }
+                if (isCurrent) stopPlayTimer()
+                releaseMediaPlayer(player)
+                if (isPromiseSettled.compareAndSet(false, true)) {
+                    promise.reject(e)
+                }
             }
         }
 
@@ -489,33 +604,51 @@ class HybridSound : HybridSoundSpec() {
         // Return immediately and process in background
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                mediaPlayer?.let { player ->
-                    // Check if player is in a valid state before stopping
-                    if (player.isPlaying) {
-                        player.stop()
-                    }
-                    player.reset()
-                    player.release()
+                val player: MediaPlayer?
+                val preparingPlayer: MediaPlayer?
+                val cancelPendingStart: (() -> Unit)?
+                synchronized(mediaPlayerLock) {
+                    playerGeneration++
+                    player = mediaPlayer
+                    preparingPlayer = preparingMediaPlayer
+                    cancelPendingStart = playerStartCancellation
+                    mediaPlayer = null
+                    preparingMediaPlayer = null
+                    playerStartCancellation = null
                 }
-                mediaPlayer = null
 
-                handler.post {
-                    stopPlayTimer()
+                stopPlayTimer()
+                cancelPendingStart?.invoke()
+                player?.let(::releaseMediaPlayer)
+                if (preparingPlayer !== player) {
+                    preparingPlayer?.let(::releaseMediaPlayer)
                 }
 
                 promise.resolve("Player stopped")
             } catch (e: Exception) {
                 // Ensure cleanup even if error occurs
+                val player: MediaPlayer?
+                val preparingPlayer: MediaPlayer?
+                val cancelPendingStart: (() -> Unit)?
                 try {
-                    mediaPlayer?.reset()
-                    mediaPlayer?.release()
-                } catch (releaseError: Exception) {
-                    // Ignore errors during cleanup
-                }
-                mediaPlayer = null
+                    synchronized(mediaPlayerLock) {
+                        playerGeneration++
+                        player = mediaPlayer
+                        preparingPlayer = preparingMediaPlayer
+                        cancelPendingStart = playerStartCancellation
+                        mediaPlayer = null
+                        preparingMediaPlayer = null
+                        playerStartCancellation = null
+                    }
 
-                handler.post {
                     stopPlayTimer()
+                    cancelPendingStart?.invoke()
+                    player?.let(::releaseMediaPlayer)
+                    if (preparingPlayer !== player) {
+                        preparingPlayer?.let(::releaseMediaPlayer)
+                    }
+                } catch (_: Exception) {
+                    // Ignore errors during cleanup
                 }
 
                 promise.reject(e)
@@ -527,37 +660,45 @@ class HybridSound : HybridSoundSpec() {
 
     override fun pausePlayer(): Promise<String> {
         return Promise.parallel {
-            val player = mediaPlayer ?: throw Exception("No player instance")
-            player.pause()
-            stopPlayTimer()
+            synchronized(mediaPlayerLock) {
+                val player = mediaPlayer ?: throw Exception("No player instance")
+                player.pause()
+                stopPlayTimer()
+            }
             "Player paused"
         }
     }
 
     override fun resumePlayer(): Promise<String> {
         return Promise.parallel {
-            // Rejecting instead of silently succeeding matches iOS; a released
-            // player otherwise makes resume look like a no-op with no error (#626).
-            val player = mediaPlayer ?: throw Exception("No player instance")
-            player.start()
-            startPlayTimer()
+            synchronized(mediaPlayerLock) {
+                // Rejecting instead of silently succeeding matches iOS; a released
+                // player otherwise makes resume look like a no-op with no error (#626).
+                val player = mediaPlayer ?: throw Exception("No player instance")
+                player.start()
+                startPlayTimer()
+            }
             "Player resumed"
         }
     }
 
     override fun seekToPlayer(time: Double): Promise<String> {
         return Promise.parallel {
-            val player = mediaPlayer ?: throw Exception("No player instance")
-            player.seekTo(time.toInt())
+            synchronized(mediaPlayerLock) {
+                val player = mediaPlayer ?: throw Exception("No player instance")
+                player.seekTo(time.toInt())
+            }
             "Seeked to ${time}ms"
         }
     }
 
     override fun setVolume(volume: Double): Promise<String> {
         return Promise.parallel {
-            val player = mediaPlayer ?: throw Exception("No player instance")
             val volumeFloat = volume.toFloat()
-            player.setVolume(volumeFloat, volumeFloat)
+            synchronized(mediaPlayerLock) {
+                val player = mediaPlayer ?: throw Exception("No player instance")
+                player.setVolume(volumeFloat, volumeFloat)
+            }
             "Volume set to $volume"
         }
     }
@@ -565,8 +706,8 @@ class HybridSound : HybridSoundSpec() {
     override fun setPlaybackSpeed(playbackSpeed: Double): Promise<String> {
         return Promise.parallel {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val player = mediaPlayer ?: throw Exception("No player instance")
-                try {
+                synchronized(mediaPlayerLock) {
+                    val player = mediaPlayer ?: throw Exception("No player instance")
                     val params = try {
                         player.playbackParams
                     } catch (_: Exception) {
@@ -575,8 +716,6 @@ class HybridSound : HybridSoundSpec() {
                     params.speed = playbackSpeed.toFloat()
                     player.playbackParams = params
                     "Playback speed set to $playbackSpeed"
-                } catch (e: Exception) {
-                    throw e
                 }
             } else {
                 throw Exception("Playback speed is not supported on Android API < 23")
@@ -700,43 +839,78 @@ class HybridSound : HybridSoundSpec() {
         recordTimer = null
     }
 
+    private fun releaseMediaPlayer(player: MediaPlayer) {
+        try {
+            player.setOnCompletionListener(null)
+            player.setOnErrorListener(null)
+        } catch (_: Exception) {
+            // The player may already be released.
+        }
+        try {
+            if (player.isPlaying) player.stop()
+        } catch (_: Exception) {
+            // Ignore invalid-state cleanup failures.
+        }
+        try {
+            player.reset()
+        } catch (_: Exception) {
+            // Ignore invalid-state cleanup failures.
+        }
+        try {
+            player.release()
+        } catch (_: Exception) {
+            // Ignore duplicate-release failures.
+        }
+    }
+
     private fun startPlayTimer() {
         playTimer?.cancel()
         playTimer = Timer()
         playTimer?.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
-                mediaPlayer?.let { player ->
-                    try {
-                        // Check if player is in valid state for getting duration/position
+                try {
+                    val playbackSnapshot = synchronized(mediaPlayerLock) {
+                        val player = mediaPlayer ?: return@synchronized null
                         val safeDuration = try {
                             player.duration.toDouble()
-                        } catch (e: IllegalStateException) {
-                            -1.0 // Invalid state, skip this update
+                        } catch (_: IllegalStateException) {
+                            -1.0
                         }
-                        
                         val safeCurrentPosition = try {
                             player.currentPosition.toDouble()
-                        } catch (e: IllegalStateException) {
-                            -1.0 // Invalid state, skip this update
+                        } catch (_: IllegalStateException) {
+                            -1.0
                         }
-                        
-                        // Only invoke callback if we have valid data
+
                         if (safeDuration >= 0 && safeCurrentPosition >= 0) {
-                            handler.post {
-                                playBackListener?.invoke(
-                                    PlayBackType(
-                                        isMuted = false,
-                                        duration = safeDuration,
-                                        currentPosition = safeCurrentPosition
-                                    )
+                            Triple(
+                                playerGeneration,
+                                player,
+                                PlayBackType(
+                                    isMuted = false,
+                                    duration = safeDuration,
+                                    currentPosition = safeCurrentPosition
                                 )
+                            )
+                        } else {
+                            null
+                        }
+                    }
+
+                    playbackSnapshot?.let { (generation, player, update) ->
+                        handler.post {
+                            val isActive = synchronized(mediaPlayerLock) {
+                                playerGeneration == generation && mediaPlayer === player
+                            }
+                            if (isActive) {
+                                playBackListener?.invoke(update)
                             }
                         }
-                    } catch (e: Exception) {
-                        // MediaPlayer might be in invalid state, stop timer
-                        handler.post {
-                            stopPlayTimer()
-                        }
+                    }
+                } catch (_: Exception) {
+                    // MediaPlayer might be in an invalid state, stop timer
+                    handler.post {
+                        stopPlayTimer()
                     }
                 }
             }
