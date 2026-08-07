@@ -51,7 +51,7 @@ Or with custom microphone permission text:
 To build the plugin:
 
 ```bash
-cd plugin
-bun install
-bun run build
+# From the repository root
+yarn install --immutable
+bun run --cwd plugin build
 ```
