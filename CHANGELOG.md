@@ -1,5 +1,19 @@
 # Changelogs
 
+## [0.2.20] — 2026-09-06
+
+
+### 🐛 Bug Fixes
+
+- skip explicit Kotlin plugin when AGP registers the kotlin extension ([#846](https://github.com/hyochan/react-native-nitro-sound/pull/846))
+
+---
+
+**Full Changelog**: https://github.com/hyochan/react-native-nitro-sound/compare/0.2.19...0.2.20
+
+---
+
+
 ## [0.2.19] — 2026-08-07
 
 
