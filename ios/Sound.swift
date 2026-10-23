@@ -426,14 +426,21 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                     DispatchQueue.global(qos: .userInitiated).async {
                         self.audioRecorder = nil
 
-                        // Deactivate audio session
-                        try? self.recordingSession?.setActive(false)
+                        // Deactivate audio session and let interrupted
+                        // apps (music, podcasts) resume playback
                         self.recordingSession = nil
+                        self.releaseAudioSessionIfIdle()
 
                         promise.resolve(withResult: url)
                     }
                 }
             } else {
+                // Startup can fail after activating the audio session but
+                // before an AVAudioRecorder exists (including denied access).
+                if self.recordingSession != nil {
+                    self.recordingSession = nil
+                    self.releaseAudioSessionIfIdle()
+                }
                 // stopRecorder is idempotent: a second call after the recorder
                 // was already stopped resolves with the same URI as the first
                 // one, so a double-tapped stop button cannot hand the caller a
@@ -561,6 +568,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         let promise = Promise<String>()
 
         self.isPausedByUser = false
+        let hadPlayer = self.audioPlayer != nil || self.audioEngine != nil
 
         if let player = self.audioPlayer {
             player.stop()
@@ -575,6 +583,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         }
 
         self.stopPlayTimer()
+        if hadPlayer {
+            self.releaseAudioSessionIfIdle()
+        }
         promise.resolve(withResult: "Player stopped")
 
         return promise
@@ -1060,6 +1071,15 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
     private func stopPlayTimer() {
         stopTimer(for: \.playTimer)
+    }
+
+    // Recording and playback share AVAudioSession.sharedInstance(), and
+    // deactivating it stops any audio objects still running. Release it only
+    // when neither a recorder nor a playing player is left.
+    private func releaseAudioSessionIfIdle() {
+        if self.audioRecorder != nil { return }
+        if self.audioPlayer?.isPlaying == true || self.audioPlayerNode?.isPlaying == true { return }
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     private func stopTimer(for keyPath: ReferenceWritableKeyPath<HybridSound, Timer?>) {
