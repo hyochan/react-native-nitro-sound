@@ -40,6 +40,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     private var subscriptionDuration: TimeInterval = 0.06
     private var playbackRate: Double = 1.0 // default 1x
     private var recordingSession: AVAudioSession?
+    private var playbackSession: AVAudioSession?
     // Returned by repeated stopRecorder() calls so every call yields the same
     // file URI instead of a sentinel string a caller could mistake for a path.
     private var lastRecordingURI: String?
@@ -426,14 +427,19 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                     DispatchQueue.global(qos: .userInitiated).async {
                         self.audioRecorder = nil
 
-                        // Deactivate audio session
-                        try? self.recordingSession?.setActive(false)
+                        // Deactivate audio session and let interrupted
+                        // apps (music, podcasts) resume playback
+                        try? self.recordingSession?.setActive(false, options: .notifyOthersOnDeactivation)
                         self.recordingSession = nil
 
                         promise.resolve(withResult: url)
                     }
                 }
             } else {
+                // Startup can fail after activating the audio session but
+                // before an AVAudioRecorder exists (including denied access).
+                try? self.recordingSession?.setActive(false, options: .notifyOthersOnDeactivation)
+                self.recordingSession = nil
                 // stopRecorder is idempotent: a second call after the recorder
                 // was already stopped resolves with the same URI as the first
                 // one, so a double-tapped stop button cannot hand the caller a
@@ -464,6 +470,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
                 // Setup audio session
                 let audioSession = AVAudioSession.sharedInstance()
+                self.playbackSession = audioSession
                 print("🎵 Setting up audio session for playback...")
                 try audioSession.setCategory(.playback, mode: .default)
                 try audioSession.setActive(true)
@@ -575,6 +582,8 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         }
 
         self.stopPlayTimer()
+        try? self.playbackSession?.setActive(false, options: .notifyOthersOnDeactivation)
+        self.playbackSession = nil
         promise.resolve(withResult: "Player stopped")
 
         return promise
