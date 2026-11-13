@@ -34,6 +34,7 @@
 - Conventional Commits enforced via commitlint (e.g., `feat: add playback speed`).
 - Hooks (lefthook): pre-commit runs `eslint` and `tsc`; commit message is linted.
 - PRs: include a clear description, linked issues, platform impact, and updated docs (e.g., `README.md`, `docs/MIGRATION.md`). If native changes, verify on both iOS and Android; update the `example/` app if behavior changes.
+- Exception: documentation, agent-workflow, and housekeeping changes whose every path is in the qualifying scope of `$loop-review-self` may land directly on `main` through that skill. Product code, native code, Nitro specs and generated bindings, and `package.json` always go through a PR.
 
 ## Architecture Notes
 
@@ -49,5 +50,6 @@
 - Use `$rebase-main` to preserve staged, unstaged, untracked, ignored, and generated work during synchronization. Never use destructive reset/clean shortcuts.
 - Use `$review-pr` to classify and resolve PR feedback, fall back to `$review-self` when automated review is unavailable, and poll through a real five-minute wake-up until the exact head is stable.
 - Use `$review-self` for a final independent pass and `$generate-doc` whenever public exports, Nitro specs, platform behavior, compatibility, or releases change.
-- Internal workflow-only changes under `.claude/`, `.codex/`, `AGENTS.md`, or `knowledge/_claude-context/` stay local unless the user explicitly requests commit, push, PR, or merge.
+- Use `$loop-review-self` to land a minor docs, release-note, agent-workflow, or housekeeping change on `main` without a PR: it reviews until two consecutive clean snapshots, runs the path checks, then pushes directly.
+- Internal workflow-only changes under `.claude/`, `.codex/`, `AGENTS.md`, or `knowledge/_claude-context/` stay local unless the user explicitly requests commit, push, PR, or merge. An explicit `$loop-review-self` invocation counts as that request.
 - Install the repository Codex skills for automatic discovery with `.codex/scripts/install-skills.sh`.

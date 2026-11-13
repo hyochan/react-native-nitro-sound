@@ -16,7 +16,8 @@ for skill in \
   funding-steward \
   rebase-main \
   review-pr \
-  review-self; do
+  review-self \
+  loop-review-self; do
   skill_source="$repo_root/.codex/skills/$skill"
   if [[ ! -d "$skill_source" ]]; then
     echo "Missing canonical Codex skill: $skill_source" >&2

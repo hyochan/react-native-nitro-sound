@@ -12,6 +12,10 @@
 - Do not modify code directly on `main`.
 - Create a topic branch from the latest `main` and open a pull request back to
   `main`.
+- Maintainers may push minor documentation and repository-housekeeping changes
+  straight to `main` through the `loop-review-self` workflow
+  (`.codex/skills/loop-review-self/SKILL.md`). Code changes always use a pull
+  request.
 
 ## Development Setup
 

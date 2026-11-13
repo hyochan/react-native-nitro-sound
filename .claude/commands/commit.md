@@ -31,7 +31,9 @@ Complete workflow: branch → commit → push → PR, for `hyochan/react-native-
 git branch --show-current
 ```
 
-If on `main` → create a feature branch first:
+If on `main` → create a feature branch first. The one exception is a change
+landed through `$loop-review-self`, which pushes its qualifying docs or
+housekeeping change directly to `main`:
 
 ```bash
 git checkout -b <type>/<scope>-<short-description>
@@ -185,7 +187,8 @@ When touching multiple layers, commit in this order so reviewers can follow:
 
 Internal workflow-only changes under `.claude/`, `.codex/`, `AGENTS.md`, or
 `knowledge/_claude-context/` stay local unless the user explicitly asks to
-commit, push, or open a PR.
+commit, push, or open a PR. An explicit `$loop-review-self` invocation counts
+as that request.
 
 ---
 

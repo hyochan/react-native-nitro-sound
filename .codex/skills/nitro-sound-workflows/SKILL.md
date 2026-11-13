@@ -36,6 +36,8 @@ Read and follow the matching command file:
 - Stable or prerelease npm publication: `.claude/commands/release.md`
 - Dependency upgrade: `.claude/commands/upgrade-deps.md`
 - Commit, push, or open a PR: `.claude/commands/commit.md`
+- Land a minor docs, release-note, agent-workflow, or housekeeping change on
+  `main` without a PR: `$loop-review-self`
 
 Use `$ios-audio-e2e` or `$android-audio-e2e` when the request targets one
 native platform. Use `$simulator-audio-e2e` for repeatable virtual-device audio
@@ -85,7 +87,8 @@ Do not claim a runtime pass from compilation alone.
 
 Internal workflow changes under `.claude/`, `.codex/`, `AGENTS.md`, or
 `knowledge/_claude-context/` stay local unless the user explicitly requests a
-commit, push, PR, or merge.
+commit, push, PR, or merge. An explicit `$loop-review-self` invocation counts
+as that request.
 
 Before any GitHub write, resolve the exact repository, issue or PR number, and
 current head. Keep public issue, PR, review, release, and commit prose in clear
