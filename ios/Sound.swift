@@ -617,8 +617,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     public func stopPlayer() throws -> Promise<String> {
         let promise = Promise<String>()
 
+        // Release only if this player still owned the session. A player that
+        // finished on its own already released it, and releasing again could
+        // cut off audio the host app has started since.
+        let hasPlayer = self.audioPlayer != nil || self.audioPlayerNode != nil
+        let playerOwnedSession = self.audioPlayer?.isPlaying == true
+            || self.audioPlayerNode?.isPlaying == true
+            || (hasPlayer && self.isPausedByUser)
         self.isPausedByUser = false
-        let hadPlayer = self.audioPlayer != nil || self.audioEngine != nil
 
         if let player = self.audioPlayer {
             player.stop()
@@ -633,7 +639,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         }
 
         self.stopPlayTimer()
-        if hadPlayer {
+        if playerOwnedSession {
             self.releaseAudioSessionIfIdle()
         }
         promise.resolve(withResult: "Player stopped")
@@ -667,17 +673,19 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         let promise = Promise<String>()
 
         if let player = self.audioPlayer {
-            self.isPausedByUser = false
             player.enableRate = true
             player.rate = Float(self.playbackRate)
             player.play()
+            // Cleared after play(), so the paused player keeps owning the
+            // session until it is playing again.
+            self.isPausedByUser = false
             DispatchQueue.main.async {
                 self.startPlayTimer()
             }
             promise.resolve(withResult: "Player resumed")
         } else if let node = self.audioPlayerNode {
-            self.isPausedByUser = false
             node.play()
+            self.isPausedByUser = false
             DispatchQueue.main.async {
                 self.startPlayTimer()
             }
@@ -976,7 +984,11 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 player.enableRate = true
                 player.rate = Float(self.playbackRate)
                 player.prepareToPlay()
-                player.play()
+                // play() runs on the main queue, like the local path, so it is
+                // serialized with the idle check and deactivation.
+                DispatchQueue.main.sync {
+                    _ = player.play()
+                }
             }
 
             self.startPlayTimer()
@@ -1249,6 +1261,21 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     deinit {
         recordTimer?.invalidate()
         playTimer?.invalidate()
+        // An instance disposed without stopping would otherwise never give
+        // back a session it owned, including one another instance's stop left
+        // active for it.
+        let ownedSession = self.isUsingAudioSession || self.recordingSession != nil
+        audioRecorder?.stop()
+        audioPlayer?.stop()
+        audioEngine?.stop()
+        audioRecorder = nil
+        audioPlayer = nil
+        audioPlayerNode = nil
+        audioEngine = nil
+        recordingSession = nil
+        if ownedSession {
+            HybridSound.releaseSharedAudioSessionIfIdle()
+        }
     }
 
     private class AudioPlayerDelegateProxy: NSObject, AVAudioPlayerDelegate {
