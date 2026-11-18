@@ -17,7 +17,7 @@ Should problems persist after the upgrade, please attach your full build log and
 Starting a recording or playback interrupts other apps such as Apple Music or podcasts. The module gives the shared `AVAudioSession` back with `.notifyOthersOnDeactivation`, so those apps can resume, when:
 
 - `stopRecorder()` finishes;
-- a recording start fails because microphone permission is denied or the session cannot be configured, or `stopRecorder()` is called after any other failed start;
+- a recording start fails before recording begins (microphone permission denied, or session or recorder setup failed), or `stopRecorder()` is called after a later failure;
 - `stopPlayer()` stops a player;
 - playback reaches the end of the file;
 - `startPlayer()` fails.
