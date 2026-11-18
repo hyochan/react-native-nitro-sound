@@ -1088,12 +1088,21 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         stopTimer(for: \.playTimer)
     }
 
-    // Recording and playback share AVAudioSession.sharedInstance(), and
-    // deactivating it stops any audio objects still running. Release it only
-    // when neither a recorder nor a playing player is left.
+    private var isUsingAudioSession: Bool {
+        return self.audioRecorder != nil
+            || self.audioPlayer?.isPlaying == true
+            || self.audioPlayerNode?.isPlaying == true
+    }
+
+    // Recording and playback share AVAudioSession.sharedInstance(), across
+    // every instance createSound() returns, and deactivating it stops any
+    // audio objects still running. Release it only when no instance has a
+    // recorder or a playing player left.
     private func releaseAudioSessionIfIdle() {
-        if self.audioRecorder != nil { return }
-        if self.audioPlayer?.isPlaying == true || self.audioPlayerNode?.isPlaying == true { return }
+        HybridSound.liveInstancesLock.lock()
+        let instances = HybridSound.liveInstances.allObjects
+        HybridSound.liveInstancesLock.unlock()
+        if instances.contains(where: { $0.isUsingAudioSession }) { return }
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
@@ -1163,6 +1172,19 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             print("🎵 Emitting playback end event at \(durationMs)ms")
             endListener(endEvent)
         }
+    }
+
+    // Every live instance, so the session idle check covers instances that
+    // share the process-wide AVAudioSession. Weak, so it never extends a
+    // lifetime.
+    private static let liveInstances = NSHashTable<HybridSound>.weakObjects()
+    private static let liveInstancesLock = NSLock()
+
+    override init() {
+        super.init()
+        HybridSound.liveInstancesLock.lock()
+        HybridSound.liveInstances.add(self)
+        HybridSound.liveInstancesLock.unlock()
     }
 
     // MARK: - AVAudioPlayerDelegate via proxy
