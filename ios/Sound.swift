@@ -71,10 +71,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 // Apply AVModeIOS if provided
                 let sessionMode = audioSets?.AVModeIOS.map(self.getAudioSessionMode) ?? .default
 
-                try session.setCategory(.playAndRecord,
-                                        mode: sessionMode,
-                                        options: [.defaultToSpeaker, .allowBluetoothHFP])
-                try session.setActive(true)
+                // Activate on the session queue, ordered with every release;
+                // recordingSession already marks this start as an owner.
+                try HybridSound.onSessionQueue {
+                    try session.setCategory(.playAndRecord,
+                                            mode: sessionMode,
+                                            options: [.defaultToSpeaker, .allowBluetoothHFP])
+                    try session.setActive(true)
+                }
 
                 print("🎙️ Audio session set up successfully")
 
@@ -84,8 +88,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                         // The instance went away during the prompt; give back
                         // the session this start activated unless another
                         // instance still needs it.
-                        HybridSound.releaseSharedAudioSessionIfIdle()
-                        promise.reject(withError: RuntimeError.error(withMessage: "Self is nil"))
+                        HybridSound.releaseSharedAudioSessionIfIdle {
+                            promise.reject(withError: RuntimeError.error(withMessage: "Self is nil"))
+                        }
                         return
                     }
 
@@ -95,14 +100,16 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                             self.setupAndStartRecording(uri: uri, audioSets: audioSets, meteringEnabled: meteringEnabled, promise: promise)
                         }
                     } else {
-                        self.releaseAudioSessionAfterFailedRecorderStart()
-                        promise.reject(withError: RuntimeError.error(withMessage: "Recording permission denied. Please enable microphone access in Settings."))
+                        self.releaseAudioSessionAfterFailedRecorderStart {
+                            promise.reject(withError: RuntimeError.error(withMessage: "Recording permission denied. Please enable microphone access in Settings."))
+                        }
                     }
                 }
             } catch {
                 print("🎙️ Audio session setup failed: \(error)")
-                self.releaseAudioSessionAfterFailedRecorderStart()
-                promise.reject(withError: RuntimeError.error(withMessage: "Audio session setup failed: \(error.localizedDescription)"))
+                self.releaseAudioSessionAfterFailedRecorderStart {
+                    promise.reject(withError: RuntimeError.error(withMessage: "Audio session setup failed: \(error.localizedDescription)"))
+                }
             }
         }
 
@@ -386,7 +393,12 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 print("🎙️ Error code: \(nsError.code)")
                 print("🎙️ Error userInfo: \(nsError.userInfo)")
             }
-            promise.reject(withError: RuntimeError.error(withMessage: "Recording setup failed: \(error.localizedDescription)"))
+            // Setup failed before recording started; drop a recorder that
+            // could not prepare and give back this start's session claim.
+            self.audioRecorder = nil
+            self.releaseAudioSessionAfterFailedRecorderStart {
+                promise.reject(withError: RuntimeError.error(withMessage: "Recording setup failed: \(error.localizedDescription)"))
+            }
         }
     }
 
@@ -446,23 +458,27 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                         // Deactivate audio session and let interrupted
                         // apps (music, podcasts) resume playback
                         self.recordingSession = nil
-                        self.releaseAudioSessionIfIdle()
-
-                        promise.resolve(withResult: url)
+                        self.releaseAudioSessionIfIdle {
+                            promise.resolve(withResult: url)
+                        }
                     }
                 }
             } else {
                 // Startup can fail after activating the audio session but
                 // before an AVAudioRecorder exists (including denied access).
-                if self.recordingSession != nil {
-                    self.recordingSession = nil
-                    self.releaseAudioSessionIfIdle()
-                }
                 // stopRecorder is idempotent: a second call after the recorder
                 // was already stopped resolves with the same URI as the first
                 // one, so a double-tapped stop button cannot hand the caller a
                 // sentinel string where it expects a file path (#789, #693).
-                promise.resolve(withResult: self.lastRecordingURI ?? "recorder already stopped")
+                let result = self.lastRecordingURI ?? "recorder already stopped"
+                if self.recordingSession != nil {
+                    self.recordingSession = nil
+                    self.releaseAudioSessionIfIdle {
+                        promise.resolve(withResult: result)
+                    }
+                } else {
+                    promise.resolve(withResult: result)
+                }
             }
         }
 
@@ -515,8 +531,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                         // follows the resolve can release the session.
                         if let failure = self.setupEnginePlayer(url: uri, httpHeaders: httpHeaders) {
                             endPendingStart()
-                            self.releaseAudioSessionIfIdle()
-                            promise.reject(withError: RuntimeError.error(withMessage: failure))
+                            self.releaseThenReject(promise, failure)
                         } else {
                             endPendingStart()
                             // A completion that ran while the claim was held
@@ -560,8 +575,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                             }
 
                             endPendingStart()
-                            self.releaseAudioSessionIfIdle()
-                            promise.reject(withError: RuntimeError.error(withMessage: "Audio file does not exist at path: \(uri)"))
+                            self.releaseThenReject(promise, "Audio file does not exist at path: \(uri)")
                             return
                         }
 
@@ -576,8 +590,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
                         guard let player = self.audioPlayer else {
                             endPendingStart()
-                            self.releaseAudioSessionIfIdle()
-                            promise.reject(withError: RuntimeError.error(withMessage: "Failed to create audio player"))
+                            self.releaseThenReject(promise, "Failed to create audio player")
                             return
                         }
 
@@ -589,6 +602,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                         // play() runs on the session queue, ordered with every
                         // release, so no idle check can pass in between.
                         let playResult = HybridSound.onSessionQueue { () -> Bool in
+                            // Reset before play() so a very short track's end
+                            // event is never mistaken for the previous one's.
+                            self.didEmitPlaybackEnd = false
                             let started = player.play()
                             if started {
                                 self.playerOwnsSession = true
@@ -598,26 +614,26 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                         endPendingStart()
 
                         if playResult {
+                            // A finish callback that ran while the claim was
+                            // held skipped its release; check again now.
+                            self.releaseAudioSessionIfIdle()
                             self.startPlayTimer()
                             promise.resolve(withResult: uri)
                         } else {
-                            self.releaseAudioSessionIfIdle()
-                            promise.reject(withError: RuntimeError.error(withMessage: "Failed to start playback"))
+                            self.releaseThenReject(promise, "Failed to start playback")
                         }
                     }
                 } else {
                     print("🎵 ❌ No URI provided")
                     endPendingStart()
-                    self.releaseAudioSessionIfIdle()
-                    promise.reject(withError: RuntimeError.error(withMessage: "URI is required for playback"))
+                    self.releaseThenReject(promise, "URI is required for playback")
                 }
             } catch {
                 print("🎵 ❌ Playback error: \(error)")
                 // The session is activated before the URI is validated or a
                 // player exists, so every failed start gives it back.
                 endPendingStart()
-                self.releaseAudioSessionIfIdle()
-                promise.reject(withError: RuntimeError.error(withMessage: "Playback error: \(error.localizedDescription)"))
+                self.releaseThenReject(promise, "Playback error: \(error.localizedDescription)")
             }
         }
 
@@ -631,8 +647,11 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         // natural end was handled already released it, and releasing again
         // could cut off audio the host app has started since. A stop between
         // the end of playback and the finish callback still releases.
-        let playerOwnedSession = self.playerOwnsSession
-        self.playerOwnsSession = false
+        let playerOwnedSession = HybridSound.onSessionQueue { () -> Bool in
+            let owned = self.playerOwnsSession
+            self.playerOwnsSession = false
+            return owned
+        }
         self.isPausedByUser = false
 
         if let player = self.audioPlayer {
@@ -649,9 +668,12 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
         self.stopPlayTimer()
         if playerOwnedSession {
-            self.releaseAudioSessionIfIdle()
+            self.releaseAudioSessionIfIdle {
+                promise.resolve(withResult: "Player stopped")
+            }
+        } else {
+            promise.resolve(withResult: "Player stopped")
         }
-        promise.resolve(withResult: "Player stopped")
 
         return promise
     }
@@ -686,19 +708,25 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             player.rate = Float(self.playbackRate)
             // A paused player keeps its pause flag and session ownership when
             // play() does not start playback.
-            guard HybridSound.onSessionQueue({ player.play() }) else {
+            let resumed = HybridSound.onSessionQueue { () -> Bool in
+                guard player.play() else { return false }
+                self.playerOwnsSession = true
+                return true
+            }
+            guard resumed else {
                 promise.reject(withError: RuntimeError.error(withMessage: "Failed to resume playback"))
                 return promise
             }
-            self.playerOwnsSession = true
             self.isPausedByUser = false
             DispatchQueue.main.async {
                 self.startPlayTimer()
             }
             promise.resolve(withResult: "Player resumed")
         } else if let node = self.audioPlayerNode {
-            HybridSound.onSessionQueue { node.play() }
-            self.playerOwnsSession = true
+            HybridSound.onSessionQueue {
+                node.play()
+                self.playerOwnsSession = true
+            }
             self.isPausedByUser = false
             DispatchQueue.main.async {
                 self.startPlayTimer()
@@ -1001,6 +1029,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 // play() runs on the session queue, like the local path, so it
                 // is ordered with the idle check and deactivation.
                 HybridSound.onSessionQueue {
+                    self.didEmitPlaybackEnd = false
                     if player.play() {
                         self.playerOwnsSession = true
                     }
@@ -1154,10 +1183,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         stopTimer(for: \.playTimer)
     }
 
+    // A recorder start owns the session from the moment it sets
+    // recordingSession until stopRecorder() or its failure cleanup clears it.
     // A paused player still owns the session, so resumePlayer() continues
     // without it being released underneath. A finished player does not.
     private var isUsingAudioSession: Bool {
-        return self.audioRecorder != nil || self.playerOwnsSession
+        return self.audioRecorder != nil
+            || self.recordingSession != nil
+            || self.playerOwnsSession
     }
 
     // Recording and playback share AVAudioSession.sharedInstance(), across
@@ -1171,13 +1204,23 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     // session, and no start can land between the check and the deactivation.
     // The release is asynchronous, so no caller thread, including the main
     // thread, blocks on setActive(false).
-    private func releaseAudioSessionIfIdle() {
-        HybridSound.releaseSharedAudioSessionIfIdle()
+    // `completion` runs on sessionQueue after the release decision, so a
+    // promise settled from it cannot let the caller start audio that a
+    // still-queued release would then deactivate.
+    private func releaseAudioSessionIfIdle(then completion: (() -> Void)? = nil) {
+        HybridSound.releaseSharedAudioSessionIfIdle(then: completion)
+    }
+
+    private func releaseThenReject(_ promise: Promise<String>, _ message: String) {
+        self.releaseAudioSessionIfIdle {
+            promise.reject(withError: RuntimeError.error(withMessage: message))
+        }
     }
 
     // Also releases while a pending startPlayer() anywhere keeps it active.
-    private static func releaseSharedAudioSessionIfIdle() {
+    private static func releaseSharedAudioSessionIfIdle(then completion: (() -> Void)? = nil) {
         sessionQueue.async {
+            defer { completion?() }
             liveInstancesLock.lock()
             let instances = liveInstances.allObjects
             let hasPendingStart = pendingPlayerStarts > 0
@@ -1216,21 +1259,30 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     // A recorder start that fails before an AVAudioRecorder exists, such as a
     // denied permission, gives the session back. Clearing recordingSession
     // here also covers a start that stopRecorder() already detached from it.
-    private func releaseAudioSessionAfterFailedRecorderStart() {
+    private func releaseAudioSessionAfterFailedRecorderStart(then completion: (() -> Void)? = nil) {
         self.recordingSession = nil
-        self.releaseAudioSessionIfIdle()
+        self.releaseAudioSessionIfIdle(then: completion)
     }
 
     // Playback that runs to the end never reaches stopPlayer(), so interrupted
     // apps would stay paused. Skip it when a newer startPlayer() has already
     // replaced this player; that start owns the session.
-    private func releaseAudioSessionAfterPlaybackEnded(_ player: AVAudioPlayer) {
-        guard player === self.audioPlayer, self.playerOwnsSession else { return }
-        self.playerOwnsSession = false
+    private func releaseAudioSessionAfterPlaybackEnded(_ player: AVAudioPlayer, then completion: @escaping () -> Void) {
+        // Check and clear the claim on the session queue, so a replacement
+        // start's claim set by its play() cannot be cleared here.
+        let owned = HybridSound.onSessionQueue { () -> Bool in
+            guard player === self.audioPlayer, self.playerOwnsSession else { return false }
+            self.playerOwnsSession = false
+            return true
+        }
+        guard owned else {
+            completion()
+            return
+        }
         // stop() frees the finished player's audio resources first, since
         // deactivating while they are still held can fail.
         player.stop()
-        self.releaseAudioSessionIfIdle()
+        self.releaseAudioSessionIfIdle(then: completion)
     }
 
     private func stopTimer(for keyPath: ReferenceWritableKeyPath<HybridSound, Timer?>) {
@@ -1323,11 +1375,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             print("🎵 AVAudioPlayer finished playing. success=\(flag)")
             guard let owner = owner else { return }
             let finalDurationMs = player.duration * 1000
-            // Release before JS hears about the end, so a next-track
-            // startPlayer() from the end listener activates after this.
-            owner.releaseAudioSessionAfterPlaybackEnded(player)
-            owner.emitPlaybackEndEvents(durationMs: finalDurationMs, includePlaybackUpdate: true)
-            owner.stopPlayTimer()
+            // Emit after the release decision, so a next-track startPlayer()
+            // from the end listener activates after it.
+            owner.releaseAudioSessionAfterPlaybackEnded(player) {
+                DispatchQueue.main.async {
+                    owner.emitPlaybackEndEvents(durationMs: finalDurationMs, includePlaybackUpdate: true)
+                    owner.stopPlayTimer()
+                }
+            }
         }
 
         func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
