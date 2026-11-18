@@ -504,12 +504,15 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                     if uri.hasPrefix("http") {
                         print("🎵 Detected remote URL, using engine player")
                         // Handle remote URL
-                        if let failure = self.setupEnginePlayer(url: uri, httpHeaders: httpHeaders, promise: promise) {
+                        // End the claim before settling, so a stopPlayer() that
+                        // follows the resolve can release the session.
+                        if let failure = self.setupEnginePlayer(url: uri, httpHeaders: httpHeaders) {
                             endPendingStart()
                             self.releaseAudioSessionIfIdle()
                             promise.reject(withError: RuntimeError.error(withMessage: failure))
                         } else {
                             endPendingStart()
+                            promise.resolve(withResult: uri)
                         }
                     } else {
                         print("🎵 Detected local file")
@@ -949,10 +952,10 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         }
     }
 
-    // Resolves the promise on success and returns nil. On failure it returns
-    // the error message and leaves session release and rejection to the
-    // caller, which must end its pending start first.
-    private func setupEnginePlayer(url: String, httpHeaders: Dictionary<String, String>?, promise: Promise<String>) -> String? {
+    // Returns nil once playback has started, or the error message. The caller
+    // settles the promise after ending its pending start, and releases the
+    // session on failure.
+    private func setupEnginePlayer(url: String, httpHeaders: Dictionary<String, String>?) -> String? {
         // TODO: Implement HTTP streaming with AVAudioEngine
         // For now, use basic implementation
         guard let audioURL = URL(string: url) else {
@@ -973,7 +976,6 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             }
 
             self.startPlayTimer()
-            promise.resolve(withResult: url)
             return nil
         } catch {
             return error.localizedDescription
