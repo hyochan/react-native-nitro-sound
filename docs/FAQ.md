@@ -11,3 +11,14 @@ If Xcode fails with errors similar to `function type mismatch, declared as '@con
 3. Build again with the updated Xcode.
 
 Should problems persist after the upgrade, please attach your full build log and toolchain versions when commenting on the issue.
+
+## iOS: music from another app stays paused after recording or playback (#344)
+
+Starting a recording or playback interrupts other apps such as Apple Music or podcasts. The module gives the shared `AVAudioSession` back with `.notifyOthersOnDeactivation`, so those apps can resume, when:
+
+- `stopRecorder()` finishes, or a recording start fails before a recorder exists and `stopRecorder()` is called;
+- `stopPlayer()` stops a player;
+- playback reaches the end of the file;
+- `startPlayer()` fails.
+
+The session stays active while a recorder exists or a player is playing, so stopping one of them does not cut off the other. Pausing does not release the session. If you call `stopRecorder()` while a `startRecorder()` call is still pending (for example, while the microphone permission prompt is showing), the session can be released under that start, so await `startRecorder()` before stopping.

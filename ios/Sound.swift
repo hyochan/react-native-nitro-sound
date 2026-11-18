@@ -517,6 +517,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                                 }
                             }
 
+                            self.releaseAudioSessionIfIdle()
                             promise.reject(withError: RuntimeError.error(withMessage: "Audio file does not exist at path: \(uri)"))
                             return
                         }
@@ -528,6 +529,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                         self.audioPlayer?.delegate = self.playerDelegateProxy
 
                         guard let player = self.audioPlayer else {
+                            self.releaseAudioSessionIfIdle()
                             promise.reject(withError: RuntimeError.error(withMessage: "Failed to create audio player"))
                             return
                         }
@@ -547,16 +549,21 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                                 promise.resolve(withResult: uri)
                             } else {
                                 self.stopPlayTimer()
+                                self.releaseAudioSessionIfIdle()
                                 promise.reject(withError: RuntimeError.error(withMessage: "Failed to start playback"))
                             }
                         }
                     }
                 } else {
                     print("🎵 ❌ No URI provided")
+                    self.releaseAudioSessionIfIdle()
                     promise.reject(withError: RuntimeError.error(withMessage: "URI is required for playback"))
                 }
             } catch {
                 print("🎵 ❌ Playback error: \(error)")
+                // The session is activated before the URI is validated or a
+                // player exists, so every failed start gives it back.
+                self.releaseAudioSessionIfIdle()
                 promise.reject(withError: RuntimeError.error(withMessage: "Playback error: \(error.localizedDescription)"))
             }
         }
@@ -910,6 +917,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         // TODO: Implement HTTP streaming with AVAudioEngine
         // For now, use basic implementation
         guard let audioURL = URL(string: url) else {
+            self.releaseAudioSessionIfIdle()
             promise.reject(withError: RuntimeError.error(withMessage: "Invalid URL"))
             return
         }
@@ -929,6 +937,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             self.startPlayTimer()
             promise.resolve(withResult: url)
         } catch {
+            self.releaseAudioSessionIfIdle()
             promise.reject(withError: RuntimeError.error(withMessage: error.localizedDescription))
         }
     }
@@ -1082,6 +1091,17 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
+    // Playback that runs to the end never reaches stopPlayer(), so interrupted
+    // apps would stay paused. Skip it when a newer startPlayer() has already
+    // replaced this player; that start owns the session.
+    private func releaseAudioSessionAfterPlaybackEnded(_ player: AVAudioPlayer) {
+        guard player === self.audioPlayer else { return }
+        // stop() frees the finished player's audio resources first, since
+        // deactivating while they are still held can fail.
+        player.stop()
+        self.releaseAudioSessionIfIdle()
+    }
+
     private func stopTimer(for keyPath: ReferenceWritableKeyPath<HybridSound, Timer?>) {
         if Thread.isMainThread {
             self[keyPath: keyPath]?.invalidate()
@@ -1135,6 +1155,9 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             print("🎵 AVAudioPlayer finished playing. success=\(flag)")
             guard let owner = owner else { return }
             let finalDurationMs = player.duration * 1000
+            // Release before JS hears about the end, so a next-track
+            // startPlayer() from the end listener activates after this.
+            owner.releaseAudioSessionAfterPlaybackEnded(player)
             owner.emitPlaybackEndEvents(durationMs: finalDurationMs, includePlaybackUpdate: true)
             owner.stopPlayTimer()
         }
