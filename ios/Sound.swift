@@ -1101,11 +1101,13 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     //
     // The check and setActive(false) run on the main queue, where
     // startPlayer() calls play() and the recorder calls record(), so no start
-    // can land between them. Checking from a background queue could miss a
-    // start that lands just before the deactivation, which would stop it.
+    // can land between them. They run synchronously, so the release finishes
+    // before the stop or failed start that triggered it settles its promise.
+    // An asynchronous release could land after a caller's next start had
+    // already activated the session, and deactivate it under that start.
     private func releaseAudioSessionIfIdle() {
         guard Thread.isMainThread else {
-            DispatchQueue.main.async { self.releaseAudioSessionIfIdle() }
+            DispatchQueue.main.sync { self.releaseAudioSessionIfIdle() }
             return
         }
         HybridSound.liveInstancesLock.lock()
