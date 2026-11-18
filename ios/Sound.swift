@@ -36,6 +36,10 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     // play timer needs this to tell a user-initiated pause apart from the end
     // of playback — otherwise pausing emits a spurious playback-end event.
     private var isPausedByUser = false
+    // True from the moment this instance's player starts playing until its
+    // natural end or stopPlayer() gives the session back. Pausing keeps it;
+    // a finished player whose end was handled does not hold it.
+    private var playerOwnsSession = false
 
     private var subscriptionDuration: TimeInterval = 0.06
     private var playbackRate: Double = 1.0 // default 1x
@@ -491,11 +495,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             do {
                 print("🎵 Starting player for URI: \(uri ?? "nil")")
 
-                // Setup audio session
-                let audioSession = AVAudioSession.sharedInstance()
+                // Setup audio session on the session queue, ordered with
+                // every release.
                 print("🎵 Setting up audio session for playback...")
-                try audioSession.setCategory(.playback, mode: .default)
-                try audioSession.setActive(true)
+                try HybridSound.onSessionQueue {
+                    let audioSession = AVAudioSession.sharedInstance()
+                    try audioSession.setCategory(.playback, mode: .default)
+                    try audioSession.setActive(true)
+                }
                 print("🎵 Audio session setup complete")
 
                 if let uri = uri, !uri.isEmpty {
@@ -579,20 +586,23 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                         player.rate = Float(self.playbackRate)
                         player.prepareToPlay()
 
-                        // Play on main queue
-                        DispatchQueue.main.async {
-                            self.startPlayTimer()
-
-                            let playResult = player.play()
-                            endPendingStart()
-
-                            if playResult {
-                                promise.resolve(withResult: uri)
-                            } else {
-                                self.stopPlayTimer()
-                                self.releaseAudioSessionIfIdle()
-                                promise.reject(withError: RuntimeError.error(withMessage: "Failed to start playback"))
+                        // play() runs on the session queue, ordered with every
+                        // release, so no idle check can pass in between.
+                        let playResult = HybridSound.onSessionQueue { () -> Bool in
+                            let started = player.play()
+                            if started {
+                                self.playerOwnsSession = true
                             }
+                            return started
+                        }
+                        endPendingStart()
+
+                        if playResult {
+                            self.startPlayTimer()
+                            promise.resolve(withResult: uri)
+                        } else {
+                            self.releaseAudioSessionIfIdle()
+                            promise.reject(withError: RuntimeError.error(withMessage: "Failed to start playback"))
                         }
                     }
                 } else {
@@ -617,13 +627,12 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     public func stopPlayer() throws -> Promise<String> {
         let promise = Promise<String>()
 
-        // Release only if this player still owned the session. A player that
-        // finished on its own already released it, and releasing again could
-        // cut off audio the host app has started since.
-        let hasPlayer = self.audioPlayer != nil || self.audioPlayerNode != nil
-        let playerOwnedSession = self.audioPlayer?.isPlaying == true
-            || self.audioPlayerNode?.isPlaying == true
-            || (hasPlayer && self.isPausedByUser)
+        // Release only if this player still owned the session. A player whose
+        // natural end was handled already released it, and releasing again
+        // could cut off audio the host app has started since. A stop between
+        // the end of playback and the finish callback still releases.
+        let playerOwnedSession = self.playerOwnsSession
+        self.playerOwnsSession = false
         self.isPausedByUser = false
 
         if let player = self.audioPlayer {
@@ -675,16 +684,21 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         if let player = self.audioPlayer {
             player.enableRate = true
             player.rate = Float(self.playbackRate)
-            player.play()
-            // Cleared after play(), so the paused player keeps owning the
-            // session until it is playing again.
+            // A paused player keeps its pause flag and session ownership when
+            // play() does not start playback.
+            guard HybridSound.onSessionQueue({ player.play() }) else {
+                promise.reject(withError: RuntimeError.error(withMessage: "Failed to resume playback"))
+                return promise
+            }
+            self.playerOwnsSession = true
             self.isPausedByUser = false
             DispatchQueue.main.async {
                 self.startPlayTimer()
             }
             promise.resolve(withResult: "Player resumed")
         } else if let node = self.audioPlayerNode {
-            node.play()
+            HybridSound.onSessionQueue { node.play() }
+            self.playerOwnsSession = true
             self.isPausedByUser = false
             DispatchQueue.main.async {
                 self.startPlayTimer()
@@ -984,10 +998,12 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                 player.enableRate = true
                 player.rate = Float(self.playbackRate)
                 player.prepareToPlay()
-                // play() runs on the main queue, like the local path, so it is
-                // serialized with the idle check and deactivation.
-                DispatchQueue.main.sync {
-                    _ = player.play()
+                // play() runs on the session queue, like the local path, so it
+                // is ordered with the idle check and deactivation.
+                HybridSound.onSessionQueue {
+                    if player.play() {
+                        self.playerOwnsSession = true
+                    }
                 }
             }
 
@@ -1141,11 +1157,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     // A paused player still owns the session, so resumePlayer() continues
     // without it being released underneath. A finished player does not.
     private var isUsingAudioSession: Bool {
-        let hasPlayer = self.audioPlayer != nil || self.audioPlayerNode != nil
-        return self.audioRecorder != nil
-            || self.audioPlayer?.isPlaying == true
-            || self.audioPlayerNode?.isPlaying == true
-            || (hasPlayer && self.isPausedByUser)
+        return self.audioRecorder != nil || self.playerOwnsSession
     }
 
     // Recording and playback share AVAudioSession.sharedInstance(), across
@@ -1153,28 +1165,52 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     // audio objects still running. Release it only when no instance has a
     // recorder or a playing player left.
     //
-    // The check and setActive(false) run on the main queue, where
-    // startPlayer() calls play() and the recorder calls record(), so no start
-    // can land between them. They run synchronously, so the release finishes
-    // before the stop or failed start that triggered it settles its promise.
-    // An asynchronous release could land after a caller's next start had
-    // already activated the session, and deactivate it under that start.
+    // The check and setActive(false) run on sessionQueue, the serial queue
+    // that also runs startPlayer()'s activation and every play(). A release
+    // queued by a stop therefore runs before a later start activates the
+    // session, and no start can land between the check and the deactivation.
+    // The release is asynchronous, so no caller thread, including the main
+    // thread, blocks on setActive(false).
     private func releaseAudioSessionIfIdle() {
         HybridSound.releaseSharedAudioSessionIfIdle()
     }
 
     // Also releases while a pending startPlayer() anywhere keeps it active.
     private static func releaseSharedAudioSessionIfIdle() {
-        guard Thread.isMainThread else {
-            DispatchQueue.main.sync { releaseSharedAudioSessionIfIdle() }
-            return
+        sessionQueue.async {
+            liveInstancesLock.lock()
+            let instances = liveInstances.allObjects
+            let hasPendingStart = pendingPlayerStarts > 0
+            liveInstancesLock.unlock()
+            if hasPendingStart || instances.contains(where: { $0.isUsingAudioSession }) {
+                print("🔈 Audio session kept active: a start is pending or audio is in use")
+                return
+            }
+            do {
+                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+                print("🔈 Audio session released with notifyOthersOnDeactivation")
+            } catch {
+                print("🔈 Audio session release failed: \(error)")
+            }
         }
-        liveInstancesLock.lock()
-        let instances = liveInstances.allObjects
-        let hasPendingStart = pendingPlayerStarts > 0
-        liveInstancesLock.unlock()
-        if hasPendingStart || instances.contains(where: { $0.isUsingAudioSession }) { return }
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+
+    // Serial queue for session activation, play(), and release. Keeps
+    // setActive off the main thread, where AVAudioSession warns it can hang
+    // the UI.
+    private static let sessionQueueKey = DispatchSpecificKey<Bool>()
+    private static let sessionQueue: DispatchQueue = {
+        let queue = DispatchQueue(label: "com.hyochan.nitrosound.audio-session")
+        queue.setSpecific(key: sessionQueueKey, value: true)
+        return queue
+    }()
+
+    @discardableResult
+    private static func onSessionQueue<T>(_ work: () throws -> T) rethrows -> T {
+        if DispatchQueue.getSpecific(key: sessionQueueKey) == true {
+            return try work()
+        }
+        return try sessionQueue.sync(execute: work)
     }
 
     // A recorder start that fails before an AVAudioRecorder exists, such as a
@@ -1189,7 +1225,8 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     // apps would stay paused. Skip it when a newer startPlayer() has already
     // replaced this player; that start owns the session.
     private func releaseAudioSessionAfterPlaybackEnded(_ player: AVAudioPlayer) {
-        guard player === self.audioPlayer else { return }
+        guard player === self.audioPlayer, self.playerOwnsSession else { return }
+        self.playerOwnsSession = false
         // stop() frees the finished player's audio resources first, since
         // deactivating while they are still held can fail.
         player.stop()
