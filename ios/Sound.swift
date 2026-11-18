@@ -84,11 +84,13 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                             self.setupAndStartRecording(uri: uri, audioSets: audioSets, meteringEnabled: meteringEnabled, promise: promise)
                         }
                     } else {
+                        self.releaseAudioSessionAfterFailedRecorderStart()
                         promise.reject(withError: RuntimeError.error(withMessage: "Recording permission denied. Please enable microphone access in Settings."))
                     }
                 }
             } catch {
                 print("🎙️ Audio session setup failed: \(error)")
+                self.releaseAudioSessionAfterFailedRecorderStart()
                 promise.reject(withError: RuntimeError.error(withMessage: "Audio session setup failed: \(error.localizedDescription)"))
             }
         }
@@ -1095,14 +1097,22 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
-    // A failed startPlayer() releases from the main queue, where a concurrent
-    // successful start calls play(). Checking isPlaying from a background
-    // queue could miss a play() that lands just before setActive(false), and
-    // deactivating stops that running player.
+    // A failed start releases from the main queue, where a concurrent
+    // successful startPlayer() calls play(). Checking isPlaying from a
+    // background queue could miss a play() that lands just before
+    // setActive(false), and deactivating stops that running player.
     private func releaseAudioSessionAfterFailedStart() {
         DispatchQueue.main.async { [weak self] in
             self?.releaseAudioSessionIfIdle()
         }
+    }
+
+    // A recorder start that fails before an AVAudioRecorder exists, such as a
+    // denied permission, gives the session back. Clearing recordingSession
+    // here also covers a start that stopRecorder() already detached from it.
+    private func releaseAudioSessionAfterFailedRecorderStart() {
+        self.recordingSession = nil
+        self.releaseAudioSessionAfterFailedStart()
     }
 
     // Playback that runs to the end never reaches stopPlayer(), so interrupted
