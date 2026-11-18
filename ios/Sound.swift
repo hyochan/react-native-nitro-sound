@@ -76,7 +76,10 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
 
                 // Request permission if needed
                 session.requestRecordPermission { [weak self] allowed in
-                    guard let self = self else { return }
+                    guard let self = self else {
+                        promise.reject(withError: RuntimeError.error(withMessage: "Self is nil"))
+                        return
+                    }
 
                     if allowed {
                         // Continue in background
@@ -1088,10 +1091,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         stopTimer(for: \.playTimer)
     }
 
+    // A paused player still owns the session, so resumePlayer() continues
+    // without it being released underneath. A finished player does not.
     private var isUsingAudioSession: Bool {
+        let hasPlayer = self.audioPlayer != nil || self.audioPlayerNode != nil
         return self.audioRecorder != nil
             || self.audioPlayer?.isPlaying == true
             || self.audioPlayerNode?.isPlaying == true
+            || (hasPlayer && self.isPausedByUser)
     }
 
     // Recording and playback share AVAudioSession.sharedInstance(), across

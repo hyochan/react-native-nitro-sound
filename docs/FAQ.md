@@ -22,4 +22,4 @@ Starting a recording or playback interrupts other apps such as Apple Music or po
 - playback reaches the end of the file;
 - `startPlayer()` fails.
 
-The session stays active while any instance from `createSound()` has a recorder or a playing player, so stopping one of them does not cut off the others. Pausing does not release the session. If you call `stopRecorder()` while a `startRecorder()` call is still pending (for example, while the microphone permission prompt is showing), the session can be released under that start, so await `startRecorder()` before stopping.
+The session stays active while any instance from `createSound()` has a recorder or a playing or paused player, so stopping one of them does not cut off the others. Pausing does not release the session. If you call `stopRecorder()` while a `startRecorder()` call is still pending (for example, while the microphone permission prompt is showing), the session can be released under that start, so await `startRecorder()` before stopping.
