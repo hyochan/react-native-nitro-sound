@@ -23,7 +23,12 @@ const babelLoaderConfiguration = {
     options: {
       cacheDirectory: false,
       cacheCompression: false,
-      presets: ['@react-native/babel-preset'],
+      // lib/module is native ESM ("type": "module"). Keep import/export for
+      // webpack; rewriting them to require() leaves `require` undefined in
+      // an ES module at runtime (#856).
+      presets: [
+        ['@react-native/babel-preset', { disableImportExportTransform: true }],
+      ],
       plugins: ['react-native-web'],
     },
   },
