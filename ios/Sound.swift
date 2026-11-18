@@ -512,6 +512,10 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                             promise.reject(withError: RuntimeError.error(withMessage: failure))
                         } else {
                             endPendingStart()
+                            // A completion that ran while the claim was held
+                            // skipped its release; check again now. The check
+                            // keeps the session while this player plays.
+                            self.releaseAudioSessionIfIdle()
                             promise.resolve(withResult: uri)
                         }
                     } else {
