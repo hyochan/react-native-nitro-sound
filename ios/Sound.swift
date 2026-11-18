@@ -523,7 +523,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                                 }
                             }
 
-                            self.releaseAudioSessionAfterFailedStart()
+                            self.releaseAudioSessionIfIdle()
                             promise.reject(withError: RuntimeError.error(withMessage: "Audio file does not exist at path: \(uri)"))
                             return
                         }
@@ -535,7 +535,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                         self.audioPlayer?.delegate = self.playerDelegateProxy
 
                         guard let player = self.audioPlayer else {
-                            self.releaseAudioSessionAfterFailedStart()
+                            self.releaseAudioSessionIfIdle()
                             promise.reject(withError: RuntimeError.error(withMessage: "Failed to create audio player"))
                             return
                         }
@@ -562,14 +562,14 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
                     }
                 } else {
                     print("🎵 ❌ No URI provided")
-                    self.releaseAudioSessionAfterFailedStart()
+                    self.releaseAudioSessionIfIdle()
                     promise.reject(withError: RuntimeError.error(withMessage: "URI is required for playback"))
                 }
             } catch {
                 print("🎵 ❌ Playback error: \(error)")
                 // The session is activated before the URI is validated or a
                 // player exists, so every failed start gives it back.
-                self.releaseAudioSessionAfterFailedStart()
+                self.releaseAudioSessionIfIdle()
                 promise.reject(withError: RuntimeError.error(withMessage: "Playback error: \(error.localizedDescription)"))
             }
         }
@@ -923,7 +923,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         // TODO: Implement HTTP streaming with AVAudioEngine
         // For now, use basic implementation
         guard let audioURL = URL(string: url) else {
-            self.releaseAudioSessionAfterFailedStart()
+            self.releaseAudioSessionIfIdle()
             promise.reject(withError: RuntimeError.error(withMessage: "Invalid URL"))
             return
         }
@@ -943,7 +943,7 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
             self.startPlayTimer()
             promise.resolve(withResult: url)
         } catch {
-            self.releaseAudioSessionAfterFailedStart()
+            self.releaseAudioSessionIfIdle()
             promise.reject(withError: RuntimeError.error(withMessage: error.localizedDescription))
         }
     }
@@ -1098,7 +1098,16 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
     // every instance createSound() returns, and deactivating it stops any
     // audio objects still running. Release it only when no instance has a
     // recorder or a playing player left.
+    //
+    // The check and setActive(false) run on the main queue, where
+    // startPlayer() calls play() and the recorder calls record(), so no start
+    // can land between them. Checking from a background queue could miss a
+    // start that lands just before the deactivation, which would stop it.
     private func releaseAudioSessionIfIdle() {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { self.releaseAudioSessionIfIdle() }
+            return
+        }
         HybridSound.liveInstancesLock.lock()
         let instances = HybridSound.liveInstances.allObjects
         HybridSound.liveInstancesLock.unlock()
@@ -1106,22 +1115,12 @@ final class HybridSound: HybridSoundSpec_base, HybridSoundSpec_protocol {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
-    // A failed start releases from the main queue, where a concurrent
-    // successful startPlayer() calls play(). Checking isPlaying from a
-    // background queue could miss a play() that lands just before
-    // setActive(false), and deactivating stops that running player.
-    private func releaseAudioSessionAfterFailedStart() {
-        DispatchQueue.main.async { [weak self] in
-            self?.releaseAudioSessionIfIdle()
-        }
-    }
-
     // A recorder start that fails before an AVAudioRecorder exists, such as a
     // denied permission, gives the session back. Clearing recordingSession
     // here also covers a start that stopRecorder() already detached from it.
     private func releaseAudioSessionAfterFailedRecorderStart() {
         self.recordingSession = nil
-        self.releaseAudioSessionAfterFailedStart()
+        self.releaseAudioSessionIfIdle()
     }
 
     // Playback that runs to the end never reaches stopPlayer(), so interrupted
