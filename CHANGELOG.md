@@ -1,5 +1,24 @@
 # Changelogs
 
+## [0.2.21] — 2026-11-19
+
+
+### 🐛 Bug Fixes
+
+- release audio session on stop ([#857](https://github.com/hyochan/react-native-nitro-sound/pull/857))
+- keep ES module imports in the web demo build ([#869](https://github.com/hyochan/react-native-nitro-sound/pull/869))
+
+### 📦 Dependency Updates
+
+18 dependency bump(s) — see the [full diff](https://github.com/hyochan/react-native-nitro-sound/compare/0.2.20...0.2.21) for details.
+
+---
+
+**Full Changelog**: https://github.com/hyochan/react-native-nitro-sound/compare/0.2.20...0.2.21
+
+---
+
+
 ## [0.2.20] — 2026-09-06
 
 
