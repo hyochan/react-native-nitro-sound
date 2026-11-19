@@ -50,6 +50,7 @@
 - Use `$rebase-main` to preserve staged, unstaged, untracked, ignored, and generated work during synchronization. Never use destructive reset/clean shortcuts.
 - Use `$review-pr` to classify and resolve PR feedback, fall back to `$review-self` when automated review is unavailable, and poll through a real five-minute wake-up until the exact head is stable.
 - Use `$review-self` for a final independent pass and `$generate-doc` whenever public exports, Nitro specs, platform behavior, compatibility, or releases change.
+- Use `$loop-review` to take a change from the latest `main` through `$review-self`, a PR reviewed until its exact head is clean, the audio regression gate, and a squash merge. It releases only when a release is also requested.
 - Use `$loop-review-self` to land a minor docs, release-note, agent-workflow, or housekeeping change on `main` without a PR: it reviews until two consecutive clean snapshots, runs the path checks, then pushes directly.
 - Internal workflow-only changes under `.claude/`, `.codex/`, `AGENTS.md`, or `knowledge/_claude-context/` stay local unless the user explicitly requests commit, push, PR, or merge. An explicit `$loop-review-self` invocation counts as that request.
 - Install the repository Codex skills for automatic discovery with `.codex/scripts/install-skills.sh`.

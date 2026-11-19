@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Loop Review Self'
+  short_description: 'Land a minor docs or housekeeping change on main without a PR'
+  default_prompt: 'Use $loop-review-self to review a minor docs or housekeeping change until stable, verify it, and push it directly to main.'

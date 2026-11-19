@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Loop Review'
+  short_description: 'Review, open a PR, and merge a clean react-native-nitro-sound change'
+  default_prompt: 'Use $loop-review to start from the latest origin/main, stabilize the change, open a PR, address reviews, gate audio regression, and merge it.'

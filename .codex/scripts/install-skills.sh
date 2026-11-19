@@ -17,6 +17,7 @@ for skill in \
   rebase-main \
   review-pr \
   review-self \
+  loop-review \
   loop-review-self; do
   skill_source="$repo_root/.codex/skills/$skill"
   if [[ ! -d "$skill_source" ]]; then

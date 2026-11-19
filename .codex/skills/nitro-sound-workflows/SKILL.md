@@ -36,6 +36,8 @@ Read and follow the matching command file:
 - Stable or prerelease npm publication: `.claude/commands/release.md`
 - Dependency upgrade: `.claude/commands/upgrade-deps.md`
 - Commit, push, or open a PR: `.claude/commands/commit.md`
+- Take a change from latest `main` through PR review, the audio regression
+  gate, and merge: `$loop-review`
 - Land a minor docs, release-note, agent-workflow, or housekeeping change on
   `main` without a PR: `$loop-review-self`
 
