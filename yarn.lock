@@ -12862,7 +12862,6 @@ __metadata:
     "@eslint/eslintrc": "npm:^3.3.7"
     "@eslint/js": "npm:^9.39.5"
     "@evilmartians/lefthook": "npm:^2.2.4"
-    "@react-native-community/slider": "npm:^5.2.2"
     "@react-native/babel-preset": "npm:0.86.2"
     "@react-native/eslint-config": "npm:^0.86.2"
     "@react-native/jest-preset": "npm:0.86.2"
