@@ -11655,18 +11655,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nitrogen@npm:0.36.5":
-  version: 0.36.5
-  resolution: "nitrogen@npm:0.36.5"
+"nitro-core@npm:0.37.2":
+  version: 0.37.2
+  resolution: "nitro-core@npm:0.37.2"
+  checksum: 10/94b69303cfef0b2f060bac3ee9907d2b31fa217b054cd0134721f14eb9a0de575ff39a7556b821cf36f0c17a3533e73535fe3385b48ed6e5e79847a73df3a500
+  languageName: node
+  linkType: hard
+
+"nitrogen@npm:0.37.2":
+  version: 0.37.2
+  resolution: "nitrogen@npm:0.37.2"
   dependencies:
     chalk: "npm:^5.3.0"
-    react-native-nitro-modules: "npm:^0.36.5"
+    nitro-core: "npm:0.37.2"
     ts-morph: "npm:^28.0.0"
     yargs: "npm:^18.0.0"
     zod: "npm:^4.4.3"
   bin:
     nitrogen: lib/index.js
-  checksum: 10/2923691f9450367b3df74175eebbebba8c0e9f5297cef1d77eb3ecf17f4cfe10fb057eb437ec932174e2ada25595d0fc922464f4c42e0b934c8d6f7dc3bfa949
+  checksum: 10/f9baa87a746131c59b2fe7393224dcee9edd76f5291c7a6edbee41d7230479bd960385794d13da6e3361e37db55c972eea82f3061199390f1bc6113319e5e1cf
   languageName: node
   linkType: hard
 
@@ -12804,13 +12811,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-nitro-modules@npm:0.36.5, react-native-nitro-modules@npm:^0.36.5":
-  version: 0.36.5
-  resolution: "react-native-nitro-modules@npm:0.36.5"
+"react-native-nitro-modules@npm:0.37.2":
+  version: 0.37.2
+  resolution: "react-native-nitro-modules@npm:0.37.2"
+  dependencies:
+    nitro-core: "npm:0.37.2"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/d92e2a6ad62d6bb338a1ac689f9b9ae757103d8b8812101f7e6e4ed2d64178d90a9e65a6dbae0b78253c972d5881fc69a0e20c0fb64aa3a42e5d16eb31d1d653
+  checksum: 10/3460802e8830f6f92e95b773c9f277acfe94d33289108b57be6814adbcceac9adb136f16c3af308b8591ddfe0ceedf7979a65c2f43d30cbe91a67abe1b20bb0f
   languageName: node
   linkType: hard
 
@@ -12839,7 +12848,7 @@ __metadata:
     react-native: "npm:0.86.2"
     react-native-builder-bob: "npm:^0.43.0"
     react-native-monorepo-config: "npm:^0.4.0"
-    react-native-nitro-modules: "npm:0.36.5"
+    react-native-nitro-modules: "npm:0.37.2"
     react-native-nitro-sound: "npm:*"
     react-native-safe-area-context: "npm:^5.11.1"
     react-native-video: "npm:^6.19.3"
@@ -12880,12 +12889,12 @@ __metadata:
     expo: "npm:^57.0.11"
     husky: "npm:^9.1.7"
     jest: "npm:^29.7.0"
-    nitrogen: "npm:0.36.5"
+    nitrogen: "npm:0.37.2"
     prettier: "npm:^3.10.1"
     react: "npm:19.2.8"
     react-native: "npm:0.86.2"
     react-native-builder-bob: "npm:0.43.0"
-    react-native-nitro-modules: "npm:0.36.5"
+    react-native-nitro-modules: "npm:0.37.2"
     release-it: "npm:^21.1.3"
     tsx: "npm:^4.23.15"
     turbo: "npm:^2.11.13"
@@ -12893,7 +12902,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-native: "*"
-    react-native-nitro-modules: ">=0.36.5"
+    react-native-nitro-modules: ">=0.37.2"
   languageName: unknown
   linkType: soft
 

@@ -30,8 +30,8 @@ regenerated before native builds or publication.
 - Library version: `0.2.18`
 - Package manager: Yarn `4.18.0`
 - Node baseline: `.nvmrc` `22.21.0`; package engines `>=22.21.0`
-- React Native Nitro Modules: development `0.36.5`, peer `>=0.36.5`
-- Nitrogen: `0.36.5`
+- React Native Nitro Modules: development `0.37.2`, peer `>=0.37.2`
+- Nitrogen: `0.37.2`
 - Example React Native: `0.86.2`; Expo `57.0.11`
 - iOS minimum: `15.1`; Android minimum: `24`
 - Xcode minimum: `26.0`; iOS CI: macOS `15` with Xcode `26.3`
