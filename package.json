@@ -188,8 +188,5 @@
     "languages": "kotlin-swift",
     "type": "nitro-module",
     "version": "0.51.1"
-  },
-  "dependencies": {
-    "@react-native-community/slider": "^5.2.2"
   }
 }
